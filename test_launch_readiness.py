@@ -268,14 +268,10 @@ class TestAppBridgeAuth:
         importlib.reload(auth_module)
 
         # Simulate what get_current_user does with dev-session in production
-        with pytest.raises((HTTPException, Exception)):
-            # _dev_context should raise when APP_ENV != development
-            import app.services.auth as a
-            # Reload to pick up new env
-            importlib.reload(a)
-            if a.settings.APP_ENV == "production":
-                # Verify the guard is in place
-                assert "dev-session" not in "production path"  # Logic gate
+        import app.services.auth as a
+        importlib.reload(a)
+        with pytest.raises(HTTPException):
+            a._dev_context()
 
         monkeypatch.setenv("APP_ENV", "development")
         importlib.reload(app.core.config)
