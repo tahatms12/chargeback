@@ -1,0 +1,138 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Shopify session storage — managed by @shopify/shopify-app-session-storage-prisma
+model Session {
+  id            String    @id
+  shop          String
+  state         String
+  isOnline      Boolean   @default(false)
+  scope         String?
+  expires       DateTime?
+  accessToken   String
+  userId        BigInt?
+  firstName     String?
+  lastName      String?
+  email         String?
+  accountOwner  Boolean   @default(false)
+  locale        String?
+  collaborator  Boolean?  @default(false)
+  emailVerified Boolean?  @default(false)
+
+  @@index([shop])
+}
+
+// One row per installed shop
+model Installation {
+  id            String    @id @default(cuid())
+  shopDomain    String    @unique
+  accessToken   String
+  billingStatus String    @default("pending") // pending | active | cancelled | expired
+  planName      String?
+  trialEndsAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([shopDomain])
+}
+
+// Seller configuration — one row per shop
+model Configuration {
+  id                  String   @id @default(cuid())
+  shopDomain          String   @unique
+  sellerName          String?
+  sellerAddressLine1  String?
+  sellerAddressLine2  String?
+  sellerCity          String?
+  sellerStateProvince String?
+  sellerPostalCode    String?
+  sellerCountryCode   String?
+  sellerContactEmail  String?
+  sellerContactPhone  String?
+  homeCountry         String?  // ISO 3166-1 alpha-2, e.g. "US"
+  defaultCurrency     String?  // ISO 4217, e.g. "USD"
+  exemptTags          String[] @default([])
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([shopDomain])
+}
+
+// One row per variant — the core audit state
+model ProductAuditRecord {
+  id                   String   @id @default(cuid())
+  shopDomain           String
+  productId            String   // Shopify GID e.g. gid://shopify/Product/123
+  variantId            String   // Shopify GID e.g. gid://shopify/ProductVariant/456
+  inventoryItemId      String?  // Shopify GID, may be null for non-tracked items
+  productTitle         String
+  variantTitle         String?
+  vendor               String?
+  productType          String?
+  hasHsCode            Boolean  @default(false)
+  hasCoo               Boolean  @default(false)
+  harmonizedSystemCode String?
+  countryCodeOfOrigin  String?
+  // needs_review | under_review | customs_verified
+  fixStatus            String   @default("needs_review")
+  orderCount30d        Int      @default(0)
+  lastAuditedAt        DateTime @default(now())
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@unique([shopDomain, variantId])
+  @@index([shopDomain])
+  @@index([shopDomain, hasHsCode])
+  @@index([shopDomain, hasCoo])
+  @@index([shopDomain, fixStatus])
+  @@index([shopDomain, orderCount30d(sort: Desc)])
+  @@index([shopDomain, productId])
+}
+
+// One row per audit job run
+model AuditRun {
+  id                String    @id @default(cuid())
+  shopDomain        String
+  // queued | running | completed | failed
+  status            String    @default("queued")
+  // manual | install | webhook
+  triggeredBy       String    @default("manual")
+  startedAt         DateTime?
+  completedAt       DateTime?
+  totalProducts     Int       @default(0)
+  totalVariants     Int       @default(0)
+  processedVariants Int       @default(0)
+  missingHs         Int       @default(0)
+  missingCoo        Int       @default(0)
+  missingBoth       Int       @default(0)
+  errorSummary      String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([shopDomain])
+  @@index([shopDomain, status])
+  @@index([shopDomain, createdAt(sort: Desc)])
+}
+
+// Minimal operational log for PDF generation — NO PII
+model PdfGenerationLog {
+  id                 String   @id @default(cuid())
+  shopDomain         String
+  orderId            String   // Shopify GID — not PII
+  orderName          String?  // e.g. "#1234" — not PII
+  completenessStatus String?  // complete | partial | not_ready
+  generatedAt        DateTime @default(now())
+  createdAt          DateTime @default(now())
+
+  @@index([shopDomain])
+  @@index([shopDomain, orderId])
+  @@index([shopDomain, generatedAt(sort: Desc)])
+}

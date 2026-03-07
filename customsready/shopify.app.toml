@@ -1,0 +1,64 @@
+name = "CustomsReady Lite"
+client_id = "REPLACE_WITH_SHOPIFY_API_KEY"
+application_url = "https://YOUR_APP_DOMAIN"
+embedded = true
+
+[access_scopes]
+scopes = "read_products,read_orders"
+
+[auth]
+redirect_urls = [
+  "https://YOUR_APP_DOMAIN/auth/callback",
+  "https://YOUR_APP_DOMAIN/auth/shopify/callback",
+  "https://YOUR_APP_DOMAIN/api/auth/callback"
+]
+
+[webhooks]
+api_version = "2025-01"
+
+  [[webhooks.subscriptions]]
+  topics = ["customers/data_request"]
+  uri = "/webhooks"
+
+  [[webhooks.subscriptions]]
+  topics = ["customers/redact"]
+  uri = "/webhooks"
+
+  [[webhooks.subscriptions]]
+  topics = ["shop/redact"]
+  uri = "/webhooks"
+
+  [[webhooks.subscriptions]]
+  topics = ["products/create"]
+  uri = "/webhooks"
+
+  [[webhooks.subscriptions]]
+  topics = ["products/update"]
+  uri = "/webhooks"
+
+  [[webhooks.subscriptions]]
+  topics = ["app/uninstalled"]
+  uri = "/webhooks"
+
+[pos]
+embedded = false
+
+[[extensions]]
+type = "ui_extension"
+name = "Order Detail Block"
+handle = "order-detail-block"
+
+[[extensions]]
+type = "ui_extension"
+name = "Order Detail Action"
+handle = "order-detail-action"
+
+[[extensions]]
+type = "ui_extension"
+name = "Order Print Action"
+handle = "print-action"
+
+[[extensions]]
+type = "ui_extension"
+name = "Product Detail Block"
+handle = "product-detail-block"

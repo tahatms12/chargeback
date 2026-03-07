@@ -1,0 +1,12 @@
+name = "Order Detail Block"
+handle = "order-detail-block"
+type = "ui_extension"
+
+[[extensions]]
+name = "Order Detail Block"
+handle = "order-detail-block"
+type = "ui_extension"
+
+  [[extensions.targeting]]
+  module = "./src/index.tsx"
+  target = "admin.order-details.block.render"

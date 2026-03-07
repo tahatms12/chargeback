@@ -1,0 +1,8 @@
+[[extensions]]
+name = "Product Detail Block"
+handle = "product-detail-block"
+type = "ui_extension"
+
+  [[extensions.targeting]]
+  module = "./src/index.tsx"
+  target = "admin.product-details.block.render"

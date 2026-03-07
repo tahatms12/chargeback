@@ -1,0 +1,8 @@
+[[extensions]]
+name = "Order Detail Action"
+handle = "order-detail-action"
+type = "ui_extension"
+
+  [[extensions.targeting]]
+  module = "./src/index.tsx"
+  target = "admin.order-details.action.render"
