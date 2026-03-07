@@ -1,7 +1,15 @@
 name = "PORef"
 client_id = "{{SHOPIFY_API_KEY}}"
-application_url = "{{SHOPIFY_APP_URL}}"
+application_url = "https://uplifttechnologies.pro/poref"
 embedded = true
+
+
+[auth]
+redirect_urls = [
+  "https://uplifttechnologies.pro/poref/auth/callback",
+  "https://uplifttechnologies.pro/poref/auth/shopify/callback",
+  "https://uplifttechnologies.pro/poref/api/auth/callback"
+]
 
 [access]
 admin = true
@@ -48,7 +56,7 @@ api_version = "2025-04"
   compliance_topics = true
 
 [app_proxy]
-url = "{{SHOPIFY_APP_URL}}/proxy"
+url = "https://uplifttechnologies.pro/poref/proxy"
 subpath = "poref"
 prefix = "apps"
 
