@@ -1,0 +1,44 @@
+version: "3.9"
+
+services:
+  gateway:
+    image: nginx:1.27-alpine
+    depends_on:
+      - chargeback
+      - customsready
+      - poref
+    ports:
+      - "80:8080"
+    environment:
+      CHARGEBACK_UPSTREAM_HOST: ${CHARGEBACK_UPSTREAM_HOST:-chargeback}
+      CHARGEBACK_UPSTREAM_PORT: ${CHARGEBACK_UPSTREAM_PORT:-3000}
+      CUSTOMSREADY_UPSTREAM_HOST: ${CUSTOMSREADY_UPSTREAM_HOST:-customsready}
+      CUSTOMSREADY_UPSTREAM_PORT: ${CUSTOMSREADY_UPSTREAM_PORT:-3000}
+      POREF_UPSTREAM_HOST: ${POREF_UPSTREAM_HOST:-poref}
+      POREF_UPSTREAM_PORT: ${POREF_UPSTREAM_PORT:-3000}
+    volumes:
+      - ./gateway/nginx.conf:/etc/nginx/templates/default.conf.template:ro
+    command: >
+      /bin/sh -c "envsubst '$$CHARGEBACK_UPSTREAM_HOST $$CHARGEBACK_UPSTREAM_PORT $$CUSTOMSREADY_UPSTREAM_HOST $$CUSTOMSREADY_UPSTREAM_PORT $$POREF_UPSTREAM_HOST $$POREF_UPSTREAM_PORT' < /etc/nginx/templates/default.conf.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"
+
+  # Chargeback app is intentionally externalized from this repo to preserve immutability.
+  # Point CHARGEBACK_UPSTREAM_HOST/PORT to its service in your target runtime.
+  chargeback:
+    image: nginx:1.27-alpine
+    command: ["/bin/sh", "-c", "echo 'Attach real chargeback service in production' > /usr/share/nginx/html/index.html && nginx -g 'daemon off;'"]
+
+  customsready:
+    build:
+      context: ./customsready
+      dockerfile: Dockerfile
+    environment:
+      PORT: 3000
+      CUSTOMSREADY_SHOPIFY_APP_URL: https://uplifttechnologies.pro/customsready
+      CUSTOMSREADY_NODE_ENV: production
+
+  poref:
+    image: nginx:1.27-alpine
+    command: ["/bin/sh", "-c", "echo 'Attach real poref runtime in production' > /usr/share/nginx/html/index.html && nginx -g 'daemon off;'"]
+    environment:
+      POREF_SHOPIFY_APP_URL: https://uplifttechnologies.pro/poref
+      POREF_NODE_ENV: production
