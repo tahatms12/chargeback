@@ -7,6 +7,7 @@ services:
       - chargeback
       - customsready
       - poref
+      - fixitcsv
     ports:
       - "80:8080"
     environment:
@@ -16,10 +17,12 @@ services:
       CUSTOMSREADY_UPSTREAM_PORT: ${CUSTOMSREADY_UPSTREAM_PORT:-3000}
       POREF_UPSTREAM_HOST: ${POREF_UPSTREAM_HOST:-poref}
       POREF_UPSTREAM_PORT: ${POREF_UPSTREAM_PORT:-3000}
+      FIXITCSV_UPSTREAM_HOST: ${FIXITCSV_UPSTREAM_HOST:-fixitcsv}
+      FIXITCSV_UPSTREAM_PORT: ${FIXITCSV_UPSTREAM_PORT:-3000}
     volumes:
       - ./gateway/nginx.conf:/etc/nginx/templates/default.conf.template:ro
     command: >
-      /bin/sh -c "envsubst '$$CHARGEBACK_UPSTREAM_HOST $$CHARGEBACK_UPSTREAM_PORT $$CUSTOMSREADY_UPSTREAM_HOST $$CUSTOMSREADY_UPSTREAM_PORT $$POREF_UPSTREAM_HOST $$POREF_UPSTREAM_PORT' < /etc/nginx/templates/default.conf.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"
+      /bin/sh -c "envsubst '$$CHARGEBACK_UPSTREAM_HOST $$CHARGEBACK_UPSTREAM_PORT $$CUSTOMSREADY_UPSTREAM_HOST $$CUSTOMSREADY_UPSTREAM_PORT $$POREF_UPSTREAM_HOST $$POREF_UPSTREAM_PORT $$FIXITCSV_UPSTREAM_HOST $$FIXITCSV_UPSTREAM_PORT' < /etc/nginx/templates/default.conf.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"
 
   # Chargeback app is intentionally externalized from this repo to preserve immutability.
   # Point CHARGEBACK_UPSTREAM_HOST/PORT to its service in your target runtime.
@@ -42,3 +45,12 @@ services:
     environment:
       POREF_SHOPIFY_APP_URL: https://uplifttechnologies.pro/poref
       POREF_NODE_ENV: production
+
+  fixitcsv:
+    build:
+      context: ./FixitCSV
+      dockerfile: Dockerfile
+    environment:
+      PORT: 3000
+      SHOPIFY_APP_URL: https://uplifttechnologies.pro/FixitCSV
+      NODE_ENV: production
