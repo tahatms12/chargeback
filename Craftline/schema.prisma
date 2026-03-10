@@ -1,0 +1,99 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Required by @shopify/shopify-app-session-storage-prisma
+model Session {
+  id            String    @id
+  shop          String
+  state         String
+  isOnline      Boolean   @default(false)
+  scope         String?
+  expires       DateTime?
+  accessToken   String
+  userId        BigInt?
+  firstName     String?
+  lastName      String?
+  email         String?
+  accountOwner  Boolean   @default(false)
+  locale        String?
+  collaborator  Boolean?  @default(false)
+  emailVerified Boolean?  @default(false)
+}
+
+// Production stage definition per store
+model Stage {
+  id           String   @id @default(cuid())
+  shop         String
+  name         String
+  position     Int
+  emailEnabled Boolean  @default(true)
+  emailSubject String   @default("Your order {{order_name}} has a new update")
+  emailBody    String   @default("Hi {{customer_name}},\n\nYour order {{order_name}} has moved to: {{stage_name}}.\n\nThank you,\n{{shop_name}}")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([shop, name])
+  @@index([shop, position])
+}
+
+// Tracks which production stage each order is in
+model OrderStage {
+  id            String   @id @default(cuid())
+  shop          String
+  orderId       String   // Shopify order GID e.g. gid://shopify/Order/12345
+  orderName     String   // Display name e.g. #1001
+  customerEmail String?
+  customerName  String?
+  productSummary String? // Comma-separated line item titles (first 3)
+  stageId       String?  // FK to Stage.id — null means unassigned
+  stageName     String?  // Denormalized for display without join
+  movedAt       DateTime @default(now())
+  createdAt     DateTime @default(now())
+
+  @@unique([shop, orderId])
+  @@index([shop, stageId])
+  @@index([shop, movedAt])
+}
+
+// Queue for outbound customer emails — ensures batch safety
+model EmailQueue {
+  id          String    @id @default(cuid())
+  shop        String
+  orderId     String
+  orderName   String
+  toEmail     String
+  toName      String?
+  subject     String
+  body        String
+  status      String    @default("pending") // pending | sent | failed
+  attempts    Int       @default(0)
+  error       String?
+  createdAt   DateTime  @default(now())
+  processedAt DateTime?
+
+  @@index([shop, status])
+  @@index([shop, createdAt])
+}
+
+// Per-store SMTP and sender settings
+model ShopSettings {
+  id           String   @id @default(cuid())
+  shop         String   @unique
+  smtpHost     String   @default("")
+  smtpPort     Int      @default(587)
+  smtpUser     String   @default("")
+  smtpPass     String   @default("")
+  smtpFrom     String   @default("")
+  smtpFromName String   @default("")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}

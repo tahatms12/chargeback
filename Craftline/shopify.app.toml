@@ -1,0 +1,38 @@
+name = "Maker Queue"
+client_id = "YOUR_CLIENT_ID"
+application_url = "https://YOUR_APP_URL"
+embedded = true
+
+[access_scopes]
+# read_orders + write_orders: view and tag orders
+# read_customers: access customer email for notifications
+# read_metafields + write_metafields: store production stage on orders
+scopes = "read_orders,write_orders,read_customers,read_metafields,write_metafields"
+
+[auth]
+redirect_urls = [
+  "https://YOUR_APP_URL/auth/callback",
+  "https://YOUR_APP_URL/auth/shopify/callback",
+  "https://YOUR_APP_URL/api/auth/callback"
+]
+
+[webhooks]
+api_version = "2025-01"
+
+  [[webhooks.subscriptions]]
+  topics = ["orders/fulfilled"]
+  uri = "/webhooks"
+
+  [[webhooks.subscriptions]]
+  topics = ["orders/cancelled"]
+  uri = "/webhooks"
+
+  [[webhooks.subscriptions]]
+  topics = ["app/uninstalled"]
+  uri = "/webhooks"
+
+[pos]
+embedded = false
+
+[build]
+include_config_on_deploy = true
