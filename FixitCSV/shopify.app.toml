@@ -3,6 +3,11 @@ client_id = "REPLACE_WITH_SHOPIFY_API_KEY"
 application_url = "https://uplifttechnologies.pro/FixitCSV"
 embedded = true
 
+[build]
+automatically_update_urls_on_dev = true
+dev_store_url = ""
+include_config_on_deploy = true
+
 [access_scopes]
 scopes = ""
 
@@ -17,6 +22,18 @@ api_version = "2025-01"
 
   [[webhooks.subscriptions]]
   topics = ["app/uninstalled"]
+  uri = "/webhooks"
+
+  [[webhooks.subscriptions]]
+  topics = ["customers/data_request"]
+  uri = "/webhooks"
+
+  [[webhooks.subscriptions]]
+  topics = ["customers/redact"]
+  uri = "/webhooks"
+
+  [[webhooks.subscriptions]]
+  topics = ["shop/redact"]
   uri = "/webhooks"
 
 [pos]

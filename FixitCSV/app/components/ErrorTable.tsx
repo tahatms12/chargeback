@@ -7,7 +7,7 @@ export function ErrorTable({ result }: { result: ValidationResult }) {
       <BlockStack gap="300">
         <InlineStack gap="200">
           <Badge tone={result.passed ? "success" : "critical"}>{result.passed ? "Passed" : `${result.errors.length} errors`}</Badge>
-          {result.warnings.length > 0 ? <Badge tone="warning">{result.warnings.length} warnings</Badge> : null}
+          {result.warnings.length > 0 ? <Badge tone="warning">{`${result.warnings.length} warnings`}</Badge> : null}
         </InlineStack>
 
         {result.headerErrors.map((e) => <Banner key={e} tone="critical"><Text as="p">{e}</Text></Banner>)}
