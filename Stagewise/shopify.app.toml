@@ -1,0 +1,28 @@
+name = "Production Queue Communicator"
+client_id = "{{ SHOPIFY_API_KEY }}"
+application_url = "{{ SHOPIFY_APP_URL }}"
+embedded = true
+handle = "production-queue-communicator"
+
+[build]
+automatically_update_urls_on_dev = true
+dev_store_url = "{{ DEV_STORE_URL }}"
+
+[access_scopes]
+# read_orders: fetch queue orders; write_orders: apply stage tags to orders; read_customers: customer email for notifications
+scopes = "read_orders,write_orders,read_customers"
+
+[auth]
+redirect_urls = [
+  "{{ SHOPIFY_APP_URL }}/auth/callback"
+]
+
+[webhooks]
+api_version = "2025-01"
+
+  [[webhooks.subscriptions]]
+  topics = ["app/uninstalled"]
+  uri = "/webhooks"
+
+[pos]
+embedded = false

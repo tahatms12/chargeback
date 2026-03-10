@@ -1,0 +1,117 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Shopify session storage — required by @shopify/shopify-app-session-storage-prisma
+model Session {
+  id            String    @id
+  shop          String
+  state         String
+  isOnline      Boolean   @default(false)
+  scope         String?
+  expires       DateTime?
+  accessToken   String
+  userId        BigInt?
+  firstName     String?
+  lastName      String?
+  email         String?
+  accountOwner  Boolean   @default(false)
+  locale        String?
+  collaborator  Boolean?  @default(false)
+  emailVerified Boolean?  @default(false)
+}
+
+// Named production stages defined per store.
+// Default stages are seeded on first install.
+model ProductionStage {
+  id           String   @id @default(cuid())
+  shopDomain   String
+  name         String
+  position     Int
+  // Hex color used to visually distinguish stages in the queue view
+  color        String   @default("#637381")
+  // Email template fields — empty string = inherit defaults
+  emailSubject String   @default("")
+  emailBody    String   @default("")
+  // Whether to send a customer notification when an order enters this stage
+  sendEmail    Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  orderStages OrderStage[]
+
+  // Position must be unique per shop to enforce ordered list
+  @@unique([shopDomain, position])
+  @@index([shopDomain])
+}
+
+// Tracks which production stage each order is currently in.
+// One record per order. Updated in place when order moves stages.
+model OrderStage {
+  id            String   @id @default(cuid())
+  shopDomain    String
+  // Shopify order GID e.g. "gid://shopify/Order/123456789"
+  orderId       String
+  // Human-readable order name e.g. "#1042"
+  orderNumber   String
+  customerEmail String?
+  customerName  String?
+  // Comma-joined line item titles for display in the queue card
+  itemSummary   String?
+  stageId       String
+  stage         ProductionStage @relation(fields: [stageId], references: [id], onDelete: Cascade)
+  // Timestamp of the most recent stage move
+  movedAt       DateTime @default(now())
+  createdAt     DateTime @default(now())
+
+  @@unique([shopDomain, orderId])
+  @@index([shopDomain])
+  @@index([stageId])
+}
+
+// SMTP configuration for outbound stage notification emails.
+// One record per store.
+model EmailSettings {
+  id         String   @id @default(cuid())
+  shopDomain String   @unique
+  smtpHost   String   @default("")
+  smtpPort   Int      @default(587)
+  smtpUser   String   @default("")
+  // Implementation choice: stored as plain text. Encrypt at rest in production
+  // using DATABASE_ENCRYPTION_KEY or use a secrets manager.
+  smtpPass   String   @default("")
+  fromEmail  String   @default("")
+  fromName   String   @default("Order Update")
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+// Persistent email queue. Emails are inserted here when an order moves stages.
+// A background processor (cron or in-process loop) picks up pending records
+// and sends them with a configurable inter-send delay to avoid rate limiting.
+model EmailQueue {
+  id            String    @id @default(cuid())
+  shopDomain    String
+  orderId       String
+  orderNumber   String
+  customerEmail String
+  subject       String
+  // HTML email body
+  body          String
+  // "pending" | "sent" | "failed"
+  status        String    @default("pending")
+  attempts      Int       @default(0)
+  error         String?
+  createdAt     DateTime  @default(now())
+  sentAt        DateTime?
+
+  @@index([shopDomain, status])
+  @@index([createdAt])
+}
