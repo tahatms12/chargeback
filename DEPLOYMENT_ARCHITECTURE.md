@@ -1,24 +1,35 @@
-# Deployment Architecture (Vercel Monorepo, Per-App Projects)
+# Deployment Architecture (Vercel Multi-Project, Subdomain Model)
 
-## Model
+This repository is configured for **one Vercel project per deployable app folder**.
 
-This monorepo should be deployed to Vercel as **multiple projects**, one per deployable app, each with its own **Root Directory** and **subdomain**.
+## Root-level anti-ambiguity guard
 
-No deployable app should depend on path-based mounting under `https://uplifttechnologies.pro/<app>`.
+- `vercel.json` at repository root is set to `"framework": null`.
+- This prevents the repo root from being treated as a Next.js app.
+- Do **not** deploy from repo root; always set a project **Root Directory** to an app folder below.
 
-## Vercel project mapping
+## Deployable app inventory
 
-| Vercel Project Root | Runtime | Production URL |
-|---|---|---|
-| `frontend/` | Next.js | `https://chargeguard.uplifttechnologies.pro` |
-| `customsready/` | Remix (Shopify app) | `https://customsready.uplifttechnologies.pro` |
-| `poref/` | Shopify app runtime | `https://poref.uplifttechnologies.pro` |
-| `Craftline/` | Remix (Shopify app) | `https://makerqueue.uplifttechnologies.pro` |
-| `FixitCSV/` | Remix (Shopify app) | `https://fixitcsv.uplifttechnologies.pro` |
-| `Stagewise/` | Remix (Shopify app) | `https://stagewise.uplifttechnologies.pro` |
+| App folder | Framework/runtime | Package manager | package.json | Build script | Next.js app | Intended for Vercel | Vercel project name (recommended) | Vercel Root Directory | Production subdomain |
+|---|---|---|---|---|---|---|---|---|---|
+| `frontend/` | Next.js 14 | npm | `frontend/package.json` | `npm run build` (`next build`) | Yes | Yes | `chargeguard-web` | `frontend` | `chargeguard.uplifttechnologies.pro` |
+| `customsready/` | Remix + Shopify app | npm | `customsready/package.json` | `npm run build` (`remix vite:build`) | No | Yes (web process) | `customsready` | `customsready` | `customsready.uplifttechnologies.pro` |
+| `Craftline/` | Remix + Shopify app | npm | `Craftline/package.json` | `npm run build` (`remix vite:build`) | No | Yes (web process) | `makerqueue` | `Craftline` | `makerqueue.uplifttechnologies.pro` |
+| `FixitCSV/` | Remix + Shopify app | npm | `FixitCSV/package.json` | `npm run build` (`remix vite:build`) | No | Yes (web process) | `fixitcsv` | `FixitCSV` | `fixitcsv.uplifttechnologies.pro` |
+| `Stagewise/` | Remix + Shopify app | npm | `Stagewise/package.json` | `npm run build` (`remix vite:build`) | No | Yes (web process) | `stagewise` | `Stagewise` | `stagewise.uplifttechnologies.pro` |
+| `poref/` | Shopify app sources/config present | n/a | **missing** | n/a | No | Not yet (incomplete package) | `poref` (after package/runtime completion) | `poref` (after package/runtime completion) | `poref.uplifttechnologies.pro` |
 
-## Notes
+## App-level Vercel config
 
-- Root-level `vercel.json` has been removed to avoid forcing a single root deployment strategy.
-- Shared package access remains monorepo-native; configure each Vercel project to the correct root directory.
-- If a specific app requires background workers beyond Vercel capabilities, keep worker processes external while the web app remains on its subdomain.
+Each deployable Node app folder includes its own `vercel.json` to ensure framework/build are interpreted per-app:
+
+- `frontend/vercel.json` -> `framework: nextjs`
+- `customsready/vercel.json` -> `framework: remix`
+- `Craftline/vercel.json` -> `framework: remix`
+- `FixitCSV/vercel.json` -> `framework: remix`
+- `Stagewise/vercel.json` -> `framework: remix`
+
+## Environment model
+
+Use each app's `.env.example` as source-of-truth templates with subdomain URLs prefilled.
+Only secrets/account-specific values remain placeholders.
