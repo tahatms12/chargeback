@@ -34,10 +34,73 @@ services:
     build:
       context: ./customsready
       dockerfile: Dockerfile
+    env_file:
+      - ./customsready/.env.compose
     environment:
       PORT: 3000
       CUSTOMSREADY_SHOPIFY_APP_URL: https://uplifttechnologies.pro/customsready
       CUSTOMSREADY_NODE_ENV: production
+      REDIS_URL: redis://customsready-redis:6379
+      DATABASE_URL: postgresql://postgres:password@customsready-db:5432/customsready_lite
+    depends_on:
+      customsready-db:
+        condition: service_healthy
+      customsready-redis:
+        condition: service_healthy
+
+  customsready-catalog-worker:
+    build:
+      context: ./customsready
+      dockerfile: Dockerfile
+    env_file:
+      - ./customsready/.env.compose
+    environment:
+      REDIS_URL: redis://customsready-redis:6379
+      DATABASE_URL: postgresql://postgres:password@customsready-db:5432/customsready_lite
+    command: ["npx", "tsx", "app/jobs/catalogAudit.worker.ts"]
+    restart: unless-stopped
+    depends_on:
+      customsready-db:
+        condition: service_healthy
+      customsready-redis:
+        condition: service_healthy
+
+  customsready-reaudit-worker:
+    build:
+      context: ./customsready
+      dockerfile: Dockerfile
+    env_file:
+      - ./customsready/.env.compose
+    environment:
+      REDIS_URL: redis://customsready-redis:6379
+      DATABASE_URL: postgresql://postgres:password@customsready-db:5432/customsready_lite
+    command: ["npx", "tsx", "app/jobs/productReaudit.worker.ts"]
+    restart: unless-stopped
+    depends_on:
+      customsready-db:
+        condition: service_healthy
+      customsready-redis:
+        condition: service_healthy
+
+  customsready-db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: customsready_lite
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  customsready-redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
   poref:
     image: nginx:1.27-alpine
