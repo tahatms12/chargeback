@@ -1,6 +1,6 @@
 name = "Production Queue Communicator"
 client_id = "00000000000000000000000000000000"
-application_url = "https://uplifttechnologies.pro/stagewise"
+application_url = "https://stagewise.uplifttechnologies.pro"
 embedded = true
 handle = "production-queue-communicator"
 
@@ -14,7 +14,7 @@ scopes = "read_orders,write_orders,read_customers"
 
 [auth]
 redirect_urls = [
-  "https://uplifttechnologies.pro/stagewise/auth/callback"
+  "https://stagewise.uplifttechnologies.pro/auth/callback"
 ]
 
 [webhooks]

@@ -1,6 +1,6 @@
 name = "FixitCSV"
 client_id = "00000000000000000000000000000000"
-application_url = "https://uplifttechnologies.pro/fixitcsv"
+application_url = "https://fixitcsv.uplifttechnologies.pro"
 embedded = true
 
 [build]
@@ -13,7 +13,7 @@ scopes = ""
 
 [auth]
 redirect_urls = [
-  "https://uplifttechnologies.pro/fixitcsv/auth/callback"
+  "https://fixitcsv.uplifttechnologies.pro/auth/callback"
 ]
 
 [webhooks]

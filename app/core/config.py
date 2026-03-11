@@ -45,12 +45,12 @@ def _env_list(name: str, default: list[str]) -> list[str]:
 class Settings:
     APP_ENV: str = os.environ.get("APP_ENV", "development")
     APP_SECRET_KEY: str = os.environ.get("APP_SECRET_KEY", "change-me")
-    APP_URL: str = os.environ.get("APP_URL", "https://chargeguard.example.com")
-    SHOPIFY_APP_URL: str = os.environ.get("SHOPIFY_APP_URL", "https://app.chargeguard.example.com")
+    APP_URL: str = os.environ.get("APP_URL", "https://chargeguard.uplifttechnologies.pro")
+    SHOPIFY_APP_URL: str = os.environ.get("SHOPIFY_APP_URL", "https://chargeguard.uplifttechnologies.pro")
     ALLOWED_ORIGINS: list[str] = field(
         default_factory=lambda: _env_list(
             "ALLOWED_ORIGINS",
-            ["https://app.chargeguard.example.com", "https://admin.shopify.com"],
+            ["https://chargeguard.uplifttechnologies.pro", "https://admin.shopify.com"],
         )
     )
 

@@ -1,12 +1,12 @@
 name = "PORef"
 client_id = "00000000000000000000000000000000"
-application_url = "https://uplifttechnologies.pro/poref"
+application_url = "https://poref.uplifttechnologies.pro"
 embedded = true
 
 
 [auth]
 redirect_urls = [
-  "https://uplifttechnologies.pro/poref/auth/callback"
+  "https://poref.uplifttechnologies.pro/auth/callback"
 ]
 
 [access]
@@ -54,7 +54,7 @@ api_version = "2025-04"
   compliance_topics = true
 
 [app_proxy]
-url = "https://uplifttechnologies.pro/poref/proxy"
+url = "https://poref.uplifttechnologies.pro/proxy"
 subpath = "poref"
 prefix = "apps"
 

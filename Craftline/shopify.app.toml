@@ -1,6 +1,6 @@
 name = "Maker Queue"
 client_id = "00000000000000000000000000000000"
-application_url = "https://uplifttechnologies.pro/craftline"
+application_url = "https://makerqueue.uplifttechnologies.pro"
 embedded = true
 
 [access_scopes]
@@ -11,7 +11,7 @@ scopes = "read_orders,write_orders,read_customers,read_metafields,write_metafiel
 
 [auth]
 redirect_urls = [
-  "https://uplifttechnologies.pro/craftline/auth/callback"
+  "https://makerqueue.uplifttechnologies.pro/auth/callback"
 ]
 
 [webhooks]
