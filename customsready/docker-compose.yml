@@ -22,7 +22,7 @@ services:
     <<: *customsready-env
     command: npm run dev
     ports:
-      - "3000:3000"
+      - "${CUSTOMSREADY_APP_PORT:-3000}:3000"
     volumes:
       - .:/app
       - /app/node_modules
@@ -70,15 +70,15 @@ services:
   postgres:
     image: postgres:16-alpine
     ports:
-      - "5432:5432"
+      - "${CUSTOMSREADY_POSTGRES_PORT:-5432}:5432"
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: customsready_lite
+      POSTGRES_USER: ${CUSTOMSREADY_POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${CUSTOMSREADY_POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${CUSTOMSREADY_POSTGRES_DB:-customsready_lite}
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${CUSTOMSREADY_POSTGRES_USER:-postgres}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -86,7 +86,7 @@ services:
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "${CUSTOMSREADY_REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     healthcheck:

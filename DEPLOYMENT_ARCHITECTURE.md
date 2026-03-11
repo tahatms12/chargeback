@@ -46,6 +46,19 @@ Recommended pattern:
 3. Run Remix/FastAPI web process and any required worker process as separate Docker services.
 4. Expose only via gateway/ingress path routing.
 
+## Environment-driven routing contract
+
+Define host/port/public URL values once in environment files (`.env.example`, `customsready/.env.example`, deployment secrets) and consume them in compose + gateway templates.
+
+Required mapping groups:
+
+- Public URLs: `*_PUBLIC_BASE_URL`
+- Embedded base paths: `*_EMBEDDED_BASE_PATH`
+- Internal upstream routing: `*_UPSTREAM_HOST`, `*_UPSTREAM_PORT`
+- Internal data services: `POSTGRES_HOST`, `REDIS_HOST`, and app-specific equivalents
+
+Do not hardcode production domains in compose or app config files; reference env variables instead.
+
 ## 5) Vercel install/build + lockfile strategy
 
 Root `vercel.json` is intentionally constrained to `frontend/`:
