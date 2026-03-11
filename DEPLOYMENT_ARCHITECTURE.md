@@ -6,7 +6,8 @@ This repository is configured for **one Vercel project per deployable app folder
 
 - `vercel.json` at repository root is set to `"framework": null`.
 - This prevents the repo root from being treated as a Next.js app.
-- Do **not** deploy from repo root; always set a project **Root Directory** to an app folder below.
+- Repo root deploys are intentional for a minimal static status page (`index.html`) and are separate from app deploys.
+- The Chargeguard web app boundary remains `frontend/` (Vercel Root Directory `frontend`).
 
 ## Deployable app inventory
 
