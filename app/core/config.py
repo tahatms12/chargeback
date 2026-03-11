@@ -45,19 +45,19 @@ def _env_list(name: str, default: list[str]) -> list[str]:
 class Settings:
     APP_ENV: str = os.environ.get("APP_ENV", "development")
     APP_SECRET_KEY: str = os.environ.get("APP_SECRET_KEY", "change-me")
-    APP_URL: str = os.environ.get("APP_URL", "http://localhost:8000")
-    SHOPIFY_APP_URL: str = os.environ.get("SHOPIFY_APP_URL", "http://localhost:3000")
+    APP_URL: str = os.environ.get("APP_URL", "https://chargeguard.example.com")
+    SHOPIFY_APP_URL: str = os.environ.get("SHOPIFY_APP_URL", "https://app.chargeguard.example.com")
     ALLOWED_ORIGINS: list[str] = field(
         default_factory=lambda: _env_list(
             "ALLOWED_ORIGINS",
-            ["http://localhost:3000", "https://admin.shopify.com"],
+            ["https://app.chargeguard.example.com", "https://admin.shopify.com"],
         )
     )
 
     DATABASE_URL: str = os.environ.get(
-        "DATABASE_URL", "postgresql+asyncpg://postgres:postgres@localhost:5432/chargeguard"
+        "DATABASE_URL", "postgresql+asyncpg://postgres:postgres@postgres:5432/chargeguard"
     )
-    REDIS_URL: str = os.environ.get("REDIS_URL", "redis://localhost:6379/0")
+    REDIS_URL: str = os.environ.get("REDIS_URL", "redis://redis:6379/0")
 
     SHOPIFY_API_KEY: str = os.environ.get("SHOPIFY_API_KEY", "")
     SHOPIFY_API_SECRET: str = os.environ.get("SHOPIFY_API_SECRET", "")
@@ -70,7 +70,7 @@ class Settings:
     S3_REGION: str = os.environ.get("S3_REGION", "us-east-1")
     S3_ACCESS_KEY_ID: str = os.environ.get("S3_ACCESS_KEY_ID", "minioadmin")
     S3_SECRET_ACCESS_KEY: str = os.environ.get("S3_SECRET_ACCESS_KEY", "minioadmin")
-    S3_ENDPOINT_URL: Optional[str] = _env_optional("S3_ENDPOINT_URL", "http://localhost:9000")
+    S3_ENDPOINT_URL: Optional[str] = _env_optional("S3_ENDPOINT_URL", "http://minio:9000")
     SIGNED_URL_EXPIRY_SECONDS: int = _env_int("SIGNED_URL_EXPIRY_SECONDS", 3600)
 
     JWT_SECRET: str = os.environ.get("JWT_SECRET", "change-me-jwt-secret")

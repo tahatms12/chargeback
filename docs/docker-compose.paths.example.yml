@@ -43,10 +43,10 @@ services:
       - ./customsready/.env.compose
     environment:
       PORT: 3000
-      CUSTOMSREADY_SHOPIFY_APP_URL: https://uplifttechnologies.pro/customsready
+      CUSTOMSREADY_SHOPIFY_APP_URL: ${CUSTOMSREADY_PUBLIC_BASE_URL:-https://customsready.example.com}
       CUSTOMSREADY_NODE_ENV: production
-      REDIS_URL: redis://customsready-redis:6379
-      DATABASE_URL: postgresql://postgres:password@customsready-db:5432/customsready_lite
+      REDIS_URL: redis://${CUSTOMSREADY_REDIS_HOST:-customsready-redis}:${CUSTOMSREADY_REDIS_PORT:-6379}
+      DATABASE_URL: postgresql://${CUSTOMSREADY_POSTGRES_USER:-postgres}:${CUSTOMSREADY_POSTGRES_PASSWORD:-password}@${CUSTOMSREADY_POSTGRES_HOST:-customsready-db}:${CUSTOMSREADY_POSTGRES_PORT:-5432}/${CUSTOMSREADY_POSTGRES_DB:-customsready_lite}
     depends_on:
       customsready-db:
         condition: service_healthy
@@ -60,8 +60,8 @@ services:
     env_file:
       - ./customsready/.env.compose
     environment:
-      REDIS_URL: redis://customsready-redis:6379
-      DATABASE_URL: postgresql://postgres:password@customsready-db:5432/customsready_lite
+      REDIS_URL: redis://${CUSTOMSREADY_REDIS_HOST:-customsready-redis}:${CUSTOMSREADY_REDIS_PORT:-6379}
+      DATABASE_URL: postgresql://${CUSTOMSREADY_POSTGRES_USER:-postgres}:${CUSTOMSREADY_POSTGRES_PASSWORD:-password}@${CUSTOMSREADY_POSTGRES_HOST:-customsready-db}:${CUSTOMSREADY_POSTGRES_PORT:-5432}/${CUSTOMSREADY_POSTGRES_DB:-customsready_lite}
     command: ["npx", "tsx", "app/jobs/catalogAudit.worker.ts"]
     restart: unless-stopped
     depends_on:
@@ -77,8 +77,8 @@ services:
     env_file:
       - ./customsready/.env.compose
     environment:
-      REDIS_URL: redis://customsready-redis:6379
-      DATABASE_URL: postgresql://postgres:password@customsready-db:5432/customsready_lite
+      REDIS_URL: redis://${CUSTOMSREADY_REDIS_HOST:-customsready-redis}:${CUSTOMSREADY_REDIS_PORT:-6379}
+      DATABASE_URL: postgresql://${CUSTOMSREADY_POSTGRES_USER:-postgres}:${CUSTOMSREADY_POSTGRES_PASSWORD:-password}@${CUSTOMSREADY_POSTGRES_HOST:-customsready-db}:${CUSTOMSREADY_POSTGRES_PORT:-5432}/${CUSTOMSREADY_POSTGRES_DB:-customsready_lite}
     command: ["npx", "tsx", "app/jobs/productReaudit.worker.ts"]
     restart: unless-stopped
     depends_on:
@@ -111,7 +111,7 @@ services:
     image: nginx:1.27-alpine
     command: ["/bin/sh", "-c", "echo 'Attach real poref runtime in production' > /usr/share/nginx/html/index.html && nginx -g 'daemon off;'"]
     environment:
-      POREF_SHOPIFY_APP_URL: https://uplifttechnologies.pro/poref
+      POREF_SHOPIFY_APP_URL: ${POREF_PUBLIC_BASE_URL:-https://poref.example.com}
       POREF_NODE_ENV: production
 
   fixitcsv:
@@ -120,5 +120,5 @@ services:
       dockerfile: Dockerfile
     environment:
       PORT: 3000
-      SHOPIFY_APP_URL: https://uplifttechnologies.pro/FixitCSV
+      SHOPIFY_APP_URL: ${FIXITCSV_PUBLIC_BASE_URL:-https://fixitcsv.example.com}
       NODE_ENV: production
