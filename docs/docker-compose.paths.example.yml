@@ -1,5 +1,6 @@
 # DOCUMENTATION EXAMPLE ONLY — DO NOT RUN THIS FILE DIRECTLY.
 # This file shows an illustrative path-based gateway topology with external service placeholders.
+# The gateway config is legacy/local-only and is not used by the active Vercel deployment path.
 # Canonical executable compose entrypoint for this repo is ../docker-compose.yml (see scripts/run-all.sh).
 # Copy this file to a deployment-specific compose file and replace every placeholder service before use.
 
@@ -25,7 +26,7 @@ services:
       FIXITCSV_UPSTREAM_HOST: ${FIXITCSV_UPSTREAM_HOST:-fixitcsv}
       FIXITCSV_UPSTREAM_PORT: ${FIXITCSV_UPSTREAM_PORT:-3000}
     volumes:
-      - ./gateway/nginx.conf:/etc/nginx/templates/default.conf.template:ro
+      - ./legacy-infra/gateway/nginx.conf:/etc/nginx/templates/default.conf.template:ro
     command: >
       /bin/sh -c "envsubst '$$CHARGEBACK_UPSTREAM_HOST $$CHARGEBACK_UPSTREAM_PORT $$CUSTOMSREADY_UPSTREAM_HOST $$CUSTOMSREADY_UPSTREAM_PORT $$POREF_UPSTREAM_HOST $$POREF_UPSTREAM_PORT $$FIXITCSV_UPSTREAM_HOST $$FIXITCSV_UPSTREAM_PORT' < /etc/nginx/templates/default.conf.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"
 

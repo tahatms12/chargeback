@@ -2,6 +2,8 @@
 
 This repository is configured for **one Vercel project per deployable app folder**.
 
+> Legacy note: `legacy-infra/gateway/nginx.conf` is retained only for optional local/path-based gateway experiments and is **not** part of the active Vercel deployment path.
+
 ## Root-level anti-ambiguity guard
 
 - `vercel.json` at repository root is set to `"framework": null`.
