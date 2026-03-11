@@ -9,16 +9,17 @@ import {
 } from "@shopify/shopify-app-remix/server";
 import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
 import { db } from "./db.server";
+import { env } from "./env.server";
 
 export const PLAN_NAME = "CustomsReady Lite Monthly";
 export const API_VERSION = ApiVersion.January25;
 
 const shopify = shopifyApp({
-  apiKey: process.env.SHOPIFY_API_KEY!,
-  apiSecretKey: process.env.SHOPIFY_API_SECRET!,
+  apiKey: env.SHOPIFY_API_KEY,
+  apiSecretKey: env.SHOPIFY_API_SECRET,
   apiVersion: API_VERSION,
   scopes: ["read_products", "read_orders"],
-  appUrl: process.env.SHOPIFY_APP_URL!,
+  appUrl: env.SHOPIFY_APP_URL,
   authPathPrefix: "/auth",
   sessionStorage: new PrismaSessionStorage(db),
   distribution: AppDistribution.AppStore,

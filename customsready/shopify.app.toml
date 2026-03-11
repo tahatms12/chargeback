@@ -1,6 +1,6 @@
 name = "CustomsReady Lite"
-client_id = "REPLACE_WITH_SHOPIFY_API_KEY"
-application_url = "https://uplifttechnologies.pro/customsready"
+client_id = "{{ SHOPIFY_API_KEY }}"
+application_url = "{{ SHOPIFY_APP_URL }}"
 embedded = true
 
 [build]
@@ -13,8 +13,8 @@ scopes = "read_products,read_orders"
 
 [auth]
 redirect_urls = [
-  "https://uplifttechnologies.pro/customsready/auth/callback",
-  "https://uplifttechnologies.pro/customsready/auth/shopify/callback"
+  "{{ SHOPIFY_APP_URL }}/auth/callback",
+  "{{ SHOPIFY_APP_URL }}/auth/shopify/callback"
 ]
 
 [webhooks]

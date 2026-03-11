@@ -1,5 +1,11 @@
 {
-  "installCommand": "if [ -d frontend ]; then cd frontend && npm install; else npm install; fi",
-  "buildCommand": "if [ -d frontend ]; then cd frontend && npm run build; else npm run build; fi",
-  "framework": "nextjs"
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "nextjs",
+  "rootDirectory": "frontend",
+  "installCommand": "npm install",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "env": {
+    "NEXT_PUBLIC_API_URL": "${NEXT_PUBLIC_API_URL}"
+  }
 }

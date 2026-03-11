@@ -1,133 +1,112 @@
 version: "3.9"
 
-# Development compose only. For production use a proper orchestrator.
-# MinIO credentials come from .env — never hardcoded.
-# --reload is absent from the api command intentionally.
-
 services:
   postgres:
-    image: postgres:15-alpine
-    container_name: chargeguard-db
+    image: postgres:16-alpine
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-chargeguard}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-chargeguard}
-      POSTGRES_DB: ${POSTGRES_DB:-chargeguard}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-customsready_lite}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-chargeguard}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
 
   redis:
     image: redis:7-alpine
-    container_name: chargeguard-redis
     ports:
-      - "6379:6379"
+      - "${REDIS_PORT:-6379}:6379"
     volumes:
       - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
 
-  minio:
-    image: minio/minio:latest
-    container_name: chargeguard-minio
-    command: server /data --console-address ":9001"
+  customsready:
+    build:
+      context: ./customsready
+      dockerfile: Dockerfile
+    env_file: .env
     environment:
-      MINIO_ROOT_USER: ${S3_ACCESS_KEY_ID}
-      MINIO_ROOT_PASSWORD: ${S3_SECRET_ACCESS_KEY}
+      PORT: ${CUSTOMSREADY_PORT:-3100}
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@postgres:5432/customsready_lite}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+      SHOPIFY_APP_URL: ${SHOPIFY_APP_URL:-http://localhost:8080/customsready}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  customsready-catalog-worker:
+    build:
+      context: ./customsready
+      dockerfile: Dockerfile
+    env_file: .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@postgres:5432/customsready_lite}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: ["npx", "tsx", "app/jobs/catalogAudit.worker.ts"]
+
+  customsready-reaudit-worker:
+    build:
+      context: ./customsready
+      dockerfile: Dockerfile
+    env_file: .env
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://postgres:postgres@postgres:5432/customsready_lite}
+      REDIS_URL: ${REDIS_URL:-redis://redis:6379}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    command: ["npx", "tsx", "app/jobs/productReaudit.worker.ts"]
+
+  fixitcsv:
+    build:
+      context: ./FixitCSV
+      dockerfile: Dockerfile
+    env_file: .env
+    environment:
+      PORT: ${FIXITCSV_PORT:-3200}
+      SHOPIFY_APP_URL: ${FIXITCSV_APP_URL:-http://localhost:8080/fixitcsv}
+      DATABASE_URL: ${FIXITCSV_DATABASE_URL:-file:./prisma/dev.db}
+    command: ["sh", "-c", "npx prisma migrate deploy && npm run start"]
+
+  gateway:
+    image: nginx:1.27-alpine
+    depends_on:
+      - customsready
+      - fixitcsv
     ports:
-      - "9000:9000"
-      - "9001:9001"
+      - "${GATEWAY_PORT:-8080}:8080"
+    environment:
+      CHARGEBACK_UPSTREAM_HOST: ${CHARGEBACK_UPSTREAM_HOST:-customsready}
+      CHARGEBACK_UPSTREAM_PORT: ${CHARGEBACK_UPSTREAM_PORT:-3100}
+      CUSTOMSREADY_UPSTREAM_HOST: ${CUSTOMSREADY_UPSTREAM_HOST:-customsready}
+      CUSTOMSREADY_UPSTREAM_PORT: ${CUSTOMSREADY_UPSTREAM_PORT:-3100}
+      POREF_UPSTREAM_HOST: ${POREF_UPSTREAM_HOST:-fixitcsv}
+      POREF_UPSTREAM_PORT: ${POREF_UPSTREAM_PORT:-3200}
+      FIXITCSV_UPSTREAM_HOST: ${FIXITCSV_UPSTREAM_HOST:-fixitcsv}
+      FIXITCSV_UPSTREAM_PORT: ${FIXITCSV_UPSTREAM_PORT:-3200}
     volumes:
-      - minio_data:/data
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
-
-  minio-setup:
-    image: minio/mc:latest
-    container_name: chargeguard-minio-setup
-    depends_on:
-      minio:
-        condition: service_healthy
-    environment:
-      MINIO_ACCESS_KEY: ${S3_ACCESS_KEY_ID}
-      MINIO_SECRET_KEY: ${S3_SECRET_ACCESS_KEY}
-      S3_BUCKET: ${S3_BUCKET:-chargeguard-evidence}
-    entrypoint: >
-      /bin/sh -c "
-      mc alias set local http://minio:9000 $${MINIO_ACCESS_KEY} $${MINIO_SECRET_KEY};
-      mc mb --ignore-existing local/$${S3_BUCKET};
-      mc anonymous set none local/$${S3_BUCKET};
-      echo 'MinIO setup done';
-      "
-
-  api:
-    build:
-      context: ./apps/api
-      dockerfile: Dockerfile
-    container_name: chargeguard-api
-    env_file: .env
-    environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-chargeguard}:${POSTGRES_PASSWORD:-chargeguard}@postgres:5432/${POSTGRES_DB:-chargeguard}
-      REDIS_URL: redis://redis:6379/0
-      S3_ENDPOINT_URL: http://minio:9000
-    ports:
-      - "8000:8000"
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      minio:
-        condition: service_healthy
+      - ./gateway/nginx.conf:/etc/nginx/templates/default.conf.template:ro
     command: >
-      sh -c "alembic upgrade head &&
-             uvicorn main:app --host 0.0.0.0 --port 8000"
-
-  worker:
-    build:
-      context: ./apps/api
-      dockerfile: Dockerfile
-    container_name: chargeguard-worker
-    env_file: .env
-    environment:
-      DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER:-chargeguard}:${POSTGRES_PASSWORD:-chargeguard}@postgres:5432/${POSTGRES_DB:-chargeguard}
-      REDIS_URL: redis://redis:6379/0
-      S3_ENDPOINT_URL: http://minio:9000
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-    command: python -m app.workers.scheduler
-
-  web:
-    build:
-      context: ./apps/web
-      dockerfile: Dockerfile
-    container_name: chargeguard-web
-    environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8000
-      NEXT_PUBLIC_SHOPIFY_API_KEY: ${SHOPIFY_API_KEY}
-      # SHOPIFY_API_SECRET intentionally absent — lives only in api container
-    ports:
-      - "3000:3000"
-    depends_on:
-      - api
-    command: npm run dev
+      /bin/sh -c "envsubst '$$CHARGEBACK_UPSTREAM_HOST $$CHARGEBACK_UPSTREAM_PORT $$CUSTOMSREADY_UPSTREAM_HOST $$CUSTOMSREADY_UPSTREAM_PORT $$POREF_UPSTREAM_HOST $$POREF_UPSTREAM_PORT $$FIXITCSV_UPSTREAM_HOST $$FIXITCSV_UPSTREAM_PORT' < /etc/nginx/templates/default.conf.template > /etc/nginx/nginx.conf && nginx -g 'daemon off;'"
 
 volumes:
   postgres_data:
   redis_data:
-  minio_data:

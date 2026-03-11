@@ -52,5 +52,5 @@ services:
       dockerfile: Dockerfile
     environment:
       PORT: 3000
-      SHOPIFY_APP_URL: https://uplifttechnologies.pro/FixitCSV
+      SHOPIFY_APP_URL: ${FIXITCSV_APP_URL:-http://localhost:8080/fixitcsv}
       NODE_ENV: production
