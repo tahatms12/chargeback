@@ -1,57 +1,62 @@
-# Deployment Architecture (Path-Based Multi-App Hosting)
+# Deployment Architecture (Split Runtime: Vercel + Docker)
 
-## 1) Current deployment model discovered in repo
-- `vercel.json` was configured to build and serve the `frontend/` Next.js website at root (`/`).
-- `customsready/` is a standalone Shopify Remix app (`shopify.app.toml`, app entry files, and Dockerfile exist).
-- `poref/` contains Shopify app configuration and architecture docs, but no complete runtime package/entrypoint is present in this repo snapshot.
-- A standalone `chargeback/` folder is not present in this checkout; therefore routing for Chargeback is treated as an external immutable service target.
+## 1) Vercel suitability audit (no persistent workers / long-running backend state)
 
-## 2) New production architecture
-A root reverse proxy gateway (Nginx) now handles all public traffic on one domain and path-routes to three independent services:
+| App path | Runtime profile | Vercel fit | Decision |
+|---|---|---|---|
+| `frontend/` | Next.js marketing/site frontend only (`next build`, no worker process) | ✅ Native fit | Deploy on Vercel |
+| `customsready/` | Shopify Remix app with Prisma DB sessions + queue workers (`bullmq`, `workers` script) | ❌ Requires long-running worker/backend state | Docker-hosted |
+| `FixitCSV/` | Shopify Remix app with Prisma-backed session/state and long-lived app server expectations | ⚠️ Not targeted for this repo's Vercel deployment profile | Docker-hosted |
+| `Stagewise/` | Remix + queue/background processing semantics | ❌ Worker/backend dependent | Docker-hosted |
+| `Craftline/` | Remix + Prisma + app server state | ❌ Backend state dependent | Docker-hosted |
+| `QuoteLoop/QuoteLoop/` | Node backend modules + polling/webhooks | ❌ Long-running service behavior | Docker-hosted |
+| `migratory/Migratory/` | Scanner/report server modules for backend processing | ❌ Backend processing dependent | Docker-hosted |
+| `app/` + root Python files | FastAPI/Python service runtime | ❌ Not a Vercel frontend target in this architecture | Docker-hosted |
 
-- `https://uplifttechnologies.pro/chargeback` → Chargeback upstream service
-- `https://uplifttechnologies.pro/customsready` → CustomsReady service
-- `https://uplifttechnologies.pro/poref` → PORef upstream service
+## 2) Selected production split
 
-Root (`/`) is intentionally disabled and returns HTTP `410 Gone` to remove the old website frontend from public serving.
+- **Vercel scope:** `frontend/` only.
+- **Docker scope:** all backend/worker-dependent services (Shopify Remix backends, queue workers, Python API services, and other long-running processors).
 
-## 3) Routing behavior
-Implemented in `gateway/nginx.conf`:
+This avoids serverless assumptions for workloads that need persistent state, workers, or durable process lifecycles.
 
-- Prefix routing with prefix stripping:
-  - `/chargeback/*` strips `/chargeback` before upstream forwarding.
-  - `/customsready/*` strips `/customsready`.
-  - `/poref/*` strips `/poref`.
-- Canonical trailing slash redirects:
-  - `/chargeback` → `/chargeback/`
-  - `/customsready` → `/customsready/`
-  - `/poref` → `/poref/`
-- Query strings are preserved by default in Nginx rewrites/proxy forwarding.
-- WebSocket/streaming upgrade headers are forwarded.
-- `X-Forwarded-*` and `X-Forwarded-Prefix` headers are set for embedded app awareness.
+## 3) Request routing model
 
-## 4) Runtime wiring
-`docker-compose.paths.yml` provides a production-oriented reference topology:
+Public traffic is expected to be routed by the gateway in `gateway/nginx.conf`:
 
-- `gateway` service runs Nginx with env-templated upstream host/port values.
-- `customsready` runs from `customsready/Dockerfile`.
-- `chargeback` and `poref` are explicitly externalizable/replaceable upstream targets so each app remains independently deployable.
+- `/` → Vercel-hosted `frontend/` app (or your chosen site hostname)
+- `/customsready/*` → Docker-hosted `customsready` service
+- `/chargeback/*` → Docker/external Chargeback upstream
+- `/poref/*` → Docker/external PORef upstream
 
-> Important: Chargeback immutability is preserved by routing only. No source edits were made for Chargeback.
+If you do not use this exact Nginx gateway, mirror the same path contracts in your ingress/load balancer.
 
-## 5) Environment isolation strategy
-Use strict per-app namespaces at infra/deployment level:
+## 4) Docker deployment path for excluded services
 
-- `CHARGEBACK_*` (e.g., upstream host/port, Shopify URL values managed outside code)
-- `CUSTOMSREADY_*`
-- `POREF_*`
+Use one of the compose entry points:
 
-No shared mutable runtime state is introduced by this gateway design.
+- `docker-compose.yml` for core local/service orchestration.
+- `docker-compose.paths.yml` for path-based gateway topology.
+- Service-local Dockerfiles (for example `customsready/Dockerfile`, `FixitCSV/Dockerfile`) for independent app images.
 
-## 6) HTTPS-safe assumptions
-Terminate TLS at your ingress/load balancer/CDN and forward to gateway over internal network.
-Gateway preserves `X-Forwarded-Proto` for app-side secure URL generation and auth callback correctness.
+Recommended pattern:
 
-## 7) Operational notes
-- The old `frontend/` website remains in-repo but is disconnected from this public routing architecture.
-- If platform routing is not Docker-based, mirror these exact path rules in your managed ingress (Nginx Ingress, ALB rules, Caddy, Traefik, etc.).
+1. Build each backend/worker image from its app directory.
+2. Inject per-service environment variables (`*_DATABASE_URL`, Redis, Shopify secrets, etc.).
+3. Run Remix/FastAPI web process and any required worker process as separate Docker services.
+4. Expose only via gateway/ingress path routing.
+
+## 5) Vercel install/build + lockfile strategy
+
+Root `vercel.json` is intentionally constrained to `frontend/`:
+
+- Install: `npm ci --prefix frontend`
+- Build: `npm run build --prefix frontend`
+
+This ensures Vercel uses **only** `frontend/package-lock.json` and does not attempt to install/build backend packages in other subdirectories.
+
+## 6) Operational guardrails
+
+- Do not assume serverless background execution for queues, polling, or webhook retries.
+- Keep worker processes in Docker/Kubernetes where uptime and restart policy are explicit.
+- Keep Prisma migrations tied to backend deploy pipelines, not Vercel frontend deploys.
