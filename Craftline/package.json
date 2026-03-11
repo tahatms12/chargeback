@@ -47,5 +47,6 @@
   },
   "workspaces": [
     "extensions/*"
-  ]
+  ],
+  "packageManager": "npm@10.8.2"
 }
