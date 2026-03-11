@@ -94,10 +94,12 @@ npx tsx app/jobs/catalogAudit.worker.ts
 npx tsx app/jobs/productReaudit.worker.ts
 ```
 
-Or using the combined script:
+Or using the combined script (optional local convenience only):
 ```bash
 npm run workers
 ```
+
+> In containerized/runtime deployments, run dedicated worker services instead of a shell-concurrency script.
 
 ---
 

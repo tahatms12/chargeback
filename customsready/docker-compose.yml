@@ -2,24 +2,27 @@
 # Local development environment: app + PostgreSQL + Redis + workers
 version: "3.9"
 
+x-customsready-env: &customsready-env
+  env_file:
+    - ./.env.compose
+  environment:
+    NODE_ENV: development
+    SHOPIFY_API_KEY: ${SHOPIFY_API_KEY}
+    SHOPIFY_API_SECRET: ${SHOPIFY_API_SECRET}
+    SHOPIFY_APP_URL: ${SHOPIFY_APP_URL}
+    LOG_LEVEL: debug
+    PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
+    PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium
+
 services:
   app:
     build:
       context: .
       target: builder
+    <<: *customsready-env
     command: npm run dev
     ports:
       - "3000:3000"
-    environment:
-      NODE_ENV: development
-      DATABASE_URL: postgresql://postgres:password@postgres:5432/customsready_lite
-      REDIS_URL: redis://redis:6379
-      SHOPIFY_API_KEY: ${SHOPIFY_API_KEY}
-      SHOPIFY_API_SECRET: ${SHOPIFY_API_SECRET}
-      SHOPIFY_APP_URL: ${SHOPIFY_APP_URL}
-      LOG_LEVEL: debug
-      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
-      PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium
     volumes:
       - .:/app
       - /app/node_modules
@@ -35,14 +38,9 @@ services:
     build:
       context: .
       target: builder
+    <<: *customsready-env
     command: npx tsx app/jobs/catalogAudit.worker.ts
-    environment:
-      NODE_ENV: development
-      DATABASE_URL: postgresql://postgres:password@postgres:5432/customsready_lite
-      REDIS_URL: redis://redis:6379
-      SHOPIFY_API_KEY: ${SHOPIFY_API_KEY}
-      LOG_LEVEL: debug
-      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: "true"
+    restart: unless-stopped
     volumes:
       - .:/app
       - /app/node_modules
@@ -57,13 +55,9 @@ services:
     build:
       context: .
       target: builder
+    <<: *customsready-env
     command: npx tsx app/jobs/productReaudit.worker.ts
-    environment:
-      NODE_ENV: development
-      DATABASE_URL: postgresql://postgres:password@postgres:5432/customsready_lite
-      REDIS_URL: redis://redis:6379
-      SHOPIFY_API_KEY: ${SHOPIFY_API_KEY}
-      LOG_LEVEL: debug
+    restart: unless-stopped
     volumes:
       - .:/app
       - /app/node_modules
