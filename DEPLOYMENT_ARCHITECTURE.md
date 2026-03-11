@@ -36,7 +36,7 @@ If you do not use this exact Nginx gateway, mirror the same path contracts in yo
 Use one of the compose entry points:
 
 - `docker-compose.yml` for core local/service orchestration.
-- `docker-compose.paths.yml` for path-based gateway topology.
+- `docs/docker-compose.paths.example.yml` as a documentation-only path-based gateway reference (contains placeholders; not runnable as-is).
 - Service-local Dockerfiles (for example `customsready/Dockerfile`, `FixitCSV/Dockerfile`) for independent app images.
 
 Recommended pattern:

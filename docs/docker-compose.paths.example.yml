@@ -1,3 +1,8 @@
+# DOCUMENTATION EXAMPLE ONLY — DO NOT RUN THIS FILE DIRECTLY.
+# This file shows an illustrative path-based gateway topology with external service placeholders.
+# Canonical executable compose entrypoint for this repo is ../docker-compose.yml (see scripts/run-all.sh).
+# Copy this file to a deployment-specific compose file and replace every placeholder service before use.
+
 version: "3.9"
 
 services:
