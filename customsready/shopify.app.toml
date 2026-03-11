@@ -1,6 +1,6 @@
 name = "CustomsReady Lite"
 client_id = "00000000000000000000000000000000"
-application_url = "${CUSTOMSREADY_PUBLIC_BASE_URL}"
+application_url = "https://customsready.uplifttechnologies.pro"
 embedded = true
 
 [build]
@@ -13,7 +13,7 @@ scopes = "read_products,read_orders"
 
 [auth]
 redirect_urls = [
-  "${CUSTOMSREADY_PUBLIC_BASE_URL}/auth/callback"
+  "https://customsready.uplifttechnologies.pro/auth/callback"
 ]
 
 [webhooks]
