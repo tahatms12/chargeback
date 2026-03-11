@@ -56,4 +56,4 @@ def _dev_context():
 
 
 def create_jwt_token(payload):
-    return jwt.encode(payload, settings.JWT_SECRET, algorithm="HS256")
+    return jwt.encode(payload, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
