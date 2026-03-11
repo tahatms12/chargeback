@@ -11,7 +11,7 @@
     "docker-start": "npm run setup && npm start",
     "setup": "prisma generate && prisma migrate deploy",
     "typecheck": "tsc",
-    "workers": "tsx --watch app/jobs/catalogAudit.worker.ts & tsx --watch app/jobs/productReaudit.worker.ts",
+    "workers": "concurrently \"tsx --watch app/jobs/catalogAudit.worker.ts\" \"tsx --watch app/jobs/productReaudit.worker.ts\"",
     "migrate:dev": "prisma migrate dev",
     "migrate:deploy": "prisma migrate deploy",
     "deploy": "shopify app deploy"
@@ -44,6 +44,7 @@
     "prisma": "^5.20.0",
     "tsx": "^4.19.1",
     "typescript": "^5.6.3",
-    "vite": "^5.4.11"
+    "vite": "^5.4.11",
+    "concurrently": "^9.1.2"
   }
 }

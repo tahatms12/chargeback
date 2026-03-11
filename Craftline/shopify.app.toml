@@ -1,6 +1,6 @@
 name = "Maker Queue"
-client_id = "YOUR_CLIENT_ID"
-application_url = "https://YOUR_APP_URL"
+client_id = "{{ SHOPIFY_API_KEY }}"
+application_url = "{{ SHOPIFY_APP_URL }}"
 embedded = true
 
 [access_scopes]
@@ -11,9 +11,9 @@ scopes = "read_orders,write_orders,read_customers,read_metafields,write_metafiel
 
 [auth]
 redirect_urls = [
-  "https://YOUR_APP_URL/auth/callback",
-  "https://YOUR_APP_URL/auth/shopify/callback",
-  "https://YOUR_APP_URL/api/auth/callback"
+  "{{ SHOPIFY_APP_URL }}/auth/callback",
+  "{{ SHOPIFY_APP_URL }}/auth/shopify/callback",
+  "{{ SHOPIFY_APP_URL }}/api/auth/callback"
 ]
 
 [webhooks]

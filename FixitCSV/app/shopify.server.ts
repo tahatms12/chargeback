@@ -3,13 +3,14 @@ import { AppDistribution, BillingInterval, DeliveryMethod, LATEST_API_VERSION, s
 import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
 import { db } from "~/db.server";
 import { PAID_PLAN_NAME, PAID_PLAN_PRICE } from "~/lib/shopify-csv-spec";
+import { env } from "~/env.server";
 
 const shopify = shopifyApp({
-  apiKey: process.env.SHOPIFY_API_KEY!,
-  apiSecretKey: process.env.SHOPIFY_API_SECRET!,
+  apiKey: env.SHOPIFY_API_KEY,
+  apiSecretKey: env.SHOPIFY_API_SECRET,
   apiVersion: LATEST_API_VERSION,
   scopes: [],
-  appUrl: process.env.SHOPIFY_APP_URL!,
+  appUrl: env.SHOPIFY_APP_URL,
   authPathPrefix: "/auth",
   sessionStorage: new PrismaSessionStorage(db),
   distribution: AppDistribution.AppStore,
