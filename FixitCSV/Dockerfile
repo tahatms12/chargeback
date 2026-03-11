@@ -2,12 +2,12 @@ FROM node:20-slim AS base
 WORKDIR /app
 
 FROM base AS deps
-COPY package.json ./
-RUN npm install --omit=dev
+COPY package.json package-lock.json ./
+RUN npm ci --omit=dev
 
 FROM base AS builder
-COPY package.json ./
-RUN npm install
+COPY package.json package-lock.json ./
+RUN npm ci
 COPY . .
 RUN npx prisma generate
 RUN npm run build
