@@ -74,7 +74,7 @@ services:
 
   api:
     build:
-      context: ./apps/api
+      context: .
       dockerfile: Dockerfile
     container_name: chargeguard-api
     env_file: .env
@@ -92,12 +92,11 @@ services:
       minio:
         condition: service_healthy
     command: >
-      sh -c "alembic upgrade head &&
-             uvicorn main:app --host 0.0.0.0 --port 8000"
+      uvicorn main:app --host 0.0.0.0 --port 8000
 
   worker:
     build:
-      context: ./apps/api
+      context: .
       dockerfile: Dockerfile
     container_name: chargeguard-worker
     env_file: .env
@@ -110,15 +109,15 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
-    command: python -m app.workers.scheduler
+    command: python -m app.services.deadline
 
   web:
     build:
-      context: ./apps/web
+      context: ./frontend
       dockerfile: Dockerfile
     container_name: chargeguard-web
     environment:
-      NEXT_PUBLIC_API_URL: http://localhost:8000
+      NEXT_PUBLIC_API_URL: http://api:8000
       NEXT_PUBLIC_SHOPIFY_API_KEY: ${SHOPIFY_API_KEY}
       # SHOPIFY_API_SECRET intentionally absent — lives only in api container
     ports:
