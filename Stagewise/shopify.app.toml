@@ -1,12 +1,12 @@
 name = "Production Queue Communicator"
-client_id = "{{ SHOPIFY_API_KEY }}"
-application_url = "{{ SHOPIFY_APP_URL }}"
+client_id = "00000000000000000000000000000000"
+application_url = "https://uplifttechnologies.pro/stagewise"
 embedded = true
 handle = "production-queue-communicator"
 
 [build]
 automatically_update_urls_on_dev = true
-dev_store_url = "{{ DEV_STORE_URL }}"
+dev_store_url = ""
 
 [access_scopes]
 # read_orders: fetch queue orders; write_orders: apply stage tags to orders; read_customers: customer email for notifications
@@ -14,7 +14,7 @@ scopes = "read_orders,write_orders,read_customers"
 
 [auth]
 redirect_urls = [
-  "{{ SHOPIFY_APP_URL }}/auth/callback"
+  "https://uplifttechnologies.pro/stagewise/auth/callback"
 ]
 
 [webhooks]
