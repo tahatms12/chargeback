@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { validateCsv } from "../app/lib/csv-validator.client";
+import { validateCsv } from "../app/lib/csv-validator.shared";
 
 describe("csv validator", () => {
   it("accepts minimal valid csv", () => {

@@ -5,7 +5,9 @@ import { BlockStack, Card, Layout, Page, Text } from "@shopify/polaris";
 import { useState } from "react";
 import { CsvUploader } from "~/components/CsvUploader";
 import { ErrorTable } from "~/components/ErrorTable";
+import { LanguageSelector } from "~/components/LanguageSelector";
 import { UsageBanner } from "~/components/UsageBanner";
+import { useI18n } from "~/lib/i18n";
 import { FREE_TIER_ROW_LIMIT, PAID_PLAN_NAME } from "~/lib/shopify-csv-spec";
 import type { ValidationResult } from "~/lib/csv-validator.client";
 import { getUsageForMonth, incrementUsage } from "~/lib/usage.server";
@@ -34,6 +36,7 @@ export default function Index() {
   const { rowsUsed, rowLimit, hasPlan } = useLoaderData<typeof loader>();
   const [result, setResult] = useState<ValidationResult | null>(null);
   const submit = useSubmit();
+  const { t } = useI18n();
 
   const onDone = (res: ValidationResult) => {
     setResult(res);
@@ -43,15 +46,15 @@ export default function Index() {
   };
 
   return (
-    <Page title="Shopify CSV Pre-Import Validator">
+    <Page title={t("page.title")} titleMetadata={<LanguageSelector />}>
       <Layout>
         <Layout.Section>
           <BlockStack gap="300">
             <UsageBanner hasPlan={hasPlan} rowsUsed={rowsUsed} rowLimit={rowLimit} />
             <Card>
               <BlockStack gap="200">
-                <Text as="h2" variant="headingMd">Upload product CSV</Text>
-                <Text as="p" tone="subdued">CSV validation is fully client-side. CSV contents are never stored server-side.</Text>
+                <Text as="h2" variant="headingMd">{t("upload.title")}</Text>
+                <Text as="p" tone="subdued">{t("upload.desc")}</Text>
                 <CsvUploader rowsUsed={rowsUsed} rowLimit={rowLimit} hasPlan={hasPlan} onDone={onDone} />
               </BlockStack>
             </Card>

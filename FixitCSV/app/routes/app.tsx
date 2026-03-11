@@ -6,6 +6,7 @@ import { AppProvider } from "@shopify/shopify-app-remix/react";
 import { NavMenu } from "@shopify/app-bridge-react";
 import "@shopify/polaris/build/esm/styles.css";
 import { authenticate } from "~/shopify.server";
+import { I18nProvider, useI18n } from "~/lib/i18n";
 
 export const headers: HeadersFunction = (args) => boundary.headers(args);
 
@@ -16,10 +17,21 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 
 export default function AppLayout() {
   const { apiKey } = useLoaderData<typeof loader>();
+
+  return (
+    <I18nProvider>
+      <AppShell apiKey={apiKey} />
+    </I18nProvider>
+  );
+}
+
+function AppShell({ apiKey }: { apiKey: string }) {
+  const { t } = useI18n();
+
   return (
     <AppProvider isEmbeddedApp apiKey={apiKey}>
       <NavMenu>
-        <Link to="/app" rel="home">FixitCSV</Link>
+        <Link to="/app" rel="home">{t("nav.home")}</Link>
       </NavMenu>
       <Outlet />
     </AppProvider>
