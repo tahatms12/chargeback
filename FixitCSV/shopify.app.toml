@@ -1,6 +1,6 @@
 name = "FixitCSV"
-client_id = "REPLACE_WITH_SHOPIFY_API_KEY"
-application_url = "https://uplifttechnologies.pro/FixitCSV"
+client_id = "00000000000000000000000000000000"
+application_url = "https://uplifttechnologies.pro/fixitcsv"
 embedded = true
 
 [build]
@@ -13,8 +13,7 @@ scopes = ""
 
 [auth]
 redirect_urls = [
-  "https://uplifttechnologies.pro/FixitCSV/auth/callback",
-  "https://uplifttechnologies.pro/FixitCSV/auth/shopify/callback"
+  "https://uplifttechnologies.pro/fixitcsv/auth/callback"
 ]
 
 [webhooks]

@@ -1,14 +1,12 @@
 name = "PORef"
-client_id = "{{SHOPIFY_API_KEY}}"
+client_id = "00000000000000000000000000000000"
 application_url = "https://uplifttechnologies.pro/poref"
 embedded = true
 
 
 [auth]
 redirect_urls = [
-  "https://uplifttechnologies.pro/poref/auth/callback",
-  "https://uplifttechnologies.pro/poref/auth/shopify/callback",
-  "https://uplifttechnologies.pro/poref/api/auth/callback"
+  "https://uplifttechnologies.pro/poref/auth/callback"
 ]
 
 [access]
