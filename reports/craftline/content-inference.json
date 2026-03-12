@@ -1,0 +1,19 @@
+{
+  "slug": "craftline",
+  "positioning": "Order synchronization and maker queue automation.",
+  "problem": "Tracking production status of customized orders across multiple makers requires constant manual syncing.",
+  "user": "Make-to-order merchants",
+  "features": [
+    "Automated production queues",
+    "Order state synchronization"
+  ],
+  "howItWorks": "Syncs Shopify orders into customizable production queues automatically based on product tags.",
+  "setupRequirements": "Configure tags for makers.",
+  "limitations": "Does not support raw material inventory tracking.",
+  "supportThemes": "Setup configuration, queue rule troubleshooting.",
+  "dataHandling": "Reads order line items; standard retention.",
+  "installPrereqs": "None",
+  "onlineStoreRequired": false,
+  "appStoreSafe": "Automate production queues for make-to-order operations.",
+  "websiteSafe": "Craftline connects your Shopify orders directly to maker workstations. Define rules once and let products route themselves to fulfillment queues automatically without spreadsheets."
+}

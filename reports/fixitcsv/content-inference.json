@@ -1,0 +1,20 @@
+{
+  "slug": "fixitcsv",
+  "positioning": "Robust, validated CSV data imports.",
+  "problem": "Formatting errors in bulk CSV uploads cause silent failures or corrupted catalog data.",
+  "user": "Store operators and catalog managers",
+  "features": [
+    "Safe CSV parsing",
+    "Pre-import validation",
+    "Syntax error highlighting"
+  ],
+  "howItWorks": "Upload your exact CSV locally, FixitCSV validates the formatting constraints before hitting Shopify APIs, then injects the clean data.",
+  "setupRequirements": "None",
+  "limitations": "File sizes up to 10MB per upload.",
+  "supportThemes": "CSV formatting rules, error deciphering.",
+  "dataHandling": "Processes files in memory; files are not retained post-import.",
+  "installPrereqs": "None",
+  "onlineStoreRequired": false,
+  "appStoreSafe": "Import catalog and bulk data safely via validated CSV.",
+  "websiteSafe": "Stop guessing why your catalog imports failed. FixitCSV provides safe, validated CSV parsing with exact error highlighting before your data hits Shopify APIs."
+}

@@ -1,0 +1,20 @@
+{
+  "slug": "poref",
+  "positioning": "Seamless Purchase Order reference tracking across checkout and POS.",
+  "problem": "B2B customers often need to provide their internal PO references at the moment of checkout, but standard Shopify flows lack a unified PO capture mechanism.",
+  "user": "B2B and blended merchants",
+  "features": [
+    "Checkout Extension block",
+    "POS Extension integration",
+    "Admin order visibility"
+  ],
+  "howItWorks": "Injects a PO capture field at checkout and POS, saving the reference to order attributes seamlessly.",
+  "setupRequirements": "Enable Checkout/POS extensions in settings.",
+  "limitations": "Only viable for Shopify plans containing Checkout Extensibility or newer.",
+  "supportThemes": "Checkout block placement, theme integration.",
+  "dataHandling": "Reads orders. Attaches new metadata to orders.",
+  "installPrereqs": "Checkout Extensibility enabled.",
+  "onlineStoreRequired": true,
+  "appStoreSafe": "Capture customer Purchase Order numbers smoothly during Checkout and POS flows.",
+  "websiteSafe": "Empower your B2B buyers. PORef naturally injects Purchase Order capture straight into your Shopify Checkout and POS experiences, ensuring invoice reconciliation is flawless."
+}

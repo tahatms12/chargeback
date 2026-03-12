@@ -1,0 +1,20 @@
+{
+  "slug": "quoteloop",
+  "positioning": "Automated draft order synchronization and quote messaging.",
+  "problem": "Following up manually on Draft Orders/Quotes slows down B2B sales cycles.",
+  "user": "Wholesale businesses drafting custom orders",
+  "features": [
+    "Draft order parsing",
+    "Quote notifications",
+    "Automated email synchronization"
+  ],
+  "howItWorks": "Watches for drafted orders and synchronizes quote notifications automatically via external email connections.",
+  "setupRequirements": "Connect designated sender email profiles.",
+  "limitations": "Requires external email provider setup.",
+  "supportThemes": "Draft order status misreads, email delivery bouncing.",
+  "dataHandling": "Reads customer email strings (Protected Data).",
+  "installPrereqs": "None",
+  "onlineStoreRequired": false,
+  "appStoreSafe": "Synchronize and send quote notifications from drafted orders seamlessly.",
+  "websiteSafe": "Accelerate your wholesale pipeline. Quando you create a draft order, QuoteLoop automatically parses the contents and structures an outbound quote notification."
+}

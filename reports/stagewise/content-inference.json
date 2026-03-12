@@ -1,0 +1,19 @@
+{
+  "slug": "stagewise",
+  "positioning": "Incremental staging for complex fulfillment operations.",
+  "problem": "Large or complex orders cannot always be fulfilled simultaneously.",
+  "user": "Merchants with staged fulfillment or multi-warehouse logistics",
+  "features": [
+    "Staged fulfillment management",
+    "Progressive order statuses"
+  ],
+  "howItWorks": "Hooks into the order lifecycle to mark progressive states of a multi-stage fulfillment cycle.",
+  "setupRequirements": "Map active fulfillment locations.",
+  "limitations": "Does not replace third-party logistics integrations.",
+  "supportThemes": "Location mismatch, webhook synchronization delays.",
+  "dataHandling": "Processes order IDs and fulfillment statuses.",
+  "installPrereqs": "None",
+  "onlineStoreRequired": false,
+  "appStoreSafe": "Manage multi-stage order fulfillment workflows.",
+  "websiteSafe": "Stagewise lets your team break large or complex orders into incremental fulfillment steps without confusing customer notifications."
+}

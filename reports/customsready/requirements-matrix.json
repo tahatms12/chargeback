@@ -1,0 +1,57 @@
+{
+  "listing_requirement": {
+    "applicable": true,
+    "state": "Pending Phase 7",
+    "required": "Draft listing copy"
+  },
+  "privacy_policy": {
+    "applicable": true,
+    "state": "Pending Phase 4",
+    "required": "Create /privacy"
+  },
+  "support_page": {
+    "applicable": true,
+    "state": "Pending Phase 4",
+    "required": "Create /support"
+  },
+  "screenshots": {
+    "applicable": true,
+    "state": "Pending Phase 6",
+    "required": "Capture strictly truthful UI screenshots"
+  },
+  "emergency_contact": {
+    "applicable": true,
+    "state": "Pending Phase 7",
+    "required": "Ensure contact details exist"
+  },
+  "compliance_webhooks": {
+    "applicable": true,
+    "state": "Pending Phase 9",
+    "required": "Validate webhook config in app TOML"
+  },
+  "embedded_auth": {
+    "applicable": true,
+    "state": "Implemented",
+    "required": "Uses Shopify App Bridge and session tokens"
+  },
+  "billing_compliance": {
+    "applicable": true,
+    "state": "Pending Phase 9",
+    "required": "Verify real billing API usage"
+  },
+  "theme_extension": {
+    "applicable": false,
+    "state": "N/A",
+    "required": "None"
+  },
+  "protected_customer_data": {
+    "applicable": true,
+    "state": "Pending Phase 8",
+    "required": "Ensure data minimization in privacy policy"
+  },
+  "uninstall_data_deletion": {
+    "applicable": true,
+    "state": "Pending Phase 4",
+    "required": "Explain data retention on uninstall"
+  }
+}

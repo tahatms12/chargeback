@@ -1,0 +1,20 @@
+{
+  "slug": "customsready",
+  "positioning": "Dynamic customs documentation preparation for international orders.",
+  "problem": "Generating accurate customs declarations for international shipments is a high-liability manual task.",
+  "user": "High-volume international shippers",
+  "features": [
+    "Forms generation",
+    "Order admin integration",
+    "Product classification sync"
+  ],
+  "howItWorks": "Reads international orders, matches product weights and HS codes, and prints localized customs declarations directly from the Shopify Admin order view.",
+  "setupRequirements": "Input baseline HS codes for catalog.",
+  "limitations": "Carrier-specific requirements may still need manual tuning depending on integration level.",
+  "supportThemes": "Label generation failures, missing HS codes.",
+  "dataHandling": "Reads customer shipping addresses (Protected Customer Data required for labels). Retains logs strictly for 30-day debug cycles.",
+  "installPrereqs": "None",
+  "onlineStoreRequired": false,
+  "appStoreSafe": "Generate and print localized customs documentation directly from the order page.",
+  "websiteSafe": "Stop hand-typing international shipping documentation. CustomsReady automatically aligns your catalog HS codes with international orders so your fulfillment team can print completed declarations instantly."
+}
