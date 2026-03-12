@@ -1,10 +1,10 @@
 name = "quoteloop-new"
 client_id = "c0a7f6741dfc891c848bba84360c66da"
-application_url = "https://quoteloop.example.com"
+application_url = "https://quoteloop.uplifttechnologies.pro"
 embedded = true
 
 [auth]
-redirect_urls = [ "https://quoteloop.example.com/auth/callback" ]
+redirect_urls = [ "https://quoteloop.uplifttechnologies.pro/auth/callback" ]
 
 [access_scopes]
 scopes = "read_draft_orders,write_draft_orders,read_customers"
