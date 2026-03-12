@@ -21,7 +21,7 @@
         "node": ">=24.13.1"
     },
     "dependencies": {
-        "@prisma/client": "^7.5.0",
+        "@prisma/client": "^6.19.2",
         "@remix-run/node": "^2.13.1",
         "@remix-run/react": "^2.13.1",
         "@remix-run/serve": "^2.13.1",
@@ -40,7 +40,7 @@
         "@shopify/cli": "^3.92.0",
         "@types/node": "^22.0.0",
         "eslint": "^8.57.0",
-        "prisma": "^7.5.0",
+        "prisma": "^6.19.2",
         "tsx": "^4.19.1",
         "typescript": "^5.6.3",
         "vite": "^5.4.11"
