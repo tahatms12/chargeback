@@ -1,0 +1,3 @@
+packages:
+  - "extensions/*"
+  - "mnt/user-data/outputs/customsready-lite/extensions/*"

@@ -1,0 +1,13 @@
+name = "quoteloop-new"
+client_id = ""
+application_url = "https://quoteloop.example.com"
+embedded = true
+
+[auth]
+redirect_urls = [ "https://quoteloop.example.com/auth/callback" ]
+
+[access_scopes]
+scopes = "read_draft_orders,write_draft_orders,read_customers"
+
+[webhooks]
+api_version = "2025-04"
