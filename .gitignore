@@ -1,0 +1,9 @@
+node_modules
+.env
+.env.local
+*.local
+dist
+.cache
+.shopify
+prisma/dev.db
+prisma/dev.db-journal

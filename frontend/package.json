@@ -1,16 +1,19 @@
-{
-  "name": "chargeback-frontend",
-  "private": true,
-  "version": "1.0.0",
-  "scripts": {
-    "build": "next build",
-    "dev": "next dev",
-    "start": "next start"
-  },
-  "dependencies": {
-    "next": "14.2.5",
-    "react": "18.2.0",
-    "react-dom": "18.2.0"
-  },
-  "packageManager": "npm@10.8.2"
+﻿{
+    "name":  "chargeback-frontend",
+    "private":  true,
+    "version":  "1.0.0",
+    "scripts":  {
+                    "build":  "next build",
+                    "dev":  "next dev",
+                    "start":  "next start"
+                },
+    "dependencies":  {
+                         "next":  "14.2.5",
+                         "react":  "18.2.0",
+                         "react-dom":  "18.2.0"
+                     },
+    "packageManager":  "pnpm@9.1.4",
+    "engines":  {
+                    "node":  "\u003e=24.13.1"
+                }
 }
