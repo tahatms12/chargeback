@@ -9,7 +9,7 @@ dev_store_url = ""
 include_config_on_deploy = true
 
 [access_scopes]
-scopes = ""
+scopes = "read_products"
 
 [auth]
 redirect_urls = [

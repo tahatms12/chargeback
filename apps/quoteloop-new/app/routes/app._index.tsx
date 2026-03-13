@@ -1,334 +1,259 @@
-import { useEffect } from "react";
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
-import { useFetcher } from "@remix-run/react";
+import { json } from "@remix-run/node";
+import { useLoaderData, useFetcher } from "@remix-run/react";
 import {
   Page,
   Layout,
-  Text,
   Card,
-  Button,
   BlockStack,
-  Box,
-  List,
-  Link,
+  Text,
+  IndexTable,
+  Badge,
+  Button,
+  EmptyState,
   InlineStack,
+  useBreakpoints,
 } from "@shopify/polaris";
-import { TitleBar, useAppBridge } from "@shopify/app-bridge-react";
+import { TitleBar } from "@shopify/app-bridge-react";
 import { authenticate } from "../shopify.server";
 
+interface DraftOrder {
+  id: string;
+  name: string;
+  customer: string;
+  status: string;
+  total: string;
+  currencyCode: string;
+  createdAt: string;
+  invoiceUrl: string | null;
+}
+
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  await authenticate.admin(request);
-
-  return null;
-};
-
-export const action = async ({ request }: ActionFunctionArgs) => {
   const { admin } = await authenticate.admin(request);
-  const color = ["Red", "Orange", "Yellow", "Green"][
-    Math.floor(Math.random() * 4)
-  ];
+
   const response = await admin.graphql(
     `#graphql
-      mutation populateProduct($product: ProductCreateInput!) {
-        productCreate(product: $product) {
-          product {
-            id
-            title
-            handle
-            status
-            variants(first: 10) {
-              edges {
-                node {
-                  id
-                  price
-                  barcode
-                  createdAt
+      query getDraftOrders {
+        draftOrders(first: 50, sortKey: CREATED_AT, reverse: true) {
+          edges {
+            node {
+              id
+              name
+              status
+              createdAt
+              invoiceUrl
+              totalPriceSet {
+                shopMoney {
+                  amount
+                  currencyCode
                 }
+              }
+              customer {
+                displayName
+                email
               }
             }
           }
         }
-      }`,
-    {
-      variables: {
-        product: {
-          title: `${color} Snowboard`,
-        },
-      },
-    },
-  );
-  const responseJson = await response.json();
-
-  const product = responseJson.data!.productCreate!.product!;
-  const variantId = product.variants.edges[0]!.node!.id!;
-
-  const variantResponse = await admin.graphql(
-    `#graphql
-    mutation shopifyRemixTemplateUpdateVariant($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {
-      productVariantsBulkUpdate(productId: $productId, variants: $variants) {
-        productVariants {
-          id
-          price
-          barcode
-          createdAt
-        }
-      }
-    }`,
-    {
-      variables: {
-        productId: product.id,
-        variants: [{ id: variantId, price: "100.00" }],
-      },
-    },
+      }`
   );
 
-  const variantResponseJson = await variantResponse.json();
+  const data = await response.json();
+  const draftOrders: DraftOrder[] =
+    data.data?.draftOrders?.edges?.map(
+      ({ node }: any): DraftOrder => ({
+        id: node.id,
+        name: node.name,
+        customer:
+          node.customer?.displayName ||
+          node.customer?.email ||
+          "No customer",
+        status: node.status,
+        total: node.totalPriceSet.shopMoney.amount,
+        currencyCode: node.totalPriceSet.shopMoney.currencyCode,
+        createdAt: new Date(node.createdAt).toLocaleDateString(),
+        invoiceUrl: node.invoiceUrl,
+      })
+    ) ?? [];
 
-  return {
-    product: responseJson!.data!.productCreate!.product,
-    variant:
-      variantResponseJson!.data!.productVariantsBulkUpdate!.productVariants,
-  };
+  return json({ draftOrders });
 };
 
-export default function Index() {
-  const fetcher = useFetcher<typeof action>();
+export const action = async ({ request }: ActionFunctionArgs) => {
+  const { admin } = await authenticate.admin(request);
+  const formData = await request.formData();
+  const intent = formData.get("intent") as string;
 
-  const shopify = useAppBridge();
-  const isLoading =
-    ["loading", "submitting"].includes(fetcher.state) &&
-    fetcher.formMethod === "POST";
-  const productId = fetcher.data?.product?.id.replace(
-    "gid://shopify/Product/",
-    "",
-  );
+  if (intent === "send_invoice") {
+    const draftOrderId = formData.get("draftOrderId") as string;
+    await admin.graphql(
+      `#graphql
+        mutation sendInvoice($id: ID!) {
+          draftOrderInvoiceSend(id: $id) {
+            userErrors { field message }
+          }
+        }`,
+      { variables: { id: draftOrderId } }
+    );
+    return json({ ok: true, action: "invoice_sent" });
+  }
 
-  useEffect(() => {
-    if (productId) {
-      shopify.toast.show("Product created");
-    }
-  }, [productId, shopify]);
-  const generateProduct = () => fetcher.submit({}, { method: "POST" });
+  if (intent === "delete") {
+    const draftOrderId = formData.get("draftOrderId") as string;
+    await admin.graphql(
+      `#graphql
+        mutation deleteDraftOrder($input: DraftOrderDeleteInput!) {
+          draftOrderDelete(input: $input) {
+            userErrors { field message }
+          }
+        }`,
+      { variables: { input: { id: draftOrderId } } }
+    );
+    return json({ ok: true, action: "deleted" });
+  }
+
+  if (intent === "complete") {
+    const draftOrderId = formData.get("draftOrderId") as string;
+    await admin.graphql(
+      `#graphql
+        mutation completeDraftOrder($id: ID!) {
+          draftOrderComplete(id: $id) {
+            draftOrder { id status }
+            userErrors { field message }
+          }
+        }`,
+      { variables: { id: draftOrderId } }
+    );
+    return json({ ok: true, action: "completed" });
+  }
+
+  return json({ ok: false, action: "unknown" });
+};
+
+function statusBadge(status: string) {
+  switch (status) {
+    case "OPEN":
+      return <Badge tone="attention">Open</Badge>;
+    case "INVOICE_SENT":
+      return <Badge tone="info">Invoice Sent</Badge>;
+    case "COMPLETED":
+      return <Badge tone="success">Completed</Badge>;
+    default:
+      return <Badge>{status}</Badge>;
+  }
+}
+
+export default function QuotesDashboard() {
+  const { draftOrders } = useLoaderData<typeof loader>();
+  const fetcher = useFetcher();
+  const { smUp } = useBreakpoints();
+
+  const resourceName = {
+    singular: "quote",
+    plural: "quotes",
+  };
+
+  const rowMarkup = draftOrders.map((order, index) => (
+    <IndexTable.Row id={order.id} key={order.id} position={index}>
+      <IndexTable.Cell>
+        <Text variant="bodyMd" fontWeight="bold" as="span">
+          {order.name}
+        </Text>
+      </IndexTable.Cell>
+      <IndexTable.Cell>{order.customer}</IndexTable.Cell>
+      <IndexTable.Cell>{statusBadge(order.status)}</IndexTable.Cell>
+      <IndexTable.Cell>
+        {order.currencyCode} {parseFloat(order.total).toFixed(2)}
+      </IndexTable.Cell>
+      <IndexTable.Cell>{order.createdAt}</IndexTable.Cell>
+      <IndexTable.Cell>
+        <InlineStack gap="200">
+          {order.status === "OPEN" && (
+            <>
+              <fetcher.Form method="post">
+                <input type="hidden" name="intent" value="send_invoice" />
+                <input type="hidden" name="draftOrderId" value={order.id} />
+                <Button size="micro" submit>
+                  Send Invoice
+                </Button>
+              </fetcher.Form>
+              <fetcher.Form method="post">
+                <input type="hidden" name="intent" value="complete" />
+                <input type="hidden" name="draftOrderId" value={order.id} />
+                <Button size="micro" tone="success" submit>
+                  Complete
+                </Button>
+              </fetcher.Form>
+            </>
+          )}
+          {order.status !== "COMPLETED" && (
+            <fetcher.Form method="post">
+              <input type="hidden" name="intent" value="delete" />
+              <input type="hidden" name="draftOrderId" value={order.id} />
+              <Button size="micro" tone="critical" submit>
+                Delete
+              </Button>
+            </fetcher.Form>
+          )}
+        </InlineStack>
+      </IndexTable.Cell>
+    </IndexTable.Row>
+  ));
 
   return (
     <Page>
-      <TitleBar title="Remix app template">
-        <button variant="primary" onClick={generateProduct}>
-          Generate a product
-        </button>
-      </TitleBar>
-      <BlockStack gap="500">
-        <Layout>
-          <Layout.Section>
+      <TitleBar title="QuoteLoop — Draft Orders & Quotes" />
+      <Layout>
+        <Layout.Section>
+          <BlockStack gap="400">
             <Card>
-              <BlockStack gap="500">
-                <BlockStack gap="200">
-                  <Text as="h2" variant="headingMd">
-                    Congrats on creating a new Shopify app 🎉
-                  </Text>
-                  <Text variant="bodyMd" as="p">
-                    This embedded app template uses{" "}
-                    <Link
-                      url="https://shopify.dev/docs/apps/tools/app-bridge"
-                      target="_blank"
-                      removeUnderline
-                    >
-                      App Bridge
-                    </Link>{" "}
-                    interface examples like an{" "}
-                    <Link url="/app/additional" removeUnderline>
-                      additional page in the app nav
-                    </Link>
-                    , as well as an{" "}
-                    <Link
-                      url="https://shopify.dev/docs/api/admin-graphql"
-                      target="_blank"
-                      removeUnderline
-                    >
-                      Admin GraphQL
-                    </Link>{" "}
-                    mutation demo, to provide a starting point for app
-                    development.
-                  </Text>
-                </BlockStack>
-                <BlockStack gap="200">
-                  <Text as="h3" variant="headingMd">
-                    Get started with products
-                  </Text>
-                  <Text as="p" variant="bodyMd">
-                    Generate a product with GraphQL and get the JSON output for
-                    that product. Learn more about the{" "}
-                    <Link
-                      url="https://shopify.dev/docs/api/admin-graphql/latest/mutations/productCreate"
-                      target="_blank"
-                      removeUnderline
-                    >
-                      productCreate
-                    </Link>{" "}
-                    mutation in our API references.
-                  </Text>
-                </BlockStack>
-                <InlineStack gap="300">
-                  <Button loading={isLoading} onClick={generateProduct}>
-                    Generate a product
-                  </Button>
-                  {fetcher.data?.product && (
-                    <Button
-                      url={`shopify:admin/products/${productId}`}
-                      target="_blank"
-                      variant="plain"
-                    >
-                      View product
-                    </Button>
-                  )}
-                </InlineStack>
-                {fetcher.data?.product && (
-                  <>
-                    <Text as="h3" variant="headingMd">
-                      {" "}
-                      productCreate mutation
-                    </Text>
-                    <Box
-                      padding="400"
-                      background="bg-surface-active"
-                      borderWidth="025"
-                      borderRadius="200"
-                      borderColor="border"
-                      overflowX="scroll"
-                    >
-                      <pre style={{ margin: 0 }}>
-                        <code>
-                          {JSON.stringify(fetcher.data.product, null, 2)}
-                        </code>
-                      </pre>
-                    </Box>
-                    <Text as="h3" variant="headingMd">
-                      {" "}
-                      productVariantsBulkUpdate mutation
-                    </Text>
-                    <Box
-                      padding="400"
-                      background="bg-surface-active"
-                      borderWidth="025"
-                      borderRadius="200"
-                      borderColor="border"
-                      overflowX="scroll"
-                    >
-                      <pre style={{ margin: 0 }}>
-                        <code>
-                          {JSON.stringify(fetcher.data.variant, null, 2)}
-                        </code>
-                      </pre>
-                    </Box>
-                  </>
-                )}
+              <BlockStack gap="200">
+                <Text as="h2" variant="headingMd">
+                  Quote Management
+                </Text>
+                <Text as="p" tone="subdued">
+                  View, send invoices, and manage draft orders as quotes for
+                  your customers.
+                </Text>
               </BlockStack>
             </Card>
-          </Layout.Section>
-          <Layout.Section variant="oneThird">
-            <BlockStack gap="500">
+
+            {draftOrders.length === 0 ? (
               <Card>
-                <BlockStack gap="200">
-                  <Text as="h2" variant="headingMd">
-                    App template specs
-                  </Text>
-                  <BlockStack gap="200">
-                    <InlineStack align="space-between">
-                      <Text as="span" variant="bodyMd">
-                        Framework
-                      </Text>
-                      <Link
-                        url="https://remix.run"
-                        target="_blank"
-                        removeUnderline
-                      >
-                        Remix
-                      </Link>
-                    </InlineStack>
-                    <InlineStack align="space-between">
-                      <Text as="span" variant="bodyMd">
-                        Database
-                      </Text>
-                      <Link
-                        url="https://www.prisma.io/"
-                        target="_blank"
-                        removeUnderline
-                      >
-                        Prisma
-                      </Link>
-                    </InlineStack>
-                    <InlineStack align="space-between">
-                      <Text as="span" variant="bodyMd">
-                        Interface
-                      </Text>
-                      <span>
-                        <Link
-                          url="https://polaris.shopify.com"
-                          target="_blank"
-                          removeUnderline
-                        >
-                          Polaris
-                        </Link>
-                        {", "}
-                        <Link
-                          url="https://shopify.dev/docs/apps/tools/app-bridge"
-                          target="_blank"
-                          removeUnderline
-                        >
-                          App Bridge
-                        </Link>
-                      </span>
-                    </InlineStack>
-                    <InlineStack align="space-between">
-                      <Text as="span" variant="bodyMd">
-                        API
-                      </Text>
-                      <Link
-                        url="https://shopify.dev/docs/api/admin-graphql"
-                        target="_blank"
-                        removeUnderline
-                      >
-                        GraphQL API
-                      </Link>
-                    </InlineStack>
-                  </BlockStack>
-                </BlockStack>
+                <EmptyState
+                  heading="No quotes yet"
+                  image="https://cdn.shopify.com/s/files/1/0262/4071/2726/files/emptystate-files.png"
+                >
+                  <p>
+                    Create a draft order in your Shopify admin to get started.
+                    Draft orders will appear here as quotes that you can manage
+                    and send to customers.
+                  </p>
+                </EmptyState>
               </Card>
-              <Card>
-                <BlockStack gap="200">
-                  <Text as="h2" variant="headingMd">
-                    Next steps
-                  </Text>
-                  <List>
-                    <List.Item>
-                      Build an{" "}
-                      <Link
-                        url="https://shopify.dev/docs/apps/getting-started/build-app-example"
-                        target="_blank"
-                        removeUnderline
-                      >
-                        {" "}
-                        example app
-                      </Link>{" "}
-                      to get started
-                    </List.Item>
-                    <List.Item>
-                      Explore Shopify’s API with{" "}
-                      <Link
-                        url="https://shopify.dev/docs/apps/tools/graphiql-admin-api"
-                        target="_blank"
-                        removeUnderline
-                      >
-                        GraphiQL
-                      </Link>
-                    </List.Item>
-                  </List>
-                </BlockStack>
+            ) : (
+              <Card padding="0">
+                <IndexTable
+                  condensed={!smUp}
+                  resourceName={resourceName}
+                  itemCount={draftOrders.length}
+                  headings={[
+                    { title: "Quote #" },
+                    { title: "Customer" },
+                    { title: "Status" },
+                    { title: "Total" },
+                    { title: "Created" },
+                    { title: "Actions" },
+                  ]}
+                  selectable={false}
+                >
+                  {rowMarkup}
+                </IndexTable>
               </Card>
-            </BlockStack>
-          </Layout.Section>
-        </Layout>
-      </BlockStack>
+            )}
+          </BlockStack>
+        </Layout.Section>
+      </Layout>
     </Page>
   );
 }
