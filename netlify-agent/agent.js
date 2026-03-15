@@ -46,22 +46,22 @@ async function processApp(app, repoMeta) {
       repoId:       repoMeta.id,
       repoFullName: repoMeta.fullName,
       branch:       repoMeta.defaultBranch,
-      buildCommand: config.buildCommand ?? "npm run build",
-      publishDir:   config.publishDir   ?? "build/client",
+      // If toml exists, we clear these to let toml take over. 
+      // Base directory MUST still be set for monorepos.
+      buildCommand: config.hasToml ? null : (config.buildCommand ?? "npm run build"),
+      publishDir:   config.hasToml ? null : (config.publishDir   ?? "build/client"),
       repoDir:      app.repoDir,
       nodeVersion:  config.nodeVersion  ?? "20",
     });
   } else {
     console.log(`  Netlify: site exists → ${site.id}`);
-    if (!config.hasToml) {
-      // Push corrected settings in case old config was wrong
-      await updateSite(site.id, {
-        buildCommand: config.buildCommand ?? "npm run build",
-        publishDir:   config.publishDir   ?? "build/client",
-        repoDir:      app.repoDir,
-        nodeVersion:  config.nodeVersion  ?? "20",
-      });
-    }
+    // Always sync settings to ensure base directory and cleared overrides are applied
+    await updateSite(site.id, {
+      buildCommand: config.hasToml ? null : (config.buildCommand ?? "npm run build"),
+      publishDir:   config.hasToml ? null : (config.publishDir   ?? "build/client"),
+      repoDir:      app.repoDir,
+      nodeVersion:  config.nodeVersion  ?? "20",
+    });
   }
 
   const netlifyDomain = `${site.subdomain ?? app.netlifyName}.netlify.app`;

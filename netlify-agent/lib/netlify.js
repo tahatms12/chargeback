@@ -30,14 +30,14 @@ export async function createSite({ name, repoId, repoFullName, branch, buildComm
       id:              repoId,
       repo:            repoFullName,
       branch,
-      cmd:             buildCommand,
-      dir:             publishDir,
+      cmd:             buildCommand || "",
+      dir:             publishDir   || "",
       base:            repoDir,       // monorepo root for this app
       allowed_branches: [branch],
     },
     build_settings: {
-      cmd:              buildCommand,
-      dir:              publishDir,
+      cmd:              buildCommand || "",
+      dir:              publishDir   || "",
       base:             repoDir,
       env: {
         NODE_VERSION: nodeVersion,
@@ -50,7 +50,13 @@ export async function createSite({ name, repoId, repoFullName, branch, buildComm
     headers: headers(),
     body: JSON.stringify(body),
   });
-  const data = await res.json();
+  const dataText = await res.text();
+  let data;
+  try {
+    data = JSON.parse(dataText);
+  } catch (err) {
+    throw new Error(`Netlify createSite (non-JSON): ${dataText}`);
+  }
   if (!res.ok) throw new Error(`Netlify createSite: ${JSON.stringify(data)}`);
   console.log(`  Netlify: site created → ${data.id} (${data.subdomain}.netlify.app)`);
   return data;
@@ -71,10 +77,9 @@ export async function getSiteByName(name) {
 export async function updateSite(siteId, { buildCommand, publishDir, repoDir, nodeVersion }) {
   const body = {
     build_settings: {
-      cmd:  buildCommand,
-      dir:  publishDir,
+      cmd:  buildCommand || "",
+      dir:  publishDir   || "",
       base: repoDir,
-      env: { NODE_VERSION: nodeVersion },
     },
   };
   const res = await fetch(`${BASE}/sites/${siteId}`, {
@@ -83,7 +88,13 @@ export async function updateSite(siteId, { buildCommand, publishDir, repoDir, no
     body: JSON.stringify(body),
   });
   if (!res.ok) {
-    const err = await res.json();
+    const errText = await res.text();
+    let err;
+    try {
+      err = JSON.parse(errText);
+    } catch (e) {
+      throw new Error(`Netlify updateSite (non-JSON): ${errText}`);
+    }
     throw new Error(`Netlify updateSite: ${JSON.stringify(err)}`);
   }
   console.log(`  Netlify: site ${siteId} updated`);
