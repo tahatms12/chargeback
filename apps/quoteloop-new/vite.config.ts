@@ -39,6 +39,9 @@ if (host === "localhost") {
 }
 
 export default defineConfig({
+  ssr: {
+    noExternal: [/^@shopify\//],
+  },
   server: {
     allowedHosts: [host],
     cors: {
