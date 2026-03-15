@@ -35,5 +35,6 @@ export default defineConfig({
   optimizeDeps: {
     // Exclude server-only modules from client bundle
     exclude: ["puppeteer", "bullmq", "ioredis", "@prisma/client"],
+    include: ["@shopify/app-bridge-react"],
   },
 }) satisfies UserConfig;
