@@ -1,6 +1,6 @@
 name = "FixitCSV"
 client_id = "1d81ef94081a2c788405f34bf1869a8b"
-application_url = "https://fixitcsv.uplifttechnologies.pro"
+application_url = "https://fixitcsv-prod.netlify.app"
 embedded = true
 
 [build]
@@ -13,6 +13,9 @@ scopes = "read_products"
 
 [auth]
 redirect_urls = [
+  "https://fixitcsv-prod.netlify.app/auth/callback",
+  "https://fixitcsv-prod.netlify.app/auth/shopify/callback",
+  "https://fixitcsv-prod.netlify.app/api/auth/callback",
   "https://fixitcsv.uplifttechnologies.pro/auth/callback",
   "https://fixitcsv.uplifttechnologies.pro/auth/shopify/callback",
   "https://fixitcsv.uplifttechnologies.pro/api/auth/callback"
