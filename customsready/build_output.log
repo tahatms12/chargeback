@@ -1,0 +1,134 @@
+
+> customsready-lite@1.0.0 build
+> remix vite:build
+
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+[7m[33m warn [39m[27m Route discovery/manifest behavior is changing in React Router v7
+[33m┃[39m [90mYou can use the `v3_lazyRouteDiscovery` future flag to opt-in early.[39m
+[33m┃[39m [90m-> https://remix.run/docs/en/2.13.1/start/future-flags#v3_lazyRouteDiscovery[39m
+[33m┗[39m
+[7m[33m warn [39m[27m Data fetching is changing to a single fetch in React Router v7
+[33m┃[39m [90mYou can use the `v3_singleFetch` future flag to opt-in early.[39m
+[33m┃[39m [90m-> https://remix.run/docs/en/2.13.1/start/future-flags#v3_singleFetch[39m
+[33m┗[39m
+[36mvite v5.4.21 [32mbuilding for production...[36m[39m
+transforming...
+Module "node_modules/.pnpm/@shopify+shopify-app-remix@4.2.0_@remix-run+node@2.17.4_typescript@5.9.3__@remix-run+react@2._vuxp7cmyhnkvmf7bguojtz4fdq/node_modules/@shopify/shopify-app-remix/dist/esm/react/components/AppProvider/AppProvider.mjs" tried to import "node_modules/.pnpm/@shopify+polaris@13.9.5_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/@shopify/polaris/locales/en.json" with "type": "json" attributes, but it was already imported elsewhere with no attributes. Please ensure that import attributes for the same module are always consistent.
+[32m✓[39m 572 modules transformed.
+[31mx[39m Build failed in 4.50s
+[31m[vite]: Rollup failed to resolve import "@shopify/app-bridge-react" from "C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/routes/app.tsx".
+This is most likely unintended because it can break your application at runtime.
+If you do want to externalize this module explicitly add it to
+`build.rollupOptions.external`[39m
+    at viteWarn (file:///C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/vite@5.4.21_@types+node@22.19.15/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:65855:17)
+    at onwarn (C:\Users\Admin\Downloads\shopifyapps\final\chargeback\customsready\node_modules\.pnpm\@remix-run+dev@2.17.4_@remix-run+react@2.17.4_react-dom@18.3.1_react@18.3.1__react@18.3.1_typ_dh347nqbfe6hov4x7ofn23k2xi\node_modules\@remix-run\dev\dist\vite\plugin.js:630:13)
+    at onRollupWarning (file:///C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/vite@5.4.21_@types+node@22.19.15/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:65885:5)
+    at onwarn (file:///C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/vite@5.4.21_@types+node@22.19.15/node_modules/vite/dist/node/chunks/dep-BK3b2jBa.js:65550:7)
+    at file:///C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/rollup@4.59.0/node_modules/rollup/dist/es/shared/node-entry.js:20995:13
+    at Object.logger [as onLog] (file:///C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/rollup@4.59.0/node_modules/rollup/dist/es/shared/node-entry.js:22968:9)
+    at ModuleLoader.handleInvalidResolvedId (file:///C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/rollup@4.59.0/node_modules/rollup/dist/es/shared/node-entry.js:21712:26)
+    at file:///C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/rollup@4.59.0/node_modules/rollup/dist/es/shared/node-entry.js:21670:26 {
+  watchFiles: [
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/root.tsx',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/entry.client.tsx',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/routes/api.product-audit.$productId.ts',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/routes/api.invoice.$orderId.ts',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/routes/api.audit-status.ts',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/routes/api.csv-export.ts',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/routes/api.fix-status.ts',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/routes/app.settings.tsx',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/routes/app._index.tsx',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/routes/webhooks.tsx',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/routes/auth.$.tsx',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/routes/health.ts',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/routes/app.tsx',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/routes/_index.tsx',
+    'C:\\Users\\Admin\\Downloads\\shopifyapps\\final\\chargeback\\customsready\\package.json',
+    'C:/Users/Admin/node_modules/react/index.js',
+    'C:/Users/Admin/node_modules/react/jsx-runtime.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+react@2.17.4_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@remix-run/react/dist/esm/index.js',
+    'C:/Users/Admin/node_modules/react-dom/client.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+react@2.17.4_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@remix-run/react/dist/esm/components.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+react@2.17.4_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@remix-run/react/dist/esm/scroll-restoration.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+react@2.17.4_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@remix-run/react/dist/esm/browser.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+react@2.17.4_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@remix-run/react/dist/esm/server.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+server-runtime@2.17.4_typescript@5.9.3/node_modules/@remix-run/server-runtime/dist/esm/index.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/react-router-dom@6.30.3_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/react-router-dom/dist/index.js',
+    'C:/Users/Admin/node_modules/react/cjs/react-jsx-runtime.production.js',
+    'C:/Users/Admin/node_modules/react/cjs/react.production.js',
+    'C:/Users/Admin/node_modules/react-dom/cjs/react-dom-client.production.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+react@2.17.4_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@remix-run/react/dist/esm/markup.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+react@2.17.4_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@remix-run/react/dist/esm/_virtual/_rollupPluginBabelHelpers.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+react@2.17.4_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@remix-run/react/dist/esm/errorBoundaries.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+react@2.17.4_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@remix-run/react/dist/esm/routes.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+react@2.17.4_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@remix-run/react/dist/esm/single-fetch.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/react-router-dom@6.30.3_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/react-router-dom/server.mjs',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+server-runtime@2.17.4_typescript@5.9.3/node_modules/@remix-run/server-runtime/dist/esm/single-fetch.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+server-runtime@2.17.4_typescript@5.9.3/node_modules/@remix-run/server-runtime/dist/esm/cookies.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+server-runtime@2.17.4_typescript@5.9.3/node_modules/@remix-run/server-runtime/dist/esm/responses.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+server-runtime@2.17.4_typescript@5.9.3/node_modules/@remix-run/server-runtime/dist/esm/formData.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+server-runtime@2.17.4_typescript@5.9.3/node_modules/@remix-run/server-runtime/dist/esm/sessions.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+server-runtime@2.17.4_typescript@5.9.3/node_modules/@remix-run/server-runtime/dist/esm/server.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+server-runtime@2.17.4_typescript@5.9.3/node_modules/@remix-run/server-runtime/dist/esm/sessions/cookieStorage.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+server-runtime@2.17.4_typescript@5.9.3/node_modules/@remix-run/server-runtime/dist/esm/sessions/memoryStorage.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+server-runtime@2.17.4_typescript@5.9.3/node_modules/@remix-run/server-runtime/dist/esm/upload/memoryUploadHandler.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+server-runtime@2.17.4_typescript@5.9.3/node_modules/@remix-run/server-runtime/dist/esm/upload/errors.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+server-runtime@2.17.4_typescript@5.9.3/node_modules/@remix-run/server-runtime/dist/esm/dev.js',
+    'C:/Users/Admin/node_modules/scheduler/index.js',
+    'C:/Users/Admin/node_modules/react-dom/index.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+react@2.17.4_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@remix-run/react/dist/esm/errors.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+react@2.17.4_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@remix-run/react/dist/esm/invariant.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+react@2.17.4_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@remix-run/react/dist/esm/fog-of-war.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/react-router@6.30.3_react@18.3.1/node_modules/react-router/dist/index.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+react@2.17.4_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@remix-run/react/dist/esm/links.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+router@1.23.2/node_modules/@remix-run/router/dist/router.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@shopify+shopify-app-remix@4.2.0_@remix-run+node@2.17.4_typescript@5.9.3__@remix-run+react@2._vuxp7cmyhnkvmf7bguojtz4fdq/node_modules/@shopify/shopify-app-remix/dist/esm/server/index.mjs',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@shopify+shopify-app-remix@4.2.0_@remix-run+node@2.17.4_typescript@5.9.3__@remix-run+react@2._vuxp7cmyhnkvmf7bguojtz4fdq/node_modules/@shopify/shopify-app-remix/dist/esm/react/index.mjs',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@shopify+polaris@13.9.5_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/@shopify/polaris/build/esm/styles.css',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@shopify+polaris@13.9.5_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/@shopify/polaris/build/esm/index.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@shopify+polaris@13.9.5_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/@shopify/polaris/locales/en.json',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+react@2.17.4_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@remix-run/react/dist/esm/routeModules.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+react@2.17.4_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@remix-run/react/dist/esm/data.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+react@2.17.4_react-dom@18.3.1_react@18.3.1__react@18.3.1_typescript@5.9.3/node_modules/@remix-run/react/dist/esm/fallback.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/turbo-stream@2.4.1/node_modules/turbo-stream/dist/turbo-stream.mjs',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+server-runtime@2.17.4_typescript@5.9.3/node_modules/@remix-run/server-runtime/dist/esm/errors.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+server-runtime@2.17.4_typescript@5.9.3/node_modules/@remix-run/server-runtime/dist/esm/headers.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+server-runtime@2.17.4_typescript@5.9.3/node_modules/@remix-run/server-runtime/dist/esm/mode.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+server-runtime@2.17.4_typescript@5.9.3/node_modules/@remix-run/server-runtime/dist/esm/actions.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+server-runtime@2.17.4_typescript@5.9.3/node_modules/@remix-run/server-runtime/dist/esm/warnings.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/cookie@0.7.2/node_modules/cookie/index.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@web3-storage+multipart-parser@1.0.0/node_modules/@web3-storage/multipart-parser/esm/src/index.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+server-runtime@2.17.4_typescript@5.9.3/node_modules/@remix-run/server-runtime/dist/esm/entry.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+server-runtime@2.17.4_typescript@5.9.3/node_modules/@remix-run/server-runtime/dist/esm/invariant.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+server-runtime@2.17.4_typescript@5.9.3/node_modules/@remix-run/server-runtime/dist/esm/routeMatching.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+server-runtime@2.17.4_typescript@5.9.3/node_modules/@remix-run/server-runtime/dist/esm/routes.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+server-runtime@2.17.4_typescript@5.9.3/node_modules/@remix-run/server-runtime/dist/esm/serverHandoff.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@remix-run+server-runtime@2.17.4_typescript@5.9.3/node_modules/@remix-run/server-runtime/dist/esm/deprecations.js',
+    'C:/Users/Admin/node_modules/react-dom/cjs/react-dom.production.js',
+    'C:/Users/Admin/node_modules/scheduler/cjs/scheduler.production.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@shopify+shopify-app-remix@4.2.0_@remix-run+node@2.17.4_typescript@5.9.3__@remix-run+react@2._vuxp7cmyhnkvmf7bguojtz4fdq/node_modules/@shopify/shopify-app-remix/dist/esm/server/types.mjs',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@shopify+shopify-app-remix@4.2.0_@remix-run+node@2.17.4_typescript@5.9.3__@remix-run+react@2._vuxp7cmyhnkvmf7bguojtz4fdq/node_modules/@shopify/shopify-app-remix/dist/esm/server/boundary/index.mjs',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@shopify+shopify-app-remix@4.2.0_@remix-run+node@2.17.4_typescript@5.9.3__@remix-run+react@2._vuxp7cmyhnkvmf7bguojtz4fdq/node_modules/@shopify/shopify-app-remix/dist/esm/server/shopify-app.mjs',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@shopify+shopify-app-remix@4.2.0_@remix-run+node@2.17.4_typescript@5.9.3__@remix-run+react@2._vuxp7cmyhnkvmf7bguojtz4fdq/node_modules/@shopify/shopify-app-remix/dist/esm/server/errors.mjs',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@shopify+shopify-api@13.0.0/node_modules/@shopify/shopify-api/dist/esm/adapters/web-api/index.mjs',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@shopify+shopify-api@13.0.0/node_modules/@shopify/shopify-api/dist/esm/runtime/index.mjs',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@shopify+shopify-api@13.0.0/node_modules/@shopify/shopify-api/dist/esm/lib/index.mjs',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@shopify+shopify-app-remix@4.2.0_@remix-run+node@2.17.4_typescript@5.9.3__@remix-run+react@2._vuxp7cmyhnkvmf7bguojtz4fdq/node_modules/@shopify/shopify-app-remix/dist/esm/react/components/AppProvider/AppProvider.mjs',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@shopify+shopify-app-remix@4.2.0_@remix-run+node@2.17.4_typescript@5.9.3__@remix-run+react@2._vuxp7cmyhnkvmf7bguojtz4fdq/node_modules/@shopify/shopify-app-remix/dist/esm/react/components/AppProxyProvider/AppProxyProvider.mjs',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@shopify+shopify-app-remix@4.2.0_@remix-run+node@2.17.4_typescript@5.9.3__@remix-run+react@2._vuxp7cmyhnkvmf7bguojtz4fdq/node_modules/@shopify/shopify-app-remix/dist/esm/react/components/AppProxyForm/AppProxyForm.mjs',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@shopify+shopify-app-remix@4.2.0_@remix-run+node@2.17.4_typescript@5.9.3__@remix-run+react@2._vuxp7cmyhnkvmf7bguojtz4fdq/node_modules/@shopify/shopify-app-remix/dist/esm/react/components/AppProxyLink/AppProxyLink.mjs',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@shopify+polaris@13.9.5_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/@shopify/polaris/build/esm/configure.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@shopify+polaris@13.9.5_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/@shopify/polaris/build/esm/types.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@shopify+polaris@13.9.5_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/@shopify/polaris/build/esm/components/shared.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@shopify+polaris@13.9.5_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/@shopify/polaris/build/esm/components/ThemeProvider/ThemeProvider.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@shopify+polaris@13.9.5_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/@shopify/polaris/build/esm/utilities/within-content-context.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@shopify+polaris@13.9.5_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/@shopify/polaris/build/esm/utilities/color-transformers.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@shopify+polaris@13.9.5_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/@shopify/polaris/build/esm/utilities/use-copy-to-clipboard.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@shopify+polaris@13.9.5_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/@shopify/polaris/build/esm/utilities/use-event-listener.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@shopify+polaris@13.9.5_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/@shopify/polaris/build/esm/utilities/use-focus.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@shopify+polaris@13.9.5_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/@shopify/polaris/build/esm/utilities/use-hover.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@shopify+polaris@13.9.5_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/@shopify/polaris/build/esm/utilities/use-media-query.js',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/node_modules/.pnpm/@shopify+polaris@13.9.5_react-dom@18.3.1_react@18.3.1__react@18.3.1/node_modules/@shopify/polaris/build/esm/utilities/use-theme.js',
+    ... 442 more items
+  ]
+}

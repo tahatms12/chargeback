@@ -75,6 +75,5 @@
                       "@graphql-codegen/typescript-operations":  "4.5.0",
                       "minimatch":  "9.0.5",
                       "vite":  "^6.2.2"
-                  },
-    "packageManager":  "npm@10.0.0"
+                  }
 }
