@@ -1,0 +1,13 @@
+{
+  "/_global-error/page": "/_global-error",
+  "/_not-found/page": "/_not-found",
+  "/favicon.ico/route": "/favicon.ico",
+  "/launch/[slug]/help/page": "/launch/[slug]/help",
+  "/launch/[slug]/page": "/launch/[slug]",
+  "/launch/[slug]/privacy/page": "/launch/[slug]/privacy",
+  "/launch/[slug]/security/page": "/launch/[slug]/security",
+  "/launch/[slug]/support/page": "/launch/[slug]/support",
+  "/launch/[slug]/terms/page": "/launch/[slug]/terms",
+  "/mockups/[slug]/page": "/mockups/[slug]",
+  "/page": "/"
+}

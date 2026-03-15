@@ -1,0 +1,13 @@
+{
+  "/_global-error/page": "app/_global-error/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/favicon.ico/route": "app/favicon.ico/route.js",
+  "/launch/[slug]/help/page": "app/launch/[slug]/help/page.js",
+  "/launch/[slug]/page": "app/launch/[slug]/page.js",
+  "/launch/[slug]/privacy/page": "app/launch/[slug]/privacy/page.js",
+  "/launch/[slug]/security/page": "app/launch/[slug]/security/page.js",
+  "/launch/[slug]/support/page": "app/launch/[slug]/support/page.js",
+  "/launch/[slug]/terms/page": "app/launch/[slug]/terms/page.js",
+  "/mockups/[slug]/page": "app/mockups/[slug]/page.js",
+  "/page": "app/page.js"
+}

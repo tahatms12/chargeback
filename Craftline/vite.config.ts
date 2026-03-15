@@ -1,4 +1,3 @@
-import { netlifyPreset } from "@netlify/remix-adapter/preset";
 import { vitePlugin as remix } from "@remix-run/dev";
 import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
@@ -10,7 +9,6 @@ export default defineConfig({
   },
   plugins: [
     remix({
-      presets: [netlifyPreset()],
       ignoredRouteFiles: ["**/.*"],
       future: {
         v3_fetcherPersist: true,
@@ -18,6 +16,7 @@ export default defineConfig({
         v3_throwAbortReason: true
       }
     }),
+    netlifyPlugin(),
     tsconfigPaths()
   ],
   build: { assetsInlineLimit: 0 }
