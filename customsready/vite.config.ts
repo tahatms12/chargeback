@@ -6,6 +6,9 @@ import tsconfigPaths from "vite-tsconfig-paths";
 // Related: https://vitejs.dev/config/server-options.html#server-hmr
 // see: https://vitejs.dev/config/server-options.html#server-allowedhosts
 export default defineConfig({
+  ssr: {
+    noExternal: [/^@shopify\//],
+  },
   server: {
     port: Number(process.env.PORT ?? 3000),
     hmr: false,
