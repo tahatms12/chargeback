@@ -1,3 +1,4 @@
+import { netlifyPreset } from "@netlify/remix-adapter/preset";
 import { vitePlugin as remix } from "@remix-run/dev";
 import { installGlobals } from "@remix-run/node";
 import { defineConfig, type UserConfig } from "vite";
@@ -52,6 +53,7 @@ export default defineConfig({
   },
   plugins: [
     remix({
+      presets: [netlifyPreset()],
       ignoredRouteFiles: ["**/.*"],
       future: {
         v3_fetcherPersist: true,
