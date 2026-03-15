@@ -1,14 +1,14 @@
 {
-  "name": "chargeback-monorepo",
-  "version": "1.0.0",
-  "private": true,
-  "scripts": {
-    "build": "echo 'Build individual apps via their Netlify base directories'",
-    "build:customsready": "npm --prefix ./customsready install && npm --prefix ./customsready run build",
-    "build:fixitcsv":     "npm --prefix ./FixitCSV install && npm --prefix ./FixitCSV run build",
-    "build:stagewise":    "npm --prefix ./Stagewise install && npm --prefix ./Stagewise run build",
-    "build:poref":        "npm --prefix ./apps/poref-new install && npm --prefix ./apps/poref-new run build",
-    "build:quoteloop":    "npm --prefix ./apps/quoteloop-new install && npm --prefix ./apps/quoteloop-new run build",
-    "build:craftline":    "npm --prefix ./Craftline install && npm --prefix ./Craftline run build"
-  }
+    "name":  "chargeback-monorepo",
+    "version":  "1.0.0",
+    "private":  true,
+    "scripts":  {
+                    "build":  "echo \u0027Build individual apps via their Netlify base directories\u0027",
+                    "build:customsready":  "npm --prefix ./customsready install \u0026\u0026 npm --prefix ./customsready run build",
+                    "build:fixitcsv":  "npm --prefix ./FixitCSV install \u0026\u0026 npm --prefix ./FixitCSV run build",
+                    "build:stagewise":  "npm --prefix ./Stagewise install \u0026\u0026 npm --prefix ./Stagewise run build",
+                    "build:poref":  "npm --prefix ./apps/poref-new install \u0026\u0026 npm --prefix ./apps/poref-new run build",
+                    "build:quoteloop":  "npm --prefix ./apps/quoteloop-new install \u0026\u0026 npm --prefix ./apps/quoteloop-new run build",
+                    "build:craftline":  "npm --prefix ./Craftline install \u0026\u0026 npm --prefix ./Craftline run build"
+                }
 }

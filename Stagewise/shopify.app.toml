@@ -1,6 +1,6 @@
 name = "Production Queue Communicator"
 client_id = "08fb1edbc0d92eda9b2e42e1934f8079"
-application_url = "https://stagewise.uplifttechnologies.pro"
+application_url = "https://stagewise-prod.netlify.app"
 embedded = true
 handle = "production-queue-communicator"
 
@@ -14,6 +14,9 @@ scopes = "read_orders,write_orders,read_customers"
 
 [auth]
 redirect_urls = [
+  "https://stagewise-prod.netlify.app/auth/callback",
+  "https://stagewise-prod.netlify.app/auth/shopify/callback",
+  "https://stagewise-prod.netlify.app/api/auth/callback",
   "https://stagewise.uplifttechnologies.pro/auth/callback",
   "https://stagewise.uplifttechnologies.pro/auth/shopify/callback",
   "https://stagewise.uplifttechnologies.pro/api/auth/callback"

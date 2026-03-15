@@ -1,6 +1,6 @@
 name = "CustomsReady Lite"
 client_id = "4f41ad971e2764edd783199602e89f90"
-application_url = "https://customsready.uplifttechnologies.pro"
+application_url = "https://customsready-prod.netlify.app"
 embedded = true
 
 [build]
@@ -13,6 +13,9 @@ scopes = "read_products,read_orders"
 
 [auth]
 redirect_urls = [
+  "https://customsready-prod.netlify.app/auth/callback",
+  "https://customsready-prod.netlify.app/auth/shopify/callback",
+  "https://customsready-prod.netlify.app/api/auth/callback",
   "https://customsready.uplifttechnologies.pro/auth/callback",
   "https://customsready.uplifttechnologies.pro/auth/shopify/callback",
   "https://customsready.uplifttechnologies.pro/api/auth/callback"

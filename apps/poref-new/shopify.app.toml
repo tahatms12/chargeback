@@ -1,11 +1,14 @@
 name = "PORef"
 client_id = "59ed62f675a6cb042c7079b3379bec5c"
-application_url = "https://poref.uplifttechnologies.pro"
+application_url = "https://poref-prod.netlify.app"
 embedded = true
 
 
 [auth]
 redirect_urls = [
+  "https://poref-prod.netlify.app/auth/callback",
+  "https://poref-prod.netlify.app/auth/shopify/callback",
+  "https://poref-prod.netlify.app/api/auth/callback",
   "https://poref.uplifttechnologies.pro/auth/callback",
   "https://poref.uplifttechnologies.pro/auth/shopify/callback",
   "https://poref.uplifttechnologies.pro/api/auth/callback"
