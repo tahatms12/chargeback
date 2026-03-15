@@ -5,6 +5,9 @@ import { netlifyPlugin } from "@netlify/remix-adapter/plugin";
 
 export default defineConfig({
   server: { port: Number(process.env.PORT ?? 3000), hmr: false },
+  ssr: {
+    noExternal: [/^@shopify\//],
+  },
   plugins: [
     remix({
       ignoredRouteFiles: ["**/.*"],
