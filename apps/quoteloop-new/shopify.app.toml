@@ -12,7 +12,11 @@ include_config_on_deploy = true
 scopes = "read_draft_orders,write_draft_orders,read_customers"
 
 [auth]
-redirect_urls = [ "https://quoteloop.uplifttechnologies.pro/auth/callback" ]
+redirect_urls = [
+  "https://quoteloop.uplifttechnologies.pro/auth/callback",
+  "https://quoteloop.uplifttechnologies.pro/auth/shopify/callback",
+  "https://quoteloop.uplifttechnologies.pro/api/auth/callback"
+]
 
 [webhooks]
 api_version = "2025-04"

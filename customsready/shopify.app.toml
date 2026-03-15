@@ -13,7 +13,9 @@ scopes = "read_products,read_orders"
 
 [auth]
 redirect_urls = [
-  "https://customsready.uplifttechnologies.pro/auth/callback"
+  "https://customsready.uplifttechnologies.pro/auth/callback",
+  "https://customsready.uplifttechnologies.pro/auth/shopify/callback",
+  "https://customsready.uplifttechnologies.pro/api/auth/callback"
 ]
 
 [webhooks]

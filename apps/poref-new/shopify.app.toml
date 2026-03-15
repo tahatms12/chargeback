@@ -6,7 +6,9 @@ embedded = true
 
 [auth]
 redirect_urls = [
-  "https://poref.uplifttechnologies.pro/auth/callback"
+  "https://poref.uplifttechnologies.pro/auth/callback",
+  "https://poref.uplifttechnologies.pro/auth/shopify/callback",
+  "https://poref.uplifttechnologies.pro/api/auth/callback"
 ]
 
 [access]

@@ -1,0 +1,23 @@
+[build]
+  base    = "apps/quoteloop-new"
+  command = "npm run build"
+  publish = "build/client"
+
+[build.environment]
+  NODE_VERSION  = "20"
+  NODE_OPTIONS  = "--max-old-space-size=4096"
+
+# Remix v2 — server functions
+[functions]
+  directory = "build/server"
+
+# Force all routes through Remix entry point
+[[redirects]]
+  from   = "/*"
+  to     = "/.netlify/functions/server"
+  status = 200
+
+[dev]
+  command   = "npm run dev"
+  port      = 3000
+  targetPort = 3000

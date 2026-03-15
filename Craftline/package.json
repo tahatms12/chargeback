@@ -22,6 +22,7 @@
         "node": ">=24.13.1"
     },
     "dependencies": {
+        "@netlify/remix-adapter": "^3.0.0",
         "@prisma/client": "^6.19.2",
         "@remix-run/node": "^2.9.1",
         "@remix-run/react": "^2.9.1",

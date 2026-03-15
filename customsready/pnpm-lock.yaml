@@ -8,6 +8,9 @@ importers:
 
   .:
     dependencies:
+      '@netlify/remix-adapter':
+        specifier: ^3.0.0
+        version: 3.0.0(typescript@5.9.3)(vite@5.4.21(@types/node@22.19.15))
       '@prisma/client':
         specifier: ^6.19.2
         version: 6.19.2(prisma@6.19.2(typescript@5.9.3))(typescript@5.9.3)
@@ -949,6 +952,12 @@ packages:
     resolution: {integrity: sha512-x0fWaQtYp4E6sktbsdAqnehxDgEc/VwM7uLsRCYWaiGu0ykYdZPiS8zCWdnjHwyiumousxfBm4SO31eXqwEZhQ==}
     cpu: [x64]
     os: [win32]
+
+  '@netlify/remix-adapter@3.0.0':
+    resolution: {integrity: sha512-6q541j/Sb8A/kawnyg4sIGvRxM56Jl+b7+Zt7DY/JEMcHrh+JXgTovb0QHajqI9KEG+1+XxjyDon3hufxKjzlg==}
+    engines: {node: '>=20.6.1'}
+    peerDependencies:
+      vite: '>=5.0.0'
 
   '@nodelib/fs.scandir@2.1.5':
     resolution: {integrity: sha512-vq24Bq3ym5HEQm2NKCr3yXDwjc7vTsEThRDnkp2DK9p1uqLR+DHurm/NOTo0KG7HYHU7eppKZj3MyqYuMBf62g==}
@@ -4586,6 +4595,14 @@ snapshots:
 
   '@msgpackr-extract/msgpackr-extract-win32-x64@3.0.3':
     optional: true
+
+  '@netlify/remix-adapter@3.0.0(typescript@5.9.3)(vite@5.4.21(@types/node@22.19.15))':
+    dependencies:
+      '@remix-run/node': 2.17.4(typescript@5.9.3)
+      isbot: 5.1.36
+      vite: 5.4.21(@types/node@22.19.15)
+    transitivePeerDependencies:
+      - typescript
 
   '@nodelib/fs.scandir@2.1.5':
     dependencies:

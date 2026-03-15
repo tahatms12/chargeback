@@ -14,7 +14,9 @@ scopes = "read_orders,write_orders,read_customers"
 
 [auth]
 redirect_urls = [
-  "https://stagewise.uplifttechnologies.pro/auth/callback"
+  "https://stagewise.uplifttechnologies.pro/auth/callback",
+  "https://stagewise.uplifttechnologies.pro/auth/shopify/callback",
+  "https://stagewise.uplifttechnologies.pro/api/auth/callback"
 ]
 
 [webhooks]
@@ -22,6 +24,18 @@ api_version = "2025-01"
 
   [[webhooks.subscriptions]]
   topics = ["app/uninstalled"]
+  uri = "/webhooks"
+
+  [[webhooks.subscriptions]]
+  topics = ["customers/data_request"]
+  uri = "/webhooks"
+
+  [[webhooks.subscriptions]]
+  topics = ["customers/redact"]
+  uri = "/webhooks"
+
+  [[webhooks.subscriptions]]
+  topics = ["shop/redact"]
   uri = "/webhooks"
 
 [pos]

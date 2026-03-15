@@ -11,7 +11,9 @@ scopes = "read_orders,write_orders,read_customers,read_metafields,write_metafiel
 
 [auth]
 redirect_urls = [
-  "https://craftline.uplifttechnologies.pro/auth/callback"
+  "https://craftline.uplifttechnologies.pro/auth/callback",
+  "https://craftline.uplifttechnologies.pro/auth/shopify/callback",
+  "https://craftline.uplifttechnologies.pro/api/auth/callback"
 ]
 
 [webhooks]
@@ -27,6 +29,18 @@ api_version = "2025-01"
 
   [[webhooks.subscriptions]]
   topics = ["app/uninstalled"]
+  uri = "/webhooks"
+
+  [[webhooks.subscriptions]]
+  topics = ["customers/data_request"]
+  uri = "/webhooks"
+
+  [[webhooks.subscriptions]]
+  topics = ["customers/redact"]
+  uri = "/webhooks"
+
+  [[webhooks.subscriptions]]
+  topics = ["shop/redact"]
   uri = "/webhooks"
 
 [pos]

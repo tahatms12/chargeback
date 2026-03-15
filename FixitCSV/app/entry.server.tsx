@@ -1,3 +1,4 @@
+import { createRequestHandler } from "@netlify/remix-adapter";
 import { PassThrough } from "node:stream";
 import { createReadableStreamFromReadable, type AppLoadContext, type EntryContext } from "@remix-run/node";
 import { RemixServer } from "@remix-run/react";
