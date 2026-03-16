@@ -21,6 +21,10 @@
     "node": ">=20.0.0"
   },
   "dependencies": {
+    "@remix-run/dev": "^2.13.1",
+    "prisma": "^6.19.2",
+    "tsx": "^4.19.1",
+    "vite": "^5.4.11",
     "@netlify/remix-adapter": "^3.0.0",
     "@prisma/client": "^6.19.2",
     "@remix-run/node": "^2.13.1",
@@ -40,13 +44,12 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@remix-run/dev": "^2.13.1",
+    
     "@shopify/cli": "^3.92.0",
     "@types/node": "^22.0.0",
     "eslint": "^8.57.0",
-    "prisma": "^6.19.2",
-    "tsx": "^4.19.1",
+    
     "typescript": "^5.6.3",
-    "vite": "^5.4.11"
+    
   }
 }
