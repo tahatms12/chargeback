@@ -1,0 +1,45 @@
+[build]
+  base = "router"
+  publish = "public"
+  command = "echo 'router build'"
+
+[[redirects]]
+  from = "/customsready/*"
+  to = "https://CUSTOMSREADY_INTERNAL_URL/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/fixitcsv/*"
+  to = "https://FIXITCSV_INTERNAL_URL/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/stagewise/*"
+  to = "https://STAGEWISE_INTERNAL_URL/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/poref/*"
+  to = "https://POREF_INTERNAL_URL/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/quoteloop/*"
+  to = "https://QUOTELOOP_INTERNAL_URL/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/craftline/*"
+  to = "https://CRAFTLINE_INTERNAL_URL/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/"
+  to = "/index.html"
+  status = 200

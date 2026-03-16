@@ -19,6 +19,7 @@ export default defineConfig({
   },
   plugins: [
     remix({
+      basename: "/customsready",
       ignoredRouteFiles: ["**/.*"],
       future: {
         v3_fetcherPersist: true,

@@ -12,6 +12,10 @@ const shopify = shopifyApp({
   scopes: [],
   appUrl: process.env.SHOPIFY_APP_URL!,
   authPathPrefix: "/auth",
+  auth: {
+    path: "/auth",
+    callbackPath: "/auth/callback",
+  },
   sessionStorage: new PrismaSessionStorage(db),
   distribution: AppDistribution.AppStore,
   future: { unstable_newEmbeddedAuthStrategy: true },
