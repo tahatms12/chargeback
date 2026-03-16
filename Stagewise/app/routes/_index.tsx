@@ -40,7 +40,8 @@ import {
   BlockStack,
 } from "@shopify/polaris";
 import { useCallback, useEffect, useState } from "react";
-import { authenticate, FREE_ORDER_LIMIT, MONTHLY_PLAN } from "../shopify.server";
+import { authenticate } from "../shopify.server";
+import { FREE_ORDER_LIMIT, MONTHLY_PLAN } from "../constants";
 import { db } from "../db.server";
 import { billingStatus } from "../billing.server";
 
