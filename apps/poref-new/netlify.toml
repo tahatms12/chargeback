@@ -1,18 +1,11 @@
 [build]
+  base = "apps/poref-new"
   command = "npm install --legacy-peer-deps && npm run build"
   publish = "build/client"
-
-[build.environment]
-  NODE_VERSION = "20"
-  NPM_VERSION = "10"
-  NODE_OPTIONS = "--max-old-space-size=4096"
-  NPM_FLAGS = "--include=dev"
 
 [functions]
   directory = "build/server"
   node_bundler = "nft"
-
-
 
 [[headers]]
   for = "/build/*"

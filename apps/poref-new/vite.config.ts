@@ -56,6 +56,7 @@ export default defineConfig({
   },
   plugins: [
     remix({
+      basename: "/poref",
       ignoredRouteFiles: ["**/.*"],
       future: {
         v3_fetcherPersist: true,
