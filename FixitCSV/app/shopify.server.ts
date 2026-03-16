@@ -1,5 +1,6 @@
 import "@shopify/shopify-app-remix/adapters/node";
-import { AppDistribution, BillingInterval, DeliveryMethod, LATEST_API_VERSION, shopifyApp } from "@shopify/shopify-app-remix/server";
+import { AppDistribution, BillingInterval, DeliveryMethod, shopifyApp } from "@shopify/shopify-app-remix/server";
+import { ApiVersion } from "@shopify/shopify-api";
 import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
 import { db } from "~/db.server";
 import { PAID_PLAN_NAME, PAID_PLAN_PRICE } from "~/lib/shopify-csv-spec";
@@ -7,7 +8,7 @@ import { PAID_PLAN_NAME, PAID_PLAN_PRICE } from "~/lib/shopify-csv-spec";
 const shopify = shopifyApp({
   apiKey: process.env.SHOPIFY_API_KEY!,
   apiSecretKey: process.env.SHOPIFY_API_SECRET!,
-  apiVersion: LATEST_API_VERSION,
+  apiVersion: ApiVersion.July25,
   scopes: [],
   appUrl: process.env.SHOPIFY_APP_URL!,
   authPathPrefix: "/auth",
