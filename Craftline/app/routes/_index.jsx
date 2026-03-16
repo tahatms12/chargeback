@@ -34,13 +34,8 @@ import {
   addOrderToQueue,
   buildProductSummary,
 } from "../lib/orders.server.js";
-import {
-  checkBillingAccess,
-  createSubscription,
-  FREE_TIER_ORDER_LIMIT,
-} from "../lib/billing.server.js";
-import { OrderCard } from "../components/OrderCard.jsx";
-
+import { checkBillingAccess, createSubscription } from "../lib/billing.server.js";
+import { FREE_TIER_ORDER_LIMIT } from "../constants.js";
 const OPEN_ORDERS_QUERY = `
   query GetOpenOrders($cursor: String) {
     orders(
