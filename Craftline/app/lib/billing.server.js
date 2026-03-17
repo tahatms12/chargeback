@@ -3,9 +3,11 @@
 // Free tier: up to 10 active orders in queue.
 // Paid tier: $9/month, unlimited orders. (Source fact)
 
-const PLAN_MONTHLY_PRICE = "9.00";
-const PLAN_NAME = "Maker Queue — Unlimited";
-const FREE_TIER_ORDER_LIMIT = 10;
+import {
+  FREE_TIER_ORDER_LIMIT,
+  PLAN_MONTHLY_PRICE,
+  PLAN_NAME,
+} from "./constants";
 
 /**
  * Returns the currently active app subscription for the shop, or null.

@@ -1,0 +1,12 @@
+﻿apps/poref-new                           | ΓÇëWARNΓÇë The field "resolutions" was found in C:\Users\Admin\Downloads\shopifyapps\final\chargeback\apps\poref-new/package.json. This will not take effect. You should configure "resolutions" at the root of the workspace instead.
+apps/quoteloop-new                       | ΓÇëWARNΓÇë The field "resolutions" was found in C:\Users\Admin\Downloads\shopifyapps\final\chargeback\apps\quoteloop-new/package.json. This will not take effect. You should configure "resolutions" at the root of the workspace instead.
+
+> production-queue-communicator@1.0.0 build C:\Users\Admin\Downloads\shopifyapps\final\chargeback\Stagewise
+> remix vite:build
+
+[36mvite v5.4.21 [32mbuilding for production...[36m[39m
+transforming...
+[32mΓ£ô[39m 79 modules transformed.
+C:\Users\Admin\Downloads\shopifyapps\final\chargeback\Stagewise:
+ΓÇëERR_PNPM_RECURSIVE_RUN_FIRST_FAILΓÇë production-queue-communicator@1.0.0 build: `remix vite:build`
+Exit status 1

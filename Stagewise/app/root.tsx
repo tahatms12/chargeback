@@ -1,5 +1,7 @@
+// app/root.tsx
 import {
   Links,
+  LiveReload,
   Meta,
   Outlet,
   Scripts,
@@ -11,7 +13,12 @@ export default function App() {
     <html lang="en">
       <head>
         <meta charSet="utf-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <link rel="preconnect" href="https://cdn.shopify.com/" />
+        <link
+          rel="stylesheet"
+          href="https://cdn.shopify.com/static/fonts/inter/v4/styles.css"
+        />
         <Meta />
         <Links />
       </head>
@@ -19,6 +26,7 @@ export default function App() {
         <Outlet />
         <ScrollRestoration />
         <Scripts />
+        <LiveReload />
       </body>
     </html>
   );

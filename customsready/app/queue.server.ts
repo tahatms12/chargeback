@@ -1,34 +1,56 @@
 // app/queue.server.ts
+// NOTE: BullMQ queues require a Redis connection.
+// In Netlify Functions (serverless/stateless), module-scope connections
+// are wrapped with null-checks so the import does not crash on cold start
+// when REDIS_URL is unavailable.
+
 import { Queue } from "bullmq";
 import IORedis from "ioredis";
 
 declare global {
   // eslint-disable-next-line no-var
-  var __redis: IORedis | undefined;
+  var __redis: IORedis | null | undefined;
 }
 
-// Singleton Redis connection for BullMQ
-export const redisConnection: IORedis =
-  global.__redis ??
-  new IORedis(process.env.REDIS_URL!, {
-    maxRetriesPerRequest: null, // Required by BullMQ
-    enableReadyCheck: false,
+// ─── Redis singleton with null-guard ──────────────────────────────────────────
+// BullMQ workers cannot run in Netlify Functions (stateless serverless).
+// Queue enqueue operations ARE possible if REDIS_URL is set as an env var,
+// but worker consumption must run from a dedicated Node.js server process.
+
+let redisConnection: IORedis | null = null;
+
+try {
+  redisConnection =
+    global.__redis ??
+    new IORedis(process.env.REDIS_URL!, {
+      maxRetriesPerRequest: null, // Required by BullMQ
+      enableReadyCheck: false,
+      lazyConnect: true, // Do not connect until first command
+    });
+
+  if (process.env.NODE_ENV !== "production") {
+    global.__redis = redisConnection;
+  }
+} catch (e) {
+  console.error("[CustomsReady] Redis unavailable — queue features disabled:", e);
+  redisConnection = null;
+}
+
+export { redisConnection };
+
+// ─── Queue definitions (only if Redis is available) ─────────────────────────
+
+export let catalogAuditQueue: Queue<CatalogAuditJobData> | null = null;
+export let productReauditQueue: Queue<ProductReauditJobData> | null = null;
+
+if (redisConnection) {
+  catalogAuditQueue = new Queue<CatalogAuditJobData>("catalog-audit", {
+    connection: redisConnection,
   });
-
-if (process.env.NODE_ENV !== "production") {
-  global.__redis = redisConnection;
+  productReauditQueue = new Queue<ProductReauditJobData>("product-reaudit", {
+    connection: redisConnection,
+  });
 }
-
-// Queue definitions
-export const catalogAuditQueue = new Queue<CatalogAuditJobData>(
-  "catalog-audit",
-  { connection: redisConnection }
-);
-
-export const productReauditQueue = new Queue<ProductReauditJobData>(
-  "product-reaudit",
-  { connection: redisConnection }
-);
 
 export interface CatalogAuditJobData {
   shopDomain: string;
@@ -46,7 +68,12 @@ export interface ProductReauditJobData {
 export async function enqueueCatalogAudit(
   shopDomain: string,
   triggeredBy: CatalogAuditJobData["triggeredBy"] = "manual"
-): Promise<string> {
+): Promise<string | null> {
+  if (!catalogAuditQueue) {
+    console.error("[CustomsReady] catalogAuditQueue unavailable — Redis not connected");
+    return null;
+  }
+
   const { db } = await import("./db.server");
 
   // Create an AuditRun record to track progress
@@ -80,6 +107,11 @@ export async function enqueueProductReaudit(
   productGid: string,
   webhookTopic: ProductReauditJobData["webhookTopic"]
 ): Promise<void> {
+  if (!productReauditQueue) {
+    console.error("[CustomsReady] productReauditQueue unavailable — Redis not connected");
+    return;
+  }
+
   await productReauditQueue.add(
     "reaudit",
     { shopDomain, productGid, webhookTopic },

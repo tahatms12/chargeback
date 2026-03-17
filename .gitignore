@@ -8,4 +8,18 @@ dist
 prisma/dev.db
 prisma/dev.db-journal
 
-netlify-agent/
+# Vite cache
+**/*.timestamp-*.mjs
+
+# Build output (do not commit)
+**/build/client/
+**/build/server/
+
+# Netlify local state
+**/.netlify/
+
+# Build logs
+**/build.log
+
+# Prisma generated
+**/node_modules/.prisma/

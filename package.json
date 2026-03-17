@@ -1,14 +1,32 @@
 {
-    "name":  "chargeback-monorepo",
-    "version":  "1.0.0",
-    "private":  true,
-    "scripts":  {
-                    "build":  "echo \u0027Build individual apps via their Netlify base directories\u0027",
-                    "build:customsready":  "npm --prefix ./customsready install \u0026\u0026 npm --prefix ./customsready run build",
-                    "build:fixitcsv":  "npm --prefix ./FixitCSV install \u0026\u0026 npm --prefix ./FixitCSV run build",
-                    "build:stagewise":  "npm --prefix ./Stagewise install \u0026\u0026 npm --prefix ./Stagewise run build",
-                    "build:poref":  "npm --prefix ./apps/poref-new install \u0026\u0026 npm --prefix ./apps/poref-new run build",
-                    "build:quoteloop":  "npm --prefix ./apps/quoteloop-new install \u0026\u0026 npm --prefix ./apps/quoteloop-new run build",
-                    "build:craftline":  "npm --prefix ./Craftline install \u0026\u0026 npm --prefix ./Craftline run build"
-                }
+  "name": "chargeback-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build:all": "pnpm run build:customsready && pnpm run build:fixitcsv && pnpm run build:stagewise && pnpm run build:poref-new && pnpm run build:quoteloop-new && pnpm run build:craftline",
+    "dev:all": "pnpm run dev:customsready & pnpm run dev:fixitcsv & pnpm run dev:stagewise & pnpm run dev:poref-new & pnpm run dev:quoteloop-new & pnpm run dev:craftline",
+    "build:customsready": "pnpm --filter customsready-lite run build",
+    "build:fixitcsv": "pnpm --filter fixitcsv run build",
+    "build:stagewise": "pnpm --filter production-queue-communicator run build",
+    "build:poref-new": "pnpm --filter poref-new run build",
+    "build:quoteloop-new": "pnpm --filter quoteloop-new run build",
+    "build:craftline": "pnpm --filter maker-queue run build",
+    "dev:customsready": "pnpm --filter customsready-lite run dev",
+    "dev:fixitcsv": "pnpm --filter fixitcsv run dev",
+    "dev:stagewise": "pnpm --filter production-queue-communicator run dev",
+    "dev:poref-new": "pnpm --filter poref-new run dev",
+    "dev:quoteloop-new": "pnpm --filter quoteloop-new run dev",
+    "dev:craftline": "pnpm --filter maker-queue run dev"
+  },
+  "devDependencies": {
+    "typescript": "5.6.3"
+  },
+  "pnpm": {
+    "overrides": {
+      "@graphql-tools/url-loader": "8.0.16",
+      "@graphql-codegen/client-preset": "4.7.0",
+      "@graphql-codegen/typescript-operations": "4.5.0",
+      "minimatch": "9.0.5"
+    }
+  }
 }

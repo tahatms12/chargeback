@@ -8,8 +8,8 @@ import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prism
 import prisma from "./db.server";
 
 const shopify = shopifyApp({
-  apiKey: process.env.SHOPIFY_API_KEY,
-  apiSecretKey: process.env.SHOPIFY_API_SECRET || "",
+  apiKey: process.env.SHOPIFY_API_KEY!,
+  apiSecretKey: process.env.SHOPIFY_API_SECRET!,
   apiVersion: ApiVersion.January25,
   scopes: process.env.SCOPES?.split(","),
   appUrl: process.env.SHOPIFY_APP_URL || "",
@@ -23,6 +23,11 @@ const shopify = shopifyApp({
   ...(process.env.SHOP_CUSTOM_DOMAIN
     ? { customShopDomains: [process.env.SHOP_CUSTOM_DOMAIN] }
     : {}),
+  hooks: {
+    afterAuth: async ({ session }) => {
+      shopify.registerWebhooks({ session });
+    },
+  },
 });
 
 export default shopify;

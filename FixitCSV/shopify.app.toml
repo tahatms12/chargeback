@@ -1,12 +1,11 @@
 name = "FixitCSV"
-client_id = "1d81ef94081a2c788405f34bf1869a8b"
-application_url = "https://fixitcsv-prod.netlify.app"
+client_id = "ae643eaf470a54b579b814b2a513eadd"
+application_url = "https://fixitcsv.uplifttechnologies.pro"
 embedded = true
 
 [build]
 automatically_update_urls_on_dev = true
 dev_store_url = ""
-include_config_on_deploy = true
 
 [access_scopes]
 scopes = "read_products"

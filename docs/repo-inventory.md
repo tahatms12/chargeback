@@ -13,48 +13,37 @@
 - `reports/`
 
 ## 2. Six Shopify Apps
-1. `Craftline` (in /Craftline)
-2. `FixitCSV` (in /FixitCSV)
-3. `Stagewise` (in /Stagewise)
-4. `customsready` (in /customsready)
-5. `poref-new` (in /apps/poref-new)
-6. `quoteloop-new` (in /apps/quoteloop-new)
+1. `Craftline` (in `/Craftline`, name: `maker-queue`)
+2. `FixitCSV` (in `/FixitCSV`, name: `fixitcsv`)
+3. `Stagewise` (in `/Stagewise`, name: `production-queue-communicator`)
+4. `customsready` (in `/customsready`, name: `customsready-lite`)
+5. `poref-new` (in `/apps/poref-new`, name: `app` -> renamed to `poref-new`)
+6. `quoteloop-new` (in `/apps/quoteloop-new`, name: `app` -> renamed to `quoteloop-new`)
 
 ## 3. Build System Files
 - `package.json` (Root, netlify-agent, and in each of the 6 apps)
-- `package-lock.json` (Root, netlify-agent)
-- `pnpm-lock.yaml` (`apps/poref-new`, `apps/quoteloop-new`)
+- `pnpm-workspace.yaml` (Root)
+- `pnpm-lock.yaml` (Root)
 
 ## 4. Deployment Config Files
-- Vercel: None found (`vercel.json` previously deleted, no `.vercel` directories).
-- Netlify: None found currently.
-- Render/Fly/Other: None.
+- Vercel: None found.
+- Netlify: `netlify.toml` in all 6 apps.
 
 ## 5. CI/CD Workflow Files
 - None. `.github` directory does not exist.
 
 ## 6. Environment Files
 - `.env.example` at root.
-- No other `.env` files found in version control.
 
 ## 7. Frontend Framework Indicators
 - `vite.config.ts` inside all 6 apps indicating Remix + Vite.
 
 ## 8. Shopify-specific Files
 - `shopify.app.toml` inside each of the 6 apps.
-- `extensions/` directories exist in some apps (e.g., customsready).
 
-## 9. App-Specific Details
-For all 6 apps:
-- **Framework**: Remix (via Vite)
-- **Build Command**: `remix vite:build` 
-- **Output Directory**: `build/`
-- **Port/Dev Server**: Managed by Shopify CLI (`shopify app dev`)
-- **Existing Environment Variables**: `SHOPIFY_API_KEY`, `SHOPIFY_APP_URL`
-- **Shopify API Key References**: Present in `shopify.app.toml` as `client_id`
-- **App Bridge Integration**: `@shopify/app-bridge-react` is present as per prior logs.
+## 10. Redundancies and Known Issues
+- **Duplicate Package Names**: Both `poref-new` and `quoteloop-new` were named `app`.
+- **Inconsistent Build Commands**: `netlify.toml` files currently use `npm install && npm run build` instead of `pnpm`.
+- **Stagewise Build failure**: `Stagewise` build is failing with `remix vite:build`, likely due to dependency or Vite config issues.
+- **Vercel Artifacts**: Most already removed, but remnants might exist in `package.json` scripts if any.
 
-## 10. Redundancies to Address
-- **Multiple package managers**: `package-lock.json` (npm) and `pnpm-lock.yaml` (pnpm) are both in use. Standardizing to pnpm workspaces.
-- **Build configs**: `vite.config.ts` might have duplicated logic.
-- **Unused scripts/Vercel artifacts**: Root `package.json` relies on `npm --prefix` instead of proper workspace commands. Vercel artifacts are already cleared based on current state.

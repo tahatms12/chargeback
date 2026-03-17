@@ -1,12 +1,11 @@
 name = "QuoteLoop"
-client_id = "c0a7f6741dfc891c848bba84360c66da"
-application_url = "https://quoteloop-prod.netlify.app"
+client_id = "fc83b2d79a0791b27995f678fb80b614"
+application_url = "https://quoteloop.uplifttechnologies.pro"
 embedded = true
 
 [build]
 automatically_update_urls_on_dev = true
 dev_store_url = ""
-include_config_on_deploy = true
 
 [access_scopes]
 scopes = "read_draft_orders,write_draft_orders,read_customers"

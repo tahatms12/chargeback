@@ -1,0 +1,26 @@
+name: Netlify Preview Deployments
+
+on:
+  pull_request:
+    paths:
+      - 'Craftline/**'
+      - 'FixitCSV/**'
+      - 'Stagewise/**'
+      - 'customsready/**'
+      - 'apps/poref-new/**'
+      - 'apps/quoteloop-new/**'
+
+jobs:
+  # Note: This workflow is a reference. 
+  # For best results in a monorepo, connect each Netlify site 
+  # directly to this GitHub repo and configure the "Base directory" 
+  # in Netlify Site Settings for each site.
+  
+  # If you prefer to deploy via CLI, you can use the netlify-cli action:
+  # https://github.com/netlify/actions
+  
+  announce:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Announce Preview
+        run: echo "Changes detected in one or more apps. Netlify will trigger preview builds for affected sites if linked."

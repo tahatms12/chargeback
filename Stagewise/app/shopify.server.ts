@@ -9,9 +9,9 @@ import {
 import { PrismaSessionStorage } from "@shopify/shopify-app-session-storage-prisma";
 import { db } from "./db.server";
 
-// Source fact: free tier = up to 10 active orders; paid tier = $9/month unlimited
-export const FREE_ORDER_LIMIT = 10;
-export const MONTHLY_PLAN = "Monthly Plan";
+import { FREE_ORDER_LIMIT, MONTHLY_PLAN } from "./lib/constants";
+
+export { FREE_ORDER_LIMIT, MONTHLY_PLAN };
 
 const shopify = shopifyApp({
   apiKey: process.env.SHOPIFY_API_KEY!,
@@ -36,6 +36,11 @@ const shopify = shopifyApp({
   ...(process.env.SHOP_CUSTOM_DOMAIN
     ? { customShopDomains: [process.env.SHOP_CUSTOM_DOMAIN] }
     : {}),
+  hooks: {
+    afterAuth: async ({ session }) => {
+      shopify.registerWebhooks({ session });
+    },
+  },
 });
 
 export default shopify;
@@ -46,3 +51,4 @@ export const unauthenticated = shopify.unauthenticated;
 export const login = shopify.login;
 export const registerWebhooks = shopify.registerWebhooks;
 export const sessionStorage = shopify.sessionStorage;
+

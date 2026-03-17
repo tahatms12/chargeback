@@ -15,7 +15,7 @@ import {
   useBreakpoints,
 } from "@shopify/polaris";
 import { TitleBar } from "@shopify/app-bridge-react";
-import { authenticate } from "../shopify.server";
+import { authenticate } from "~/shopify.server";
 
 interface DraftOrder {
   id: string;

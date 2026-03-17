@@ -1,14 +1,11 @@
 name = "PORef"
-client_id = "59ed62f675a6cb042c7079b3379bec5c"
-application_url = "https://poref-prod.netlify.app"
+client_id = "f1f6c46cef65eb4c90663b2bc88fd1e6"
+application_url = "https://poref.uplifttechnologies.pro"
 embedded = true
 
 
 [auth]
 redirect_urls = [
-  "https://poref-prod.netlify.app/auth/callback",
-  "https://poref-prod.netlify.app/auth/shopify/callback",
-  "https://poref-prod.netlify.app/api/auth/callback",
   "https://poref.uplifttechnologies.pro/auth/callback",
   "https://poref.uplifttechnologies.pro/auth/shopify/callback",
   "https://poref.uplifttechnologies.pro/api/auth/callback"
@@ -70,53 +67,3 @@ embedded = true
 automatically_update_urls_on_dev = true
 dev_store_url = ""
 include_config_on_deploy = true
-
-[[extensions]]
-name = "PORef Checkout Field"
-handle = "poref-checkout"
-type = "ui_extension"
-
-  [extensions.targeting]
-    [[extensions.targeting.targets]]
-    target = "purchase.checkout.block.render"
-    module = "./extensions/poref-checkout/src/index.tsx"
-    default_placement_reference = "CONTACT"
-
-[[extensions]]
-name = "PORef Order Block"
-handle = "poref-order-block"
-type = "ui_extension"
-
-  [extensions.targeting]
-    [[extensions.targeting.targets]]
-    target = "admin.order-details.block.render"
-    module = "./extensions/poref-order-block/src/index.tsx"
-
-[[extensions]]
-name = "PORef Order Action"
-handle = "poref-order-action"
-type = "ui_extension"
-
-  [extensions.targeting]
-    [[extensions.targeting.targets]]
-    target = "admin.order-details.action.render"
-    module = "./extensions/poref-order-action/src/index.tsx"
-
-[[extensions]]
-name = "PORef POS"
-handle = "poref-pos"
-type = "ui_extension"
-
-  [extensions.targeting]
-    [[extensions.targeting.targets]]
-    target = "pos.home.tile.render"
-    module = "./extensions/poref-pos/src/Tile.tsx"
-
-    [[extensions.targeting.targets]]
-    target = "pos.home.modal.render"
-    module = "./extensions/poref-pos/src/Modal.tsx"
-
-[[extensions]]
-name = "PORef Cart Field"
-handle = "poref-cart"
-type = "theme_app_extension"

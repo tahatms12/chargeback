@@ -1,4 +1,3 @@
-// app/root.tsx
 import {
   Links,
   LiveReload,
@@ -7,10 +6,8 @@ import {
   Scripts,
   ScrollRestoration,
 } from "@remix-run/react";
-import { AppProvider as PolarisAppProvider } from "@shopify/polaris";
 import { addDocumentResponseHeaders } from "./shopify.server";
 import type { LoaderFunctionArgs, HeadersFunction } from "@remix-run/node";
-import en from "@shopify/polaris/locales/en.json";
 
 export const headers: HeadersFunction = (headersArgs) => {
   return addDocumentResponseHeaders(headersArgs.request, headersArgs.loaderHeaders);
@@ -36,9 +33,7 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <PolarisAppProvider i18n={en}>
-          <Outlet />
-        </PolarisAppProvider>
+        <Outlet />
         <ScrollRestoration />
         <Scripts />
         <LiveReload />

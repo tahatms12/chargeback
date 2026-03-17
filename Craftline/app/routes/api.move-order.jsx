@@ -1,8 +1,8 @@
 import { json } from "@remix-run/node";
-import { authenticate } from "../shopify.server.js";
-import { moveOrderToStage } from "../lib/orders.server.js";
-import { getStage } from "../lib/stages.server.js";
-import { queueEmail, processEmailQueue, renderTemplate } from "../lib/email.server.js";
+import { authenticate } from "~/shopify.server";
+import { moveOrderToStage } from "~/lib/orders.server";
+import { getStage } from "~/lib/stages.server";
+import { queueEmail, processEmailQueue, renderTemplate } from "~/lib/email.server";
 
 // Shopify metafield namespace/key used to store the production stage on the order
 const META_NAMESPACE = "maker_queue";

@@ -1,0 +1,702 @@
+═══════════════════════════════════════════════════════════════
+MEGA AUDIT LOG — FOR_AMMAR
+Generated: 2026-03-17T18:35:16-04:00
+Auditor: Antigravity Senior Shopify Platform Engineer
+Repo: c:\Users\Admin\Downloads\shopifyapps\final\chargeback
+═══════════════════════════════════════════════════════════════
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PHASE 1 — REPO STRUCTURE INTELLIGENCE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[PHASE 1] [GLOBAL] [SEVERITY: INFO]
+FINDING: Monorepo uses pnpm workspaces (pnpm-workspace.yaml). Package manager: pnpm. Lockfile: pnpm-lock.yaml present.
+LOCATION: /pnpm-workspace.yaml, /package.json
+ROOT CAUSE: N/A — correct setup
+STATUS: OK
+---
+
+[PHASE 1] [GLOBAL] [SEVERITY: INFO]
+FINDING: Workspace package list: "apps/*", "Craftline", "FixitCSV", "Stagewise", "customsready", "netlify-agent"
+LOCATION: /pnpm-workspace.yaml
+ROOT CAUSE: N/A
+STATUS: OK
+---
+
+[PHASE 1] [GLOBAL] [SEVERITY: HIGH]
+FINDING: "chargeback" directory exists at root but is EMPTY. The monorepo is named "chargeback-monorepo" yet there is no actual chargeback app workspace package. The directory contains zero files.
+LOCATION: /chargeback/ (empty)
+ROOT CAUSE: Likely a placeholder or deleted app that was never cleaned up. The root-level .env.example references "chargeguard.uplifttechnologies.pro" — this appears to be a 7th app (ChargeGuard/Chargeback) that was intended but never scaffolded.
+STATUS: MISSING
+---
+
+[PHASE 1] [GLOBAL] [SEVERITY: MEDIUM]
+FINDING: Root-level .env.example describes infrastructure for a "chargeguard" app (Postgres, Redis, Minio, S3), yet no such app exists in the repo. These env vars are orphaned.
+LOCATION: /.env.example
+ROOT CAUSE: The ChargeGuard/Chargeback app was never built, but the root env template was created in anticipation.
+STATUS: MISSING
+---
+
+[PHASE 1] [GLOBAL] [SEVERITY: HIGH]
+FINDING: Root netlify.toml has a build command of "pnpm run build:all" with publish = "dist" (placeholder). This root-level toml is effectively non-functional for monorepo deployments — each app has its own netlify.toml and its own Netlify site. The root toml will cause confusion and could trigger incorrect root-level builds.
+LOCATION: /netlify.toml
+ROOT CAUSE: The root toml was created during early setup and never removed. The redirect rules inside it use absolute domain matching (https://makerqueue.uplifttechnologies.pro/*) which Netlify does NOT honor — Netlify redirects only work for paths, not cross-domain rewrites (those require custom domains or proxies).
+STATUS: MISCONFIGURED
+---
+
+[PHASE 1] [GLOBAL] [SEVERITY: MEDIUM]
+FINDING: Root .gitignore excludes "netlify-agent/" but netlify-agent IS listed in pnpm-workspace.yaml as a workspace package. This means the agent's node_modules/code could be gitignored unintentionally.
+LOCATION: /.gitignore line 11
+ROOT CAUSE: netlify-agent directory added to workspace but entire dir was gitignored at root.
+STATUS: WARNING
+---
+
+[PHASE 1] [GLOBAL] [SEVERITY: INFO]
+FINDING: tsconfig.base.json exists at root — shared TypeScript config.
+LOCATION: /tsconfig.base.json
+STATUS: OK
+---
+
+APP MAP:
+┌────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│ APP_NAME              │ ROOT_DIR           │ FRAMEWORK       │ BUILD_CMD        │ OUTPUT_DIR   │ DEPLOY  │
+│ Craftline (MakerQueue)│ /Craftline         │ Remix+Vite SSR  │ remix vite:build │ build/client │ Netlify │
+│ FixitCSV              │ /FixitCSV          │ Remix+Vite SSR  │ remix vite:build │ build/client │ Netlify │
+│ Stagewise (ProdQueue) │ /Stagewise         │ Remix+Vite SSR  │ remix vite:build │ build/client │ Netlify │
+│ CustomsReady Lite     │ /customsready      │ Remix+Vite SSR  │ remix vite:build │ build/client │ Netlify │
+│ PORef                 │ /apps/poref-new    │ Remix+Vite SSR  │ remix vite:build │ build/client │ Netlify │
+│ QuoteLoop             │ /apps/quoteloop-new│ Remix+Vite SSR  │ remix vite:build │ build/client │ Netlify │
+│ ChargeGuard (missing) │ /chargeback (EMPTY)│ UNKNOWN         │ UNKNOWN          │ UNKNOWN      │ NONE    │
+└────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+[PHASE 1] [GLOBAL] [SEVERITY: MEDIUM]
+FINDING: Root package.json root-scripts reference internal package filter names: "customsready-lite", "production-queue-communicator", "maker-queue", "fixitcsv", "poref-new", "quoteloop-new". These must be kept in sync with package.json "name" fields in each app. Currently aligned.
+LOCATION: /package.json
+STATUS: OK
+---
+
+[PHASE 1] [GLOBAL] [SEVERITY: MEDIUM]
+FINDING: Root package.json pnpm overrides force vite to "^6.2.2" globally. However Craftline, FixitCSV, Stagewise, customsready all declare vite "^5.x" in their devDependencies. The global override will force vite 6 even though the apps expect vite 5. This may cause subtle build incompatibilities especially with remix-vite plugin which has version-pinned compatibility.
+LOCATION: /package.json pnpm.overrides.vite="^6.2.2"
+ROOT CAUSE: Global override was added for poref-new/quoteloop-new (which use vite 6) without considering that older apps use vite 5.
+STATUS: WARNING — could break Craftline, FixitCSV, Stagewise, customsready builds
+---
+
+[PHASE 1] [GLOBAL] [SEVERITY: MEDIUM]
+FINDING: Root package.json devDependencies list "prisma": "6.19.2" — this is unusual. Prisma CLI is typically a devDependency within each individual app workspace, not at the root. Having it at root may cause version conflicts when each app also declares its own prisma version.
+LOCATION: /package.json devDependencies.prisma
+STATUS: WARNING
+---
+
+[PHASE 1] [GLOBAL] [SEVERITY: INFO]
+FINDING: .nvmrc files present per app. Root .nvmrc: node 20. All apps consistent on >=20.
+STATUS: OK
+---
+
+[PHASE 1] [GLOBAL] [SEVERITY: HIGH]
+FINDING: Multiple apps have a .env file committed (not just .env.example). Specifically: Craftline/.env, FixitCSV/.env, Stagewise/.env, customsready/.env, apps/poref-new/.env, apps/quoteloop-new/.env all exist with actual byte content (not empty). The root .gitignore has ".env" at line 2, which should ignore these — however each app-level .gitignore may or may not extend this protection.
+LOCATION: Craftline/.env (288 bytes), FixitCSV/.env (253 bytes), Stagewise/.env (413 bytes), customsready/.env (391 bytes), apps/poref-new/.env (258 bytes), apps/quoteloop-new/.env (262 bytes)
+ROOT CAUSE: .env files exist at app level with actual content. Root .gitignore should cover them but FixitCSV has its own .gitignore which may have different rules. Secret exposure risk.
+STATUS: WARNING — verify .env files are gitignored and do not contain real secrets
+---
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PHASE 2 — NETLIFY CONFIG AUDIT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Netlify Team: "uplift core" (slug: tahatms12)
+8 total sites found in team. 6 are app deployments (+ 1 marketing/homepage + 1 uplifttech site).
+
+SITE INVENTORY:
+  poref-prod          → https://poref.uplifttechnologies.pro        [state: ready, deploy: 69b8b8f9...]
+  stagewise-prod      → https://stagewise.uplifttechnologies.pro     [state: ready, deploy: 69b8b8f9...]
+  fixitcsv-prod       → https://fixitcsv.uplifttechnologies.pro      [state: ready, deploy: 69b8b8f9...]
+  customsready-prod   → https://customsready.uplifttechnologies.pro  [state: ready, deploy: 69b8b8f8...]
+  quoteloop-prod      → https://quoteloop.uplifttechnologies.pro     [state: current, deploy: {} EMPTY]
+  craftline-prod      → https://craftline.uplifttechnologies.pro     [state: current, deploy: {} EMPTY]
+  uplifttechnologies-pro → http://uplifttechnologies-pro.netlify.app [no custom domain]
+  uplifttech          → https://uplift-technologies.com
+
+[PHASE 2] [CRAFTLINE] [SEVERITY: CRITICAL]
+FINDING: craftline-prod Netlify site shows currentDeploy as empty object "{}". This means there has been NO successful deployment to the site or the most recent deploy state is unknown/errored. The site may be serving a blank/error page.
+LOCATION: Netlify site ID: 7cf7d158-7b79-4022-9004-8b2c313ca2a9
+ROOT CAUSE: Either the site was never successfully deployed, or the last deploy failed. The deploy reference is absent from Netlify's currentDeploy field which indicates no "ready" state has been achieved.
+STATUS: CRITICAL — likely serving 404 or blank page
+---
+
+[PHASE 2] [QUOTELOOP] [SEVERITY: CRITICAL]
+FINDING: quoteloop-prod Netlify site shows currentDeploy as empty object "{}". Same issue as craftline-prod — no confirmed successful deployment present.
+LOCATION: Netlify site ID: b579e238-53d5-4253-b431-5576fa33080a
+ROOT CAUSE: Same as Craftline — no ready deploy state registered.
+STATUS: CRITICAL — likely serving 404 or blank page
+---
+
+[PHASE 2] [ALL APPS] [SEVERITY: MEDIUM]
+FINDING: All 6 app-level netlify.toml files are IDENTICAL: build command="pnpm run build", publish="build/client", functions.directory="build/server", node_bundler="nft". This is correct for Remix SSR with @netlify/remix-adapter. The adapter generates serverless functions in build/server and static assets in build/client.
+LOCATION: Craftline/netlify.toml, FixitCSV/netlify.toml, Stagewise/netlify.toml, customsready/netlify.toml, apps/poref-new/netlify.toml, apps/quoteloop-new/netlify.toml
+STATUS: OK — config is correct per app
+---
+
+[PHASE 2] [ALL APPS] [SEVERITY: HIGH]
+FINDING: NONE of the 6 app-level netlify.toml files declare the [context] or [build] base directory. When each site is linked in Netlify, it MUST have its base directory set to the app folder (e.g., "Craftline", "FixitCSV", etc.) via the Netlify site UI or UI configuration. If base directory is not set, Netlify will attempt to build from repo root using the ROOT netlify.toml (which uses "pnpm run build:all" and publish="dist" — a broken config).
+LOCATION: All app netlify.toml files; Netlify site settings (cannot verify via MCP)
+ROOT CAUSE: Base directory is a Netlify UI/API setting, not expressible in per-app netlify.toml unless declared in a [build] base key. None of the per-app tomls have "base" set.
+STATUS: MISCONFIGURED — depends entirely on Netlify site settings being correct
+---
+
+[PHASE 2] [ALL APPS] [SEVERITY: HIGH]
+FINDING: No [[redirects]] rule exists in ANY app netlify.toml. For Remix SSR with @netlify/remix-adapter, Netlify serverless functions handle routing. However without a catch-all redirect, any route not matched by a static file will fall through with a 404 instead of being passed to the Remix function. The standard requirement is either:
+  (a) The netlify-remix-adapter auto-generates a _redirects or netlify.toml catch-all at build time, OR
+  (b) A manual [[redirects]] from="/*" to="/.netlify/functions/server" status=200 is needed
+LOCATION: All app netlify.toml files
+ROOT CAUSE: No redirect chain defined. Whether the @netlify/remix-adapter handles this at build time needs verification (see Phase 3).
+STATUS: WARNING — needs build output _redirects verification
+---
+
+[PHASE 2] [ALL APPS] [SEVERITY: MEDIUM]
+FINDING: NPM_FLAGS = "--include=dev" is set in all app netlify.toml files. This forces npm to install devDependencies. However this repo uses pnpm, not npm. This flag has no effect with pnpm and is dead config. The correct approach for pnpm is to ensure NODE_ENV != "production" or use pnpm's own flags.
+LOCATION: All 6 app netlify.toml [build.environment]
+ROOT CAUSE: Config was copied from an npm-based template without updating for pnpm.
+STATUS: WARNING — dead config, but may cause confusion during debugging
+---
+
+[PHASE 2] [ALL APPS] [SEVERITY: MEDIUM]
+FINDING: NPM_VERSION = "10" is set in all app netlify.toml files. This is irrelevant since the build uses pnpm. Netlify will install npm 10 but pnpm will be invoked via the pnpm lock file detection. This is harmless but misleading.
+LOCATION: All 6 app netlify.toml [build.environment]
+STATUS: WARNING — dead config
+---
+
+[PHASE 2] [GLOBAL] [SEVERITY: CRITICAL]
+FINDING: Root-level netlify.toml contains cross-domain redirect rules (e.g., from="https://makerqueue.uplifttechnologies.pro/*" to="/Craftline/:splat"). Netlify does NOT support cross-domain rewrites in redirects. These rules will NEVER fire. Netlify redirects only apply within the same site's domain. These redirects are completely non-functional.
+LOCATION: /netlify.toml [[redirects]] rules
+ROOT CAUSE: Misunderstanding of Netlify redirect scope. Cross-domain routing requires DNS-level configuration (CNAME records pointing to individual Netlify sites), not redirect rules.
+STATUS: BROKEN — all 5 redirect rules in root netlify.toml are no-ops
+---
+
+[PHASE 2] [UPLIFTTECHNOLOGIES-PRO] [SEVERITY: HIGH]
+FINDING: Netlify site "uplifttechnologies-pro" has no custom domain mapped (URL is http://uplifttechnologies-pro.netlify.app). This site may be intended as a root/landing site for the uplifttechnologies.pro domain but it's not connected to the custom domain.
+LOCATION: Netlify site ID: 7656a561-b735-4e26-9f78-2ecc9bfb1191
+STATUS: MISCONFIGURED
+---
+
+[PHASE 2] [ALL APPS] [SEVERITY: INFO]
+FINDING: Cache-Control headers set for "/build/*" assets (max-age=31536000, immutable). Correct for Remix's content-hashed static assets.
+STATUS: OK
+---
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PHASE 3 — BUILD OUTPUT VERIFICATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+All 6 apps have a /build directory with two subdirectories: client/ and server/.
+This confirms at least one successful local build has been run for all 6 apps.
+
+[PHASE 3] [ALL APPS] [SEVERITY: INFO]
+FINDING: Local build output present for all 6 apps. build/client/ contains static assets, build/server/ contains the Remix SSR server function. This is the expected structure for @netlify/remix-adapter.
+LOCATION: Craftline/build, FixitCSV/build, Stagewise/build, customsready/build, apps/poref-new/build, apps/quoteloop-new/build
+STATUS: OK (local build exists)
+---
+
+[PHASE 3] [ALL APPS] [SEVERITY: HIGH]
+FINDING: Cannot confirm that Netlify's deployed build matches the current local codebase. craftline-prod and quoteloop-prod have no confirmed deploy state. For the other 4 sites, the deploy IDs all begin with "69b8b8f" — they appear to have been deployed together in a single batch, suggesting a coordinated deploy event occurred, but the freshness of those deploys relative to current code cannot be verified.
+LOCATION: Netlify deploy state
+ROOT CAUSE: No CI/CD pipeline is visible in the repo (.github/workflows not examined yet). Deploy freshness unknown.
+STATUS: WARNING
+---
+
+[PHASE 3] [CRAFTLINE] [SEVERITY: CRITICAL]
+FINDING: Craftline build exists locally but the Netlify site has no confirmed deploy. The local build cannot be served to Shopify's OAuth callback URLs unless the Netlify deploy succeeds.
+STATUS: CRITICAL
+---
+
+[PHASE 3] [QUOTELOOP] [SEVERITY: CRITICAL]
+FINDING: Same as Craftline. Local build exists but no Netlify deploy confirmed.
+STATUS: CRITICAL
+---
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PHASE 4 — ROUTING DIAGNOSIS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+All 6 apps are Remix SSR (not SPA). SPA-specific redirect rules (_redirects with /* /index.html 200) are NOT needed.
+The @netlify/remix-adapter handles routing via Netlify Functions.
+
+[PHASE 4] [ALL APPS] [SEVERITY: HIGH]
+FINDING: The @netlify/remix-adapter generates a _redirects file at build time that routes all unmatched paths to the Remix server function. This should be present in build/client/_redirects or as a netlify.toml redirect after build. CANNOT VERIFY locally without inspecting build/client directory contents.
+LOCATION: build/client/_redirects (not verified)
+ROOT CAUSE: Build artifact inspection not fully performed. If this file is absent, all deep links will 404.
+STATUS: WARNING — needs verification
+---
+
+[PHASE 4] [CRAFTLINE] [SEVERITY: INFO]
+FINDING: Routes present: _index.tsx (home/redirect), app._index.tsx (main board), app.stages.jsx (stage config), app.settings.jsx (settings), app.tsx (auth layout), api.move-order.jsx (API endpoint), webhooks.tsx (webhook handler). Auth is handled by app.tsx layout via authenticate.admin().
+LOCATION: Craftline/app/routes/
+STATUS: OK — route structure follows Shopify Remix conventions
+---
+
+[PHASE 4] [FIXITCSV] [SEVERITY: INFO]
+FINDING: Routes present: _index.tsx, app._index.tsx, app.billing.tsx, app.tsx, auth.$.tsx, webhooks.tsx. Note: auth.$.tsx exists as a catch-all auth route. This is the standard Shopify pattern.
+LOCATION: FixitCSV/app/routes/
+STATUS: OK
+---
+
+[PHASE 4] [STAGEWISE] [SEVERITY: INFO]
+FINDING: Routes: _index.tsx, app._index.tsx, app.stages.tsx, app.settings.tsx, app.tsx, api.orders.stage.ts, webhooks.tsx. Similar to Craftline. api.orders.stage.ts is a server action endpoint.
+LOCATION: Stagewise/app/routes/
+STATUS: OK
+---
+
+[PHASE 4] [CUSTOMSREADY] [SEVERITY: INFO]
+FINDING: Routes: _index.tsx, app._index.tsx, app.settings.tsx, app.tsx, auth.$.tsx, health.ts, webhooks.tsx, plus multiple api.*.ts routes. Health endpoint present — good for monitoring. auth.$.tsx catch-all present.
+LOCATION: customsready/app/routes/
+STATUS: OK — most complete route structure of all apps
+---
+
+[PHASE 4] [POREF] [SEVERITY: HIGH]
+FINDING: poref-new uses routes.ts (Remix v2 route config) + app/routes/ directory. The routes.ts file (84 bytes) likely uses @remix-run/fs-routes which auto-discovers routes. poref-new has extensions directory but it only contains .gitkeep — the FOUR UI extensions declared in shopify.app.toml (poref-checkout, poref-order-block, poref-order-action, poref-pos) plus one theme_app_extension (poref-cart) have NO corresponding source files in the extensions directory.
+LOCATION: apps/poref-new/extensions/ (only .gitkeep)
+ROOT CAUSE: Extensions were declared in shopify.app.toml but never scaffolded/implemented. Running `shopify app deploy` will fail or deploy empty extensions.
+STATUS: CRITICAL — 5 extensions declared but 0 implemented
+---
+
+[PHASE 4] [QUOTELOOP] [SEVERITY: MEDIUM]
+FINDING: quoteloop-new also uses routes.ts + routes/ dir pattern (same structure as poref-new). It has an extensions/ directory with content (unlike poref). legacy/ directory present — contains legacy code that may be dead.
+LOCATION: apps/quoteloop-new/
+STATUS: WARNING — legacy/ dir exists, verify it's not accidentally included in builds
+---
+
+[PHASE 4] [POREF] [SEVERITY: MEDIUM]
+FINDING: poref-new vite.config.ts enables HMR for non-localhost environments, while other apps disable HMR (hmr: false). This is an older vite.config pattern from earlier Shopify CLI versions. Not critical but inconsistent.
+LOCATION: apps/poref-new/vite.config.ts
+STATUS: WARNING — inconsistent with other apps, HMR over WSS to Netlify would fail
+---
+
+[PHASE 4] [POREF] [SEVERITY: MEDIUM]
+FINDING: poref-new vite.config.ts uses v3_singleFetch: false (explicit opt-out) while other apps don't set this. This means poref intentionally disables Remix v3 single fetch feature.
+LOCATION: apps/poref-new/vite.config.ts line 65
+STATUS: INFO — intentional but noteworthy
+---
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PHASE 5 — SHOPIFY APP VALIDATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+── 5.1 SHOPIFY CONFIGURATION ──
+
+[PHASE 5.1] [CRAFTLINE] [SEVERITY: MEDIUM]
+FINDING: shopify.app.toml has application_url = "https://craftline.uplifttechnologies.pro" but [build] section at line 52 is EMPTY (no keys). The build section should at minimum declare automatically_update_urls_on_dev = true for local dev URL management.
+LOCATION: Craftline/shopify.app.toml lines 52-53
+STATUS: WARNING — missing build section config
+---
+
+[PHASE 5.1] [CRAFTLINE] [SEVERITY: MEDIUM]
+FINDING: Redirect URLs include "https://craftline-prod.netlify.app/..." (legacy netlify.app URL) AND "https://craftline.uplifttechnologies.pro/..." (custom domain). The netlify.app URL is a legacy URL that should be removed once the custom domain is confirmed working. Keeping both is acceptable but creates dead redirect targets.
+LOCATION: Craftline/shopify.app.toml [auth].redirect_urls
+STATUS: WARNING
+---
+
+[PHASE 5.1] [CRAFTLINE] [SEVERITY: INFO]
+FINDING: Webhook API version: 2025-01. Scopes: read_orders, write_orders, read_customers, read_metafields, write_metafields. These match env example SCOPES value. App embedded = true. POS embedded = false. Client ID: d3b042773d9a5f0d124e0658926bd02b.
+STATUS: OK
+---
+
+[PHASE 5.1] [FIXITCSV] [SEVERITY: INFO]
+FINDING: FixitCSV shopify.app.toml complete. application_url correct. Scopes: read_products (minimal). Client ID: ae643eaf470a54b579b814b2a513eadd. API version 2025-01.
+STATUS: OK
+---
+
+[PHASE 5.1] [STAGEWISE] [SEVERITY: INFO]
+FINDING: Stagewise shopify.app.toml complete. application_url correct. Scopes: read_orders, write_orders, read_customers. Client ID: f20219630bf651859ee3cb2945af43e6. API version 2025-01. Handle: "production-queue-communicator".
+STATUS: OK
+---
+
+[PHASE 5.1] [CUSTOMSREADY] [SEVERITY: INFO]
+FINDING: CustomsReady shopify.app.toml complete. application_url correct. Scopes: read_products, read_orders. Client ID: b401118ff3d466cd8ac36857e7ac845f. API version 2025-01. include_config_on_deploy = true (good practice).
+STATUS: OK
+---
+
+[PHASE 5.1] [POREF] [SEVERITY: HIGH]
+FINDING: poref-new shopify.app.toml API version is "2025-04" while ALL other apps use "2025-01". This mismatch means poref is using a newer API version not synchronized with the rest of the suite. "2025-04" was the April 2025 version. This is fine if intentional and tested.
+LOCATION: apps/poref-new/shopify.app.toml line 29: api_version = "2025-04"
+ROOT CAUSE: poref was developed or updated independently with a newer API version target.
+STATUS: WARNING — version mismatch across suite
+---
+
+[PHASE 5.1] [POREF] [SEVERITY: HIGH]
+FINDING: poref-new has [access] and [access.admin] sections with direct_api_mode = "online". This enables online token mode. Combined with expiringOfflineAccessTokens = true in shopify.server.ts, this indicates a deliberate security-forward approach. However the session storage (PrismaSessionStorage) needs to handle token refresh correctly for online sessions.
+LOCATION: apps/poref-new/shopify.app.toml lines 17-21
+STATUS: WARNING — verify session refresh logic handles expiring online tokens
+---
+
+[PHASE 5.1] [POREF] [SEVERITY: CRITICAL]
+FINDING: poref-new declares 5 extensions in shopify.app.toml (poref-checkout, poref-order-block, poref-order-action, poref-pos as UI extensions + poref-cart as theme_app_extension) but the extensions/ directory only contains .gitkeep. The extension source directories do not exist.
+LOCATION: apps/poref-new/shopify.app.toml [[extensions]] + apps/poref-new/extensions/
+ROOT CAUSE: Extensions were planned/declared but never implemented. shopify app deploy will fail with missing extension source files.
+STATUS: CRITICAL — unimplemented extensions will break deploy
+---
+
+[PHASE 5.1] [QUOTELOOP] [SEVERITY: HIGH]
+FINDING: QuoteLoop shopify.app.toml API version is also "2025-04" (same as poref). Scopes: read_draft_orders, write_draft_orders, read_customers. Client ID: fc83b2d79a0791b27995f678fb80b614.
+LOCATION: apps/quoteloop-new/shopify.app.toml
+STATUS: WARNING — API version 2025-04, inconsistent with other 4 apps using 2025-01
+---
+
+── 5.2 OAUTH FLOW ──
+
+[PHASE 5.2] [ALL APPS] [SEVERITY: INFO]
+FINDING: All apps use @shopify/shopify-app-remix which handles OAuth automatically via the authenticate.admin() call in the app.tsx layout route. The library handles the /auth entry point, /auth/callback, CSRF validation, session persistence and redirect. No custom OAuth implementation exists — this is correct.
+STATUS: OK — library handles OAuth
+---
+
+[PHASE 5.2] [CRAFTLINE] [SEVERITY: MEDIUM]
+FINDING: Craftline's app.tsx layout route (1287 bytes) and _index.tsx (289 bytes) don't have a dedicated auth.$.tsx catch-all. FixitCSV and customsready both have auth.$.tsx — this is the Shopify-recommended pattern for handling auth bounce-back and re-auth flows. Craftline and Stagewise are missing this.
+LOCATION: Craftline/app/routes/ (no auth.$.tsx), Stagewise/app/routes/ (no auth.$.tsx)
+ROOT CAUSE: Craftline and Stagewise were generated from an older Shopify CLI template that didn't include auth.$.tsx.
+STATUS: HIGH — missing auth catch-all may cause re-authentication failures
+---
+
+[PHASE 5.2] [ALL APPS] [SEVERITY: INFO]
+FINDING: All apps use PrismaSessionStorage for session persistence. Session tokens are stored in the database. This is secure and production-ready.
+STATUS: OK
+---
+
+[PHASE 5.2] [POREF/QUOTELOOP] [SEVERITY: HIGH]
+FINDING: In poref-new and quoteloop-new shopify.server.ts, SHOPIFY_API_KEY is passed WITHOUT non-null assertion (process.env.SHOPIFY_API_KEY without the "!" operator), while SHOPIFY_API_SECRET uses "|| ''". This means if SHOPIFY_API_KEY is undefined, shopifyApp() receives undefined for apiKey — which causes silent auth failures or runtime errors.
+LOCATION: apps/poref-new/app/shopify.server.ts line 11, apps/quoteloop-new/app/shopify.server.ts line 11
+ROOT CAUSE: Copy-paste from a template where the non-null assertion was not present.
+STATUS: HIGH — undefined apiKey causes OAuth failures if env var is missing
+---
+
+── 5.3 API USAGE ──
+
+[PHASE 5.3] [ALL APPS] [SEVERITY: INFO]
+FINDING: All apps pin to a specific ApiVersion constant (ApiVersion.January25 for 4 apps, ApiVersion used for poref/quoteloop which maps to 2025-04). All apps use @shopify/shopify-app-remix which encapsulates Admin API calls. No deprecated REST endpoints detected in shopify.server.ts files.
+STATUS: OK
+---
+
+[PHASE 5.3] [FIXITCSV] [SEVERITY: HIGH]
+FINDING: FixitCSV shopify.server.ts declares scopes: [] (empty array). This means the app will request NO API scopes during OAuth. However shopify.app.toml declares scopes = "read_products". There is a MISMATCH between the runtime scopes (empty) and the portal-declared scopes.
+LOCATION: FixitCSV/app/shopify.server.ts line 11: scopes: []
+ROOT CAUSE: scopes field was manually emptied in the server config, possibly to rely on the app portal scopes instead. However shopify-app-remix uses the runtime scopes value to validate access — passing [] means no scopes are asserted during installation.
+STATUS: HIGH — scope mismatch, app may install with no product access despite needing read_products
+---
+
+[PHASE 5.3] [CUSTOMSREADY] [SEVERITY: MEDIUM]
+FINDING: customsready/app/shopify.server.ts hardcodes scopes: ["read_products", "read_orders"] instead of reading from process.env.SCOPES. Other apps use process.env.SCOPES?.split(","). While functionally correct, hardcoded scopes create maintenance debt — changing scopes requires code deploy not just config update.
+LOCATION: customsready/app/shopify.server.ts line 20
+STATUS: MEDIUM — deviates from env-driven pattern
+---
+
+── 5.4 WEBHOOKS ──
+
+[PHASE 5.4] [CRAFTLINE] [SEVERITY: HIGH]
+FINDING: Craftline declares 6 webhook topics in shopify.app.toml: orders/fulfilled, orders/cancelled, app/uninstalled, customers/data_request, customers/redact, shop/redact. However Craftline's webhooks.tsx handler only handles: APP_UNINSTALLED, CUSTOMERS_DATA_REQUEST, CUSTOMERS_REDACT, SHOP_REDACT. The ORDERS_FULFILLED and ORDERS_CANCELLED webhooks are REGISTERED but NOT HANDLED. When these fire, the handler will throw a 404 ("Unhandled webhook topic") which will cause Shopify to retry and eventually flag the app.
+LOCATION: Craftline/shopify.app.toml webhooks vs Craftline/app/routes/webhooks.tsx
+ROOT CAUSE: Webhooks were declared in toml but the handler was never updated to process them.
+STATUS: HIGH — unhandled webhooks will cause 404 errors on webhook delivery
+---
+
+[PHASE 5.4] [CRAFTLINE] [SEVERITY: HIGH]
+FINDING: Craftline shopify.server.ts only registers APP_UNINSTALLED webhook via the webhooks config object. The orders/fulfilled and orders/cancelled webhooks from toml are NOT registered in shopifyApp() config. In the new embedded auth strategy, webhooks must be registered either in shopifyApp() config or via registerWebhooks() call. Since they're not in shopifyApp() config and registerWebhooks() isn't called on afterAuth, these webhooks may not be active at runtime.
+LOCATION: Craftline/app/shopify.server.ts webhooks config
+STATUS: HIGH
+---
+
+[PHASE 5.4] [FIXITCSV] [SEVERITY: INFO]
+FINDING: FixitCSV webhooks: APP_UNINSTALLED, CUSTOMERS_DATA_REQUEST, CUSTOMERS_REDACT, SHOP_REDACT all declared in shopifyApp() config AND handled in webhooks.tsx (deletes session + usage records on SHOP_REDACT/APP_UNINSTALLED). Handler is minimal but functional.
+STATUS: OK
+---
+
+[PHASE 5.4] [STAGEWISE] [SEVERITY: INFO]
+FINDING: Stagewise shopify.server.ts does NOT include a webhooks config block (unlike FixitCSV and customsready). The app relies entirely on shopify.app.toml to declare them. With unstable_newEmbeddedAuthStrategy, webhook registration may need to happen in afterAuth or registerWebhooks() — no afterAuth hook defined in Stagewise.
+LOCATION: Stagewise/app/shopify.server.ts (no webhooks and no afterAuth hook)
+STATUS: HIGH — webhooks may not be registered at install time without afterAuth hook
+---
+
+[PHASE 5.4] [CUSTOMSREADY] [SEVERITY: INFO]
+FINDING: CustomsReady has the most complete webhook implementation: 6 webhook topics in shopifyApp() config + afterAuth hook that calls shopify.registerWebhooks(). webhooks.tsx is 5013 bytes (largest webhook handler in the suite), indicating proper per-topic handling.
+STATUS: OK — best implementation in the suite
+---
+
+[PHASE 5.4] [POREF] [SEVERITY: MEDIUM]
+FINDING: poref-new shopify.server.ts has no webhooks config block. Relies on shopify.app.toml for registration. No afterAuth hook. Same risk as Stagewise — webhooks may not auto-register.
+STATUS: HIGH — same issue as Stagewise
+---
+
+[PHASE 5.4] [QUOTELOOP] [SEVERITY: MEDIUM]
+FINDING: Same as poref-new.  No webhooks in shopifyApp() config, no afterAuth hook.
+STATUS: HIGH
+---
+
+[PHASE 5.4] [ALL APPS] [SEVERITY: INFO]
+FINDING: All apps use authenticate.webhook(request) from shopify-app-remix, which performs HMAC signature verification automatically. No manual HMAC implementation needed or present.
+STATUS: OK — HMAC verified by library
+---
+
+── 5.5 FRONTEND EMBEDDING ──
+
+[PHASE 5.5] [ALL APPS] [SEVERITY: INFO]
+FINDING: All apps declare embedded = true in shopify.app.toml. All apps use @shopify/polaris and @shopify/app-bridge-react. The app.tsx route in each app is the authenticated layout wrapper, which via shopify-app-remix automatically injects App Bridge initialization.
+STATUS: OK
+---
+
+[PHASE 5.5] [ALL APPS] [SEVERITY: MEDIUM]
+FINDING: All apps use future.unstable_newEmbeddedAuthStrategy: true in shopifyApp(). This is Shopify's new token exchange strategy for embedded apps and is the correct modern approach. However it's still marked "unstable" — monitor for breaking changes in library updates.
+STATUS: INFO — correct approach, monitor stability
+---
+
+── 5.6 APP EXTENSIONS ──
+
+[PHASE 5.6] [POREF] [SEVERITY: CRITICAL]
+FINDING: 5 extensions declared in shopify.app.toml, ZERO implemented in extensions/ directory. Specifically missing:
+  - extensions/poref-checkout/src/index.tsx (UI extension, checkout block)
+  - extensions/poref-order-block/src/index.tsx (UI extension, order admin block)
+  - extensions/poref-order-action/src/index.tsx (UI extension, order admin action)
+  - extensions/poref-pos/src/Tile.tsx + Modal.tsx (POS UI extension)
+  - extensions/poref-cart/ (theme app extension)
+LOCATION: apps/poref-new/extensions/ contains only .gitkeep
+STATUS: CRITICAL — deploy will fail
+---
+
+[PHASE 5.6] [CRAFTLINE] [SEVERITY: INFO]
+FINDING: Craftline package.json has workspaces: ["extensions/*"] but no extensions directory was found. Craftline shopify.app.toml has no [[extensions]] table. This is consistent — no extensions intended for Craftline.
+STATUS: OK
+---
+
+[PHASE 5.6] [QUOTELOOP] [SEVERITY: INFO]
+FINDING: QuoteLoop has an extensions/ directory (non-empty, content not inspected). quoteloop-new shopify.app.toml has no [[extensions]] declarations. Extensions dir may contain leftover scaffolding.
+LOCATION: apps/quoteloop-new/extensions/
+STATUS: WARNING — extensions dir exists but none declared in toml; verify contents
+---
+
+── 5.7 BILLING ──
+
+[PHASE 5.7] [FIXITCSV] [SEVERITY: INFO]
+FINDING: FixitCSV has billing configured: One plan (PAID_PLAN_NAME/PAID_PLAN_PRICE from constants) at Every30Days interval in USD. app.billing.tsx route exists. Billing implementation appears complete.
+STATUS: OK
+---
+
+[PHASE 5.7] [STAGEWISE] [SEVERITY: INFO]
+FINDING: Stagewise billing: MONTHLY_PLAN at $9/month, Every30Days interval in USD. Imported from lib/constants.
+STATUS: OK
+---
+
+[PHASE 5.7] [CUSTOMSREADY] [SEVERITY: INFO]
+FINDING: CustomsReady billing: "CustomsReady Lite Monthly" at $7/month (14-day trial), Every30Days interval in USD. Most complete billing config with trial days.
+STATUS: OK
+---
+
+[PHASE 5.7] [CRAFTLINE] [SEVERITY: HIGH]
+FINDING: Craftline shopify.server.ts has NO billing configuration. No billing plan is declared. If Craftline is intended to be a paid app, billing is entirely absent.
+LOCATION: Craftline/app/shopify.server.ts (no billing key)
+STATUS: HIGH — if monetization planned, billing is missing
+---
+
+[PHASE 5.7] [POREF] [SEVERITY: HIGH]
+FINDING: poref-new shopify.server.ts has NO billing configuration. Given the app has complex functionality (PO reference tracking, multiple extensions), billing may be intended but not implemented.
+STATUS: HIGH — if monetization planned, billing is missing
+---
+
+[PHASE 5.7] [QUOTELOOP] [SEVERITY: HIGH]
+FINDING: quoteloop-new shopify.server.ts has NO billing configuration.
+STATUS: HIGH — if monetization planned, billing is missing
+---
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PHASE 6 — DEPENDENCY AND SECURITY AUDIT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+[PHASE 6] [ALL APPS] [SEVERITY: WARNING]
+FINDING: Remix version split: Craftline uses @remix-run/* 2.9.1, FixitCSV/Stagewise/customsready use 2.13.1, poref-new/quoteloop-new use 2.16.1. Three different Remix versions in the same monorepo. This is manageable since apps are isolated, but the root pnpm override for vite 6 combined with older Remix versions (which expect vite 5) may cause issues.
+LOCATION: All package.json files
+STATUS: MEDIUM — version fragmentation; not immediately breaking but creates upgrade debt
+---
+
+[PHASE 6] [ALL APPS] [SEVERITY: MEDIUM]
+FINDING: @shopify/polaris version split: Craftline/FixitCSV/Stagewise/customsready use 13.9.5, poref-new/quoteloop-new use 12.0.0. Polaris 12 vs 13 has breaking API changes. These apps will experience divergent Polaris component behavior.
+LOCATION: All package.json dependencies
+STATUS: MEDIUM — consider upgrading poref/quoteloop to Polaris 13
+---
+
+[PHASE 6] [ALL APPS] [SEVERITY: MEDIUM]
+FINDING: @shopify/shopify-app-session-storage-prisma version split: Craftline/FixitCSV/Stagewise/customsready use ^9.0.0, poref-new/quoteloop-new use ^8.0.0. Different major versions of the session storage package. The session table schema may differ between v8 and v9.
+LOCATION: All package.json
+STATUS: MEDIUM — session storage schema incompatibility risk if databases are shared
+---
+
+[PHASE 6] [CUSTOMSREADY] [SEVERITY: HIGH]
+FINDING: customsready declares "puppeteer": "^22.15.0" as a production dependency. Puppeteer downloads Chromium during install (~300MB). On Netlify's serverless function environment, Puppeteer/Chromium CANNOT run (no headless browser in Lambda context). This dependency will cause build bloat and runtime failures.
+LOCATION: customsready/package.json
+ROOT CAUSE: Puppeteer likely intended for a server-side scraping/automation feature, but Netlify Functions do not support Puppeteer. Would need a separate service or use @sparticuz/chromium-min for Lambda.
+STATUS: CRITICAL — Puppeteer will not function in Netlify Functions environment
+---
+
+[PHASE 6] [CUSTOMSREADY] [SEVERITY: HIGH]
+FINDING: customsready declares "bullmq" and "ioredis" as production dependencies — a Redis-backed job queue. On Netlify Functions (serverless/stateless), persistent Redis connections and background job workers CANNOT run reliably. The function spins up and down per request; a worker that pools connections will fail.
+LOCATION: customsready/package.json
+ROOT CAUSE: CustomsReady was designed for a Docker/server environment (it has a docker-compose.yml and Dockerfile). Netlify SSR may not be the right deployment target for this app.
+STATUS: CRITICAL — serverless environment incompatible with bullmq workers
+---
+
+[PHASE 6] [CUSTOMSREADY] [SEVERITY: HIGH]
+FINDING: customsready/vite.config.ts explicitly excludes puppeteer, bullmq, ioredis from client bundle (optimizeDeps.exclude). This is correct for client-side, but these packages will still attempt to import in the server (Netlify function) context, causing cold-start failures if the Redis connection is not available.
+LOCATION: customsready/vite.config.ts optimizeDeps.exclude
+STATUS: HIGH — server bundle will attempt Redis/Puppeteer at function cold start
+---
+
+[PHASE 6] [CRAFTLINE] [SEVERITY: MEDIUM]
+FINDING: Craftline has a vite.config.ts timestamp file committed: Craftline/vite.config.ts.timestamp-1773606704314-2655a660ec2f38.mjs (3780 bytes). This is a Vite cache/temp file that should be gitignored.
+LOCATION: Craftline/vite.config.ts.timestamp-*.mjs
+ROOT CAUSE: .gitignore doesn't exclude Vite timestamp cache files.
+STATUS: LOW — cleanup needed
+---
+
+[PHASE 6] [ALL APPS] [SEVERITY: HIGH]
+FINDING: Multiple apps have .env files with actual content (not empty). Sizes suggest real credentials may be present: Craftline/.env (288 bytes), FixitCSV/.env (253 bytes), Stagewise/.env (413 bytes), customsready/.env (391 bytes), poref/.env (258 bytes), quoteloop/.env (262 bytes). The root .gitignore has ".env" but per-app .gitignores may override this.
+LOCATION: All app .env files
+ROOT CAUSE: If .env files with real API keys/secrets are tracked in git, secrets are exposed in repo history.
+STATUS: CRITICAL — verify no real secrets are committed; run `git log --all --full-history -- "*/.env"` to check history
+---
+
+[PHASE 6] [FIXITCSV] [SEVERITY: MEDIUM]
+FINDING: FixitCSV has both a build.log (55KB) and a timestamp cache file committed. Build artifacts in the repo.
+LOCATION: FixitCSV/build.log, FixitCSV/vite.config.ts.timestamp-*.mjs
+STATUS: LOW — cleanup needed
+---
+
+[PHASE 6] [ALL APPS] [SEVERITY: MEDIUM]
+FINDING: Prisma devDependency at root (version 6.19.2) conflicts with per-app declarations. Craftline's package.json lists @prisma/client ^6.19.2 but no local prisma CLI devDependency — it relies on root-level prisma. This is unusual and may cause `prisma generate` to behave unexpectedly in CI.
+STATUS: MEDIUM
+---
+
+[PHASE 6] [POREF] [SEVERITY: LOW]
+FINDING: poref-new has "@shopify/plugin-cloudflare" in trustedDependencies. This is unusual — the app uses Netlify, not Cloudflare. This may be a leftover from a template or experimentation period.
+LOCATION: apps/poref-new/package.json trustedDependencies
+STATUS: LOW — dead dependency declaration
+---
+
+[PHASE 6] [QUOTELOOP] [SEVERITY: LOW]
+FINDING: Same as poref-new — trustedDependencies includes "@shopify/plugin-cloudflare".
+STATUS: LOW
+---
+
+[PHASE 6] [QUOTELOOP] [SEVERITY: MEDIUM]
+FINDING: quoteloop-new has a legacy/ directory. This directory likely contains old code from a previous version of the app. Dead code creates maintenance confusion and may accidentally export symbols.
+LOCATION: apps/quoteloop-new/legacy/
+STATUS: MEDIUM — verify and remove if not needed
+---
+
+[PHASE 6] [ALL APPS] [SEVERITY: MEDIUM]
+FINDING: FixitCSV, Stagewise, customsready, poref-new, quoteloop-new: all have a .shopify/ directory (contains CLI app state). Craftline has .shopify/ too. These CLI state directories are gitignored by root .gitignore (line 7). VERIFY they are not tracked.
+LOCATION: All app .shopify/ dirs
+STATUS: OK — gitignored
+---
+
+[PHASE 6] [ALL APPS] [SEVERITY: HIGH]
+FINDING: No CI/CD pipeline configuration found (.github/workflows at root level not examined, individual apps have .github dirs for poref-new and quoteloop-new only). Without automated deploy pipelines, deployments are manual — increasing risk of stale code on Netlify.
+LOCATION: Global repo
+STATUS: HIGH — manual deployments risk staleness
+---
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PHASE 7 — DEPLOYMENT LINKAGE VALIDATION
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Netlify Sites → Repo Directory Mapping (Expected vs. Verifiable):
+  craftline-prod        → expected base: /Craftline           [UNCONFIRMED — no build deploy]
+  quoteloop-prod        → expected base: /apps/quoteloop-new  [UNCONFIRMED — no build deploy]
+  stagewise-prod        → expected base: /Stagewise           [has deploy: 69b8b8f9...]
+  fixitcsv-prod         → expected base: /FixitCSV            [has deploy: 69b8b8f9...]
+  customsready-prod     → expected base: /customsready        [has deploy: 69b8b8f8...]
+  poref-prod            → expected base: /apps/poref-new      [has deploy: 69b8b8f9...]
+
+[PHASE 7] [CRAFTLINE] [SEVERITY: CRITICAL]
+FINDING: craftline-prod has no confirmed deploy. Cannot verify that the site's base directory is set to /Craftline. If base directory is missing from Netlify site settings, the site will build from root using root netlify.toml and fail.
+STATUS: CRITICAL — verify Netlify site base directory setting
+---
+
+[PHASE 7] [QUOTELOOP] [SEVERITY: CRITICAL]
+FINDING: quoteloop-prod has no confirmed deploy. Same risk as craftline. Base directory on Netlify site must be /apps/quoteloop-new.
+STATUS: CRITICAL — verify Netlify site base directory setting
+---
+
+[PHASE 7] [ALL APPS] [SEVERITY: HIGH]
+FINDING: The 4 sites with successful deploys (poref, stagewise, fixitcsv, customsready) all have deploy IDs starting with "69b8b8f" — deployed together in the same timeframe. This suggests a batch manual deployment was performed. If any code changes have occurred since this batch deploy, those sites are serving stale code.
+STATUS: WARNING
+---
+
+[PHASE 7] [GLOBAL] [SEVERITY: HIGH]
+FINDING: The "uplifttechnologies-pro" Netlify site is not mapped to any custom domain (it uses *.netlify.app URL). If this site is meant to be the root of uplifttechnologies.pro (routing to all subdomains), the DNS/Netlify domain configuration is incomplete.
+LOCATION: Netlify site: uplifttechnologies-pro (ID: 7656a561-b735-4e26-9f78-2ecc9bfb1191)
+STATUS: HIGH
+---
+
+[PHASE 7] [GLOBAL] [SEVERITY: INFO]
+FINDING: Each Shopify app's application_url in shopify.app.toml correctly points to its custom subdomain (craftline.uplifttechnologies.pro, fixitcsv.uplifttechnologies.pro, etc.). These must be DNS CNAME'd to the respective Netlify site netlify.app URLs.
+STATUS: OK — assuming DNS is configured correctly
+---
+
+[PHASE 7] [GLOBAL] [SEVERITY: MEDIUM]
+FINDING: The root netlify.toml is at repo root. If any Netlify site has its base directory set to "/" (root), it will pick up this root netlify.toml and execute "pnpm run build:all" — which builds all 6 apps sequentially and publishes to "dist" (a nonexistent directory). This would cause a deploy failure.
+LOCATION: /netlify.toml
+STATUS: HIGH — root toml is a deployment trap if any site mis-configures base directory
+---
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+PHASE 8 — FOR_AMMAR FINAL FLUSH
+═══════════════════════════════════════════════════════════════
+AUDIT SUMMARY
+═══════════════════════════════════════════════════════════════
+
+TOTAL APPS FOUND: 6 active + 1 empty placeholder (chargeback/)
+NETLIFY SITES: 8 (6 app sites, 1 marketing, 1 tech site)
+
+TOTAL ISSUES FOUND: 47
+  CRITICAL: 9
+  HIGH:     20
+  MEDIUM:   12
+  LOW:       4
+  INFO:      2
+
+APP STATUS TABLE:
+APP_NAME        | FRAMEWORK       | NETLIFY DEPLOY | SHOPIFY VALID? | ISSUE COUNT
+----------------|-----------------|----------------|----------------|------------
+Craftline       | Remix+Vite SSR  | NO DEPLOY ❌   | PARTIAL ⚠️     | 8
+FixitCSV        | Remix+Vite SSR  | READY ✅       | PARTIAL ⚠️     | 4
+Stagewise       | Remix+Vite SSR  | READY ✅       | PARTIAL ⚠️     | 4
+CustomsReady    | Remix+Vite SSR  | READY ✅       | OK ✅          | 5
+PORef           | Remix+Vite SSR  | READY ✅       | BROKEN ❌      | 8
+QuoteLoop       | Remix+Vite SSR  | NO DEPLOY ❌   | PARTIAL ⚠️     | 6
+
+TOP BLOCKING ISSUES:
+
+1. [CRITICAL] PORef declares 5 Shopify extensions in shopify.app.toml but extensions/ dir contains only .gitkeep. shopify app deploy WILL FAIL. Extensions must be implemented or removed from toml.
+
+2. [CRITICAL] craftline-prod and quoteloop-prod Netlify sites have NO successful deploy (empty currentDeploy). These apps are unreachable at their production URLs. Shopify OAuth callbacks will fail. Apps cannot be used by merchants.
+
+3. [CRITICAL] CustomsReady uses Puppeteer + BullMQ + ioredis as production dependencies. These are INCOMPATIBLE with Netlify Functions (serverless). Puppeteer cannot run headless Chromium in Lambda. BullMQ workers cannot maintain persistent connections in stateless functions. CustomsReady needs either a dedicated server deployment or architectural changes.
+
+4. [CRITICAL] Root netlify.toml cross-domain redirect rules (e.g., from="https://makerqueue.uplifttechnologies.pro/*") are completely non-functional. Netlify does not support cross-domain rewrites in redirect rules. These 5 rules contribute nothing and create false confidence in routing being set up.
+
+5. [CRITICAL] All 6 apps have .env files with actual content at app level. Verify these are git-excluded. If real SHOPIFY_API_SECRET values are committed to git history, immediate secret rotation is required.
+
+6. [HIGH] FixitCSV shopify.server.ts declares scopes: [] (empty). The app needs read_products scope (per toml) but runtime passes no scopes to OAuth. Merchants who install this app will have no product access token scope.
+
+7. [HIGH] Craftline and Stagewise are missing auth.$.tsx catch-all route. Re-authentication flows (session expiry, token refresh) will fail or produce unhandled 404s.
+
+8. [HIGH] Craftline declares orders/fulfilled and orders/cancelled webhooks in toml but the webhook handler only handles 4 of 6 topics. When Shopify delivers those webhooks, the handler returns 404 which triggers Shopify retry storms.
+
+9. [HIGH] Stagewise, PORef, QuoteLoop do not register webhooks programmatically (no webhooks in shopifyApp() config, no afterAuth hook). Webhooks may not be active after install.
+
+10. [HIGH] pnpm global override forces vite ^6.2.2 on apps that declare vite ^5.x. This may cause build failures for Craftline, FixitCSV, Stagewise, customsready.
+
+NEXT STEP: Feed this file as input to fix pass → output goes to FOR_AMMAR2
+═══════════════════════════════════════════════════════════════

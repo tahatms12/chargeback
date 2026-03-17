@@ -20,14 +20,14 @@ import {
 } from "@shopify/polaris";
 import { DeleteIcon, ArrowUpIcon, ArrowDownIcon } from "@shopify/polaris-icons";
 import { useState, useCallback } from "react";
-import { authenticate } from "../shopify.server.js";
+import { authenticate } from "~/shopify.server";
 import {
   getStages,
   createStage,
   updateStage,
   deleteStage,
   reorderStages,
-} from "../lib/stages.server.js";
+} from "~/lib/stages.server";
 
 export const loader = async ({ request }) => {
   const { session } = await authenticate.admin(request);

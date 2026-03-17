@@ -1,0 +1,6 @@
+packages:
+  - "apps/*"
+  - "Craftline"
+  - "FixitCSV"
+  - "Stagewise"
+  - "customsready"

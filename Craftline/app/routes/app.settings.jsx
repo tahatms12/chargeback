@@ -15,9 +15,9 @@ import {
   Box,
 } from "@shopify/polaris";
 import { useState, useCallback } from "react";
-import { authenticate } from "../shopify.server.js";
-import { sendTestEmail } from "../lib/email.server.js";
-import prisma from "../db.server.js";
+import { authenticate } from "~/shopify.server";
+import { sendTestEmail } from "~/lib/email.server";
+import prisma from "~/db.server";
 
 export const loader = async ({ request }) => {
   const { session } = await authenticate.admin(request);

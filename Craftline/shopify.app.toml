@@ -1,6 +1,6 @@
 name = "Maker Queue"
-client_id = "c8804da311dd652cf7f23b99b5250e84"
-application_url = "https://craftline-prod.netlify.app"
+client_id = "d3b042773d9a5f0d124e0658926bd02b"
+application_url = "https://craftline.uplifttechnologies.pro"
 embedded = true
 
 [access_scopes]
@@ -11,9 +11,6 @@ scopes = "read_orders,write_orders,read_customers,read_metafields,write_metafiel
 
 [auth]
 redirect_urls = [
-  "https://craftline-prod.netlify.app/auth/callback",
-  "https://craftline-prod.netlify.app/auth/shopify/callback",
-  "https://craftline-prod.netlify.app/api/auth/callback",
   "https://craftline.uplifttechnologies.pro/auth/callback",
   "https://craftline.uplifttechnologies.pro/auth/shopify/callback",
   "https://craftline.uplifttechnologies.pro/api/auth/callback"
@@ -50,4 +47,4 @@ api_version = "2025-01"
 embedded = false
 
 [build]
-include_config_on_deploy = true
+automatically_update_urls_on_dev = true

@@ -41,6 +41,7 @@ export function OrderCard({ order, stages }) {
       {
         orderId: order.orderId,
         newStageId,
+        _action: "move", // Explicit action flag
       },
       { method: "POST", action: "/api/move-order" }
     );

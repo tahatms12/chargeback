@@ -1,6 +1,6 @@
 name = "Production Queue Communicator"
-client_id = "08fb1edbc0d92eda9b2e42e1934f8079"
-application_url = "https://stagewise-prod.netlify.app"
+client_id = "f20219630bf651859ee3cb2945af43e6"
+application_url = "https://stagewise.uplifttechnologies.pro"
 embedded = true
 handle = "production-queue-communicator"
 
