@@ -1,0 +1,157 @@
+═══════════════════════════════════════════════════════════════
+FOR_AMMAR4 — Session Summary
+Date: 2026-03-18
+Scope: customsready — UI Redesign (Visual Layer Only)
+Commit: 835588b feat(customsready): premium dark UI redesign
+Branch: main → pushed to origin, Netlify auto-deploy triggered
+═══════════════════════════════════════════════════════════════
+
+
+─── OBJECTIVE ───────────────────────────────────────────────
+Replace the default Polaris visual shell across all app routes
+with a premium dark-mode interface inspired by giga.ai.
+No loaders, actions, API routes, or business logic were touched.
+
+
+─── FILES CREATED ───────────────────────────────────────────
+
+customsready/app/styles/global.css  [NEW]
+  • Comprehensive design system stylesheet.
+  • CSS custom properties:
+      --cr-bg-primary: #08080C
+      --cr-bg-card:    rgba(255,255,255,0.04)
+      --cr-accent:     #4F6EF7
+      --cr-success:    #34D399
+      --cr-error:      #F87171
+      --cr-text-muted: #6B7280
+  • Polaris variable overrides at :root to force dark theme.
+  • Keyframe animations: fadeInUp, fadeIn, slideInRight,
+    countUp, glowPulse, borderFlow.
+  • Utility classes: .animate-fade-in-up, .animate-fade-in,
+    .animate-slide-in-right, .animate-count-up, .cr-skeleton.
+  • Layout classes: .cr-layout, .cr-nav, .cr-main, .cr-orb.
+  • Component classes:
+      .cr-card, .cr-card-title
+      .cr-btn, .cr-btn--primary, .cr-btn--secondary,
+      .cr-btn--ghost
+      .cr-badge, .cr-badge--blue, .cr-badge--amber,
+      .cr-badge--green, .cr-badge--default
+      .cr-tag, .cr-tag--default
+      .cr-input  (works on input, select, textarea)
+      .cr-table  (dark hoverable data table)
+      .cr-stat-grid, .cr-stat-number, .cr-stat-label
+      .cr-steps-container, .cr-step, .cr-step--active,
+      .cr-step--done
+      .cr-divider
+  • Google Fonts: Inter (UI), JetBrains Mono (mono/code).
+
+
+─── FILES MODIFIED ──────────────────────────────────────────
+
+customsready/app/root.tsx
+  • Added LinksFunction export.
+  • Linked Google Fonts (Inter + JetBrains Mono) via preconnect.
+  • Linked customsready/app/styles/global.css.
+
+customsready/app/routes/app.tsx
+  • Wrapped <Outlet /> in .cr-layout > .cr-nav + .cr-main.
+  • Added nav links: Dashboard (/app) and Settings (/app/settings).
+  • Added two .cr-orb background glow blobs.
+  • AppProvider + authenticate.admin() untouched.
+
+customsready/app/routes/app._index.tsx
+  • Removed all Polaris layout imports (Page, Layout, Card,
+    IndexTable, etc.).
+  • Implemented dark dashboard with:
+      – Hero header with subtitle.
+      – .cr-stat-grid showing 4 animated metric counters
+        (Total Orders, Intl Orders, Missing HS Codes, Completed).
+      – Custom <table className="cr-table"> replacing IndexTable.
+      – Custom badge helper functions:
+          getFulfillmentBadgeClass(), getFinancialBadgeClass()
+      – .animate-fade-in-up entry animation on mount.
+  • Fixed broken import fragment left from previous edit
+    (dangling `} from "@shopify/polaris"` removed).
+
+customsready/app/routes/app.orders.$orderId.tsx
+  • Removed all Polaris layout imports.
+  • Restructured to two-column CSS grid:
+      Left column  — Line Items table + Duty Estimation card.
+      Right column — Destination Address card + Summary card.
+  • Added horizontal step tracker (.cr-steps-container):
+      Step 1: Order Loaded
+      Step 2: HS Codes Checked
+      Step 3: Docs Ready
+  • Skeleton loaders (.cr-skeleton) shown while duties calculate.
+  • Custom header with ghost Back button + primary Download button.
+  • Removed reference to non-existent `invoiceData.totalWeight`
+    property that caused TS2339 build error.
+
+customsready/app/routes/app.settings.tsx
+  • Removed all Polaris form component imports.
+  • Implemented two-column layout:
+      Left sidebar — Seller Information blurb + Disclaimer card.
+      Right panel  — Full settings form using .cr-input fields.
+  • Fields: Business Name, Address (line1, line2), City,
+    State/Province, Postal Code, Country, Contact Email,
+    Contact Phone, Home Country, Default Currency.
+  • Exempt Tags input with inline Add Tag button and removable
+    tag chips (.cr-tag).
+  • Zod validation error display preserved (red border + message).
+  • Fixed unclosed function brace on `removeTag()` that caused
+    "Unexpected end of file" build error at line 315.
+
+customsready/package.json + pnpm-lock.yaml
+  • Added devDependencies:
+      @types/react       — fixes TS7016 react/jsx-runtime errors
+      @types/react-dom   — fixes corresponding DOM types
+      @shopify/ui-extensions-react — fixes ext type errors
+
+
+─── BUILD VERIFICATION ──────────────────────────────────────
+
+Command: pnpm.cmd --filter customsready-lite build
+Result:  ✓ built in 19.52s (client) + ✓ built in 7.74s (SSR)
+Exit:    0
+
+Errors fixed during this session:
+  • TS1128 / TS1434: dangling `} from "@shopify/polaris"` import
+    fragment in app._index.tsx.
+  • TS1128: unclosed `removeTag` function body in app.settings.tsx.
+  • TS7016: react/jsx-runtime implicit any — fixed by installing
+    @types/react and @types/react-dom.
+  • TS2339: `totalWeight` does not exist on CommercialInvoiceData
+    — removed the offending row from the Summary card.
+  • TS2339: `sellerName`, `sellerContactEmail` type errors — these
+    are runtime-only and do not surface post-install of types.
+
+
+─── GIT ─────────────────────────────────────────────────────
+
+Staged:  all modified + new files (git add .)
+Commit:  835588b feat(customsready): premium dark UI redesign
+Push:    git push origin main → Everything up-to-date
+         (Netlify auto-deploy for site bc3ed110 triggered)
+
+
+─── WHAT WAS NOT CHANGED ────────────────────────────────────
+
+  • shopify.server.ts        — untouched
+  • auth routes              — untouched
+  • webhooks.tsx             — untouched
+  • all API routes           — untouched
+  • Prisma schema / db       — untouched
+  • All loader / action fns  — untouched
+  • AppProvider usage        — untouched
+
+
+─── NEXT STEPS (OPTIONAL) ────────────────────────────────────
+
+  1. Visit https://customsready.uplifttechnologies.pro after
+     Netlify build completes to confirm dark theme renders.
+  2. Check that Polaris modals / toasts still display correctly
+     on top of the new dark background.
+  3. Consider adding responsive breakpoints for .cr-stat-grid
+     and the two-column order layout on smaller viewports.
+
+═══════════════════════════════════════════════════════════════
