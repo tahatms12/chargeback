@@ -281,24 +281,35 @@ REASON: Pre-existing billing config type error in Stagewise shopify.server.ts li
 ACTION NEEDED: Review and correct billing plan interval type
 
 PHASE 10 — NETLIFY UI BUILD SETTINGS (POST-DEPLOY DIAGNOSIS)
-─────────────────────────────────────────────────────────────
-[DIAGNOSIS] GLOBAL [SEVERITY: CRITICAL — BLOCKS ALL DEPLOYS]
-DISCOVERED: 2026-03-17T19:29
-ROOT CAUSE: Netlify site UI settings are overriding the rebuilt netlify.toml for all 6 sites.
-  Netlify UI settings always take precedence over netlify.toml when set.
+──────────────────────────────�ACTION TAKEN: Standardized pnpm in all 6 netlify.toml files (using pnpm install && pnpm run build).
+STATUS: COMMITTED AND PUSHED (commit 68bb2a0).
 
-EVIDENCE FROM BUILD LOG (customsready build):
-  Line 3: "Custom publish path detected: 'customsready/build/client'"
-  Line 4: "Custom functions path detected: 'customsready/build/server'"
-  Line 5: "Custom build command detected: 'npm install --legacy-peer-deps && npm run build'"
+REMAINING MANUAL ACTION REQUIRED — for each of the 6 sites:
+  Go to: https://app.netlify.com/projects/<site-name>/configuration/deploys
+  Under "Build settings":
+    Base directory    → set to value in table below
+    Build command     → CLEAR (leave blank)
+    Publish directory → CLEAR (leave blank)
+    Functions dir     → CLEAR (leave blank)
+  Click Save.
 
-THREE COMPOUNDING PROBLEMS:
-  1. Base directory NOT set in UI → Netlify is building from repo root, not the app subdirectory.
-     This causes all paths to be prefixed with the app name (e.g. customsready/build/client
-     instead of build/client), breaking all function resolution.
-  2. Build command is hardcoded to 'npm install --legacy-peer-deps && npm run build' in the UI.
-     This means pnpm is never used, so pnpm's automatic Puppeteer build-script blocking is bypassed.
-  3. npm install triggered Puppeteer's postinstall which downloads 300MB of Chromium.
+  Site-to-base-directory mapping:
+    customsready-prod → customsready
+    craftline-prod    → Craftline
+    fixitcsv-prod     → FixitCSV
+    stagewise-prod    → Stagewise
+    poref-prod         → apps/poref-new
+    quoteloop-prod    → apps/quoteloop-new
+
+  After saving all 6 sites, trigger a new deploy (or push a commit).
+  Netlify will then read each app's own netlify.toml and execute pnpm run build correctly.
+
+═══════════════════════════════════════════════════════════════
+END OF LOG — Code fixes complete (commit 68bb2a0). Netlify UI fix still required.
+Commit: 68bb2a0 → tahatms12/chargeback main
+Last updated: 2026-03-17T20:07
+═══════════════════════════════════════════════════════════════
+ downloads 300MB of Chromium.
      This caused the 11-minute build timeout. Build cancelled.
 
 NETLIFY SITE IDs (for reference):

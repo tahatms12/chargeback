@@ -1,5 +1,6 @@
 // app/db.server.ts
-import { PrismaClient } from "@prisma/client";
+import pkg from "@prisma/client";
+const { PrismaClient } = pkg;
 
 // Prevent multiple Prisma instances during hot reload in development.
 // Implementation choice: global singleton pattern, standard for Remix + Prisma.

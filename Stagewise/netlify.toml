@@ -1,6 +1,6 @@
 [build]
   base = "Stagewise"
-  command = "pnpm install && pnpm run build"
+  command = "npx prisma generate && pnpm run build"
   publish = "build/client"
 
 [functions]

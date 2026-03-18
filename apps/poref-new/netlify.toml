@@ -1,6 +1,6 @@
 [build]
   base = "apps/poref-new"
-  command = "pnpm install && pnpm run build"
+  command = "npx prisma generate && pnpm run build"
   publish = "build/client"
 
 [functions]
