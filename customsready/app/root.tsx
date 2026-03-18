@@ -1,17 +1,7 @@
-import {
-  Links,
-  LiveReload,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-} from "@remix-run/react";
+import { Links, LiveReload, Meta, Outlet, Scripts, ScrollRestoration,  } from "@remix-run/react";
 import { addDocumentResponseHeaders } from "./shopify.server";
-import type { LoaderFunctionArgs, HeadersFunction } from "@remix-run/node";
+import type { LoaderFunctionArgs } from "@remix-run/node";
 
-export const headers: HeadersFunction = (headersArgs) => {
-  return addDocumentResponseHeaders(headersArgs.request, headersArgs.loaderHeaders);
-};
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   addDocumentResponseHeaders(request, new Headers());

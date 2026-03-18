@@ -1,4 +1,4 @@
-import type { LoaderFunctionArgs, HeadersFunction } from "@remix-run/node";
+import type { LoaderFunctionArgs} from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { Link, Outlet, useLoaderData, useRouteError } from "@remix-run/react";
 import { boundary } from "@shopify/shopify-app-remix/server";
@@ -8,7 +8,6 @@ import "@shopify/polaris/build/esm/styles.css";
 import { authenticate } from "~/shopify.server";
 import { I18nProvider, useI18n } from "~/lib/i18n";
 
-export const headers: HeadersFunction = (args) => boundary.headers(args);
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   await authenticate.admin(request);
