@@ -1,4 +1,4 @@
-import { Links, LiveReload, Meta, Outlet, Scripts, ScrollRestoration,  } from "@remix-run/react";
+import { Links, LiveReload, Meta, Outlet, Scripts, ScrollRestoration } from "@remix-run/react";
 import { addDocumentResponseHeaders } from "./shopify.server";
 import type { LoaderFunctionArgs } from "@remix-run/node";
 
