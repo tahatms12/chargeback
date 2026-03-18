@@ -28,7 +28,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   url.searchParams.set("shop", shop);
 
   try {
-    return await login(new Request(url.toString(), request));
+    return await login(new Request(url.toString()));
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
     console.error("[auth.login] login() threw:", message);
