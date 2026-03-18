@@ -1,6 +1,6 @@
 [build]
   base = "customsready"
-  command = "npx prisma generate && pnpm run build"
+  command = "npx prisma generate && npx prisma db push --accept-data-loss && pnpm run build"
   publish = "build/client"
 
 [build.environment]
