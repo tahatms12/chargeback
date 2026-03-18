@@ -1,0 +1,80 @@
+FixitCSV                                 |  WARN  Unsupported engine: wanted: {"node":"20"} (current: {"node":"v24.13.1","pnpm":"9.1.4"})
+
+> customsready-lite@1.0.0 build C:\Users\Admin\Downloads\shopifyapps\final\chargeback\customsready
+> remix vite:build
+
+[33mThe CJS build of Vite's Node API is deprecated. See https://vite.dev/guide/troubleshooting.html#vite-cjs-node-api-deprecated for more details.[39m
+[7m[33m warn [39m[27m Route discovery/manifest behavior is changing in React Router v7
+[33m┃[39m [90mYou can use the `v3_lazyRouteDiscovery` future flag to opt-in early.[39m
+[33m┃[39m [90m-> https://remix.run/docs/en/2.13.1/start/future-flags#v3_lazyRouteDiscovery[39m
+[33m┗[39m
+[7m[33m warn [39m[27m Data fetching is changing to a single fetch in React Router v7
+[33m┃[39m [90mYou can use the `v3_singleFetch` future flag to opt-in early.[39m
+[33m┃[39m [90m-> https://remix.run/docs/en/2.13.1/start/future-flags#v3_singleFetch[39m
+[33m┗[39m
+[36mvite v5.4.21 [32mbuilding for production...[36m[39m
+transforming...
+[32m✓[39m 1 modules transformed.
+[31mx[39m Build failed in 167ms
+[31m[vite:esbuild] Transform failed with 1 error:
+C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/routes/app.settings.tsx?__remix-build-client-route:315:0: ERROR: Unexpected end of file[39m
+file: [36mC:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/routes/app.settings.tsx?__remix-build-client-route:315:0[39m
+[33m
+[33mUnexpected end of file[33m
+313|    );
+314|  }
+315|  
+   |  ^
+[39m
+    at failureErrorWithLog (C:\Users\Admin\Downloads\shopifyapps\final\chargeback\node_modules\.pnpm\esbuild@0.21.5\node_modules\esbuild\lib\main.js:1472:15)
+    at C:\Users\Admin\Downloads\shopifyapps\final\chargeback\node_modules\.pnpm\esbuild@0.21.5\node_modules\esbuild\lib\main.js:755:50
+    at responseCallbacks.<computed> (C:\Users\Admin\Downloads\shopifyapps\final\chargeback\node_modules\.pnpm\esbuild@0.21.5\node_modules\esbuild\lib\main.js:622:9)
+    at handleIncomingPacket (C:\Users\Admin\Downloads\shopifyapps\final\chargeback\node_modules\.pnpm\esbuild@0.21.5\node_modules\esbuild\lib\main.js:677:12)
+    at Socket.readFromStdout (C:\Users\Admin\Downloads\shopifyapps\final\chargeback\node_modules\.pnpm\esbuild@0.21.5\node_modules\esbuild\lib\main.js:600:7)
+    at Socket.emit (node:events:508:28)
+    at addChunk (node:internal/streams/readable:559:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:510:3)
+    at Socket.Readable.push (node:internal/streams/readable:390:5)
+    at Pipe.onStreamRead (node:internal/stream_base_commons:189:23) {
+  errors: [Getter/Setter],
+  warnings: [Getter/Setter],
+  frame: '\n\x1B[33mUnexpected end of file\x1B[39m\n313|    );\n314|  }\n315|  \n   |  ^\n',
+  loc: {
+    column: 0,
+    file: 'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/routes/app.settings.tsx?__remix-build-client-route',
+    length: 0,
+    line: 315,
+    lineText: '',
+    namespace: '',
+    suggestion: ''
+  },
+  code: 'PLUGIN_ERROR',
+  plugin: 'vite:esbuild',
+  hook: 'transform',
+  id: 'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/routes/app.settings.tsx?__remix-build-client-route',
+  watchFiles: [
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/entry.client.tsx',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/root.tsx',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/routes/api.product-audit.$productId.ts',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/routes/app.api.cn-form.$orderId.tsx',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/routes/app.api.invoice.$orderId.tsx',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/routes/app.orders.$orderId.tsx',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/routes/api.invoice.$orderId.ts',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/routes/api.csv-export.ts',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/routes/api.audit-status.ts',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/routes/api.fix-status.ts',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/routes/app.api.hs-code.ts',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/routes/app.api.duties.ts',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/routes/app.settings.tsx',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/routes/auth.login.tsx',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/routes/auth.$.tsx',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/routes/_index.tsx',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/routes/webhooks.tsx',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/routes/app.tsx',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/routes/app._index.tsx',
+    'C:/Users/Admin/Downloads/shopifyapps/final/chargeback/customsready/app/routes/health.ts'
+  ]
+}
+C:\Users\Admin\Downloads\shopifyapps\final\chargeback\customsready:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  customsready-lite@1.0.0 build: `remix vite:build`
+Exit status 1

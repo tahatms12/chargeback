@@ -44,14 +44,37 @@ export default function App() {
 
   return (
     <AppProvider isEmbeddedApp apiKey={apiKey}>
-      <NavMenu>
-        <Link to="/app" rel="home">
-          Dashboard
-        </Link>
-        <Link to="/app/settings">Settings</Link>
-      </NavMenu>
-      <Outlet />
-    </AppProvider>
+        <ui-nav-menu>
+          <Link to="/app" rel="home">
+            Home
+          </Link>
+          <Link to="/app/settings">Settings</Link>
+        </ui-nav-menu>
+        
+        <div className="cr-layout">
+          {/* Glowing Background Orbs */}
+          <div className="cr-orb cr-orb--blue-tl"></div>
+          <div className="cr-orb cr-orb--violet-bl"></div>
+          <div className="cr-orb cr-orb--blue-tr"></div>
+          
+          {/* Custom Header Nav */}
+          <header className="cr-nav">
+            <div className="cr-nav__brand">
+              <span className="cr-nav__logo">⚡</span>
+              <span className="cr-nav__name">CustomsReady</span>
+            </div>
+            <nav className="cr-nav__links">
+              <Link to="/app" className="cr-nav__link">Dashboard</Link>
+              <Link to="/app/settings" className="cr-nav__link">Settings</Link>
+            </nav>
+          </header>
+
+          {/* Main Content Area */}
+          <main className="cr-main">
+            <Outlet />
+          </main>
+        </div>
+      </AppProvider>
   );
 }
 

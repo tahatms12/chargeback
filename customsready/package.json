@@ -46,7 +46,10 @@
   },
   "devDependencies": {
     "@shopify/cli": "^3.92.0",
+    "@shopify/ui-extensions-react": "^2025.7.3",
     "@types/node": "^22.0.0",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
     "eslint": "^8.57.0",
     "typescript": "^5.6.3"
   }
