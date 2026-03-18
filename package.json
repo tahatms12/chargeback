@@ -5,8 +5,7 @@
   "scripts": {
     "build:all": "pnpm run build:customsready && pnpm run build:fixitcsv && pnpm run build:stagewise && pnpm run build:poref-new && pnpm run build:quoteloop-new && pnpm run build:craftline",
     "dev:all": "pnpm run dev:customsready & pnpm run dev:fixitcsv & pnpm run dev:stagewise & pnpm run dev:poref-new & pnpm run dev:quoteloop-new & pnpm run dev:craftline",
-"build:customsready": "npm --prefix ./customsready install && npm --prefix ./customsready exec -- prisma generate && npm --prefix ./customsready exec -- prisma db push --accept-data-loss && npm --prefix ./customsready run build"    "build:fixitcsv": "pnpm --filter fixitcsv run build",
-    "build:stagewise": "pnpm --filter production-queue-communicator run build",
+    "build:customsready": "npm --prefix ./customsready install && npm --prefix ./customsready exec -- prisma generate && npm --prefix ./customsready exec -- prisma db push --accept-data-loss && npm --prefix ./customsready run build"      "build:stagewise": "pnpm --filter production-queue-communicator run build",
     "build:poref-new": "pnpm --filter poref-new run build",
     "build:quoteloop-new": "pnpm --filter quoteloop-new run build",
     "build:craftline": "pnpm --filter maker-queue run build",
