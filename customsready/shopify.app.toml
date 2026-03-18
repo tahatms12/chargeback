@@ -13,9 +13,6 @@ scopes = "read_products,read_orders"
 
 [auth]
 redirect_urls = [
-  "https://customsready-prod.netlify.app/auth/callback",
-  "https://customsready-prod.netlify.app/auth/shopify/callback",
-  "https://customsready-prod.netlify.app/api/auth/callback",
   "https://customsready.uplifttechnologies.pro/auth/callback",
   "https://customsready.uplifttechnologies.pro/auth/shopify/callback",
   "https://customsready.uplifttechnologies.pro/api/auth/callback"
