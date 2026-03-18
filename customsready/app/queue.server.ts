@@ -19,21 +19,29 @@ declare global {
 
 let redisConnection: IORedis | null = null;
 
-try {
-  redisConnection =
-    global.__redis ??
-    new IORedis(process.env.REDIS_URL!, {
-      maxRetriesPerRequest: null, // Required by BullMQ
-      enableReadyCheck: false,
-      lazyConnect: true, // Do not connect until first command
+if (process.env.REDIS_URL) {
+  try {
+    redisConnection =
+      global.__redis ??
+      new IORedis(process.env.REDIS_URL, {
+        maxRetriesPerRequest: null, // Required by BullMQ
+        enableReadyCheck: false,
+        lazyConnect: true, // Do not connect until first command
+      });
+
+    redisConnection.on("error", (err) => {
+      console.error("[CustomsReady] Redis error:", err.message);
     });
 
-  if (process.env.NODE_ENV !== "production") {
-    global.__redis = redisConnection;
+    if (process.env.NODE_ENV !== "production") {
+      global.__redis = redisConnection;
+    }
+  } catch (e) {
+    console.error("[CustomsReady] Redis init failed:", e);
+    redisConnection = null;
   }
-} catch (e) {
-  console.error("[CustomsReady] Redis unavailable — queue features disabled:", e);
-  redisConnection = null;
+} else {
+  console.warn("[CustomsReady] REDIS_URL not set — queue features disabled");
 }
 
 export { redisConnection };
