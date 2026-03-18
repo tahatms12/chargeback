@@ -4,8 +4,18 @@ import { useRouteError } from "@remix-run/react";
 import { authenticate } from "~/shopify.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  await authenticate.admin(request);
-  return null;
+  try {
+    await authenticate.admin(request);
+    return null;
+  } catch (err) {
+    if (err instanceof Response) throw err;
+    const errorBody = err instanceof Error ? err.stack : String(err);
+    // Throwing a Response bypasses Remix's default production error hiding
+    throw Response.json({ message: errorBody }, {
+      status: 500,
+      statusText: "Explicit Server Error",
+    });
+  }
 };
 
 export function ErrorBoundary() {

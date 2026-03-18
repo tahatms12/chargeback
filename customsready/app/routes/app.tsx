@@ -12,40 +12,50 @@ import { enqueueCatalogAudit } from "~/queue.server";
 
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { session, billing } = await authenticate.admin(request);
-  const shopDomain = session.shop;
-
-  // Billing gate — redirects to Shopify billing approval if no active plan
   try {
-    await billing.require({
-      plans: [PLAN_NAME],
-      onFailure: async () =>
-        billing.request({
-          plan: PLAN_NAME,
-          isTest: process.env.NODE_ENV !== "production",
-          trialDays: 14,
-        }),
-    });
-  } catch (billingError) {
-    if (billingError instanceof Response) {
-      throw billingError;
-    }
-    console.error("[app.tsx] Billing check error (non-fatal):", billingError);
-  }
+    const { session, billing } = await authenticate.admin(request);
+    const shopDomain = session.shop;
 
-  // First-install: enqueue the initial catalog audit if none has run yet
-  try {
-    const auditRunCount = await db.auditRun.count({ where: { shopDomain } });
-    if (auditRunCount === 0) {
-      await enqueueCatalogAudit(shopDomain, "install");
+    // Billing gate — redirects to Shopify billing approval if no active plan
+    try {
+      await billing.require({
+        plans: [PLAN_NAME],
+        onFailure: async () =>
+          billing.request({
+            plan: PLAN_NAME,
+            isTest: process.env.NODE_ENV !== "production",
+            trialDays: 14,
+          }),
+      });
+    } catch (billingError) {
+      if (billingError instanceof Response) {
+        throw billingError;
+      }
+      console.error("[app.tsx] Billing check error (non-fatal):", billingError);
     }
+
+    // First-install: enqueue the initial catalog audit if none has run yet
+    try {
+      const auditRunCount = await db.auditRun.count({ where: { shopDomain } });
+      if (auditRunCount === 0) {
+        await enqueueCatalogAudit(shopDomain, "install");
+      }
+    } catch (err) {
+      // We are logging this to see if Prisma fails here
+      console.error("[app.tsx] Database or queue error:", err);
+      throw err;
+    }
+
+    return json({ apiKey: process.env.SHOPIFY_API_KEY! });
   } catch (err) {
-    // We are logging this to see if Prisma fails here
-    console.error("[app.tsx] Database or queue error:", err);
-    throw err;
+    if (err instanceof Response) throw err;
+    const errorBody = err instanceof Error ? err.stack : String(err);
+    // Bypass Remix's default production error hiding
+    throw Response.json({ message: errorBody }, {
+      status: 500,
+      statusText: "Explicit App Loader Error",
+    });
   }
-
-  return json({ apiKey: process.env.SHOPIFY_API_KEY! });
 };
 
 export default function App() {
