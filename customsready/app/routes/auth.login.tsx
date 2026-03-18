@@ -30,6 +30,11 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   try {
     return await login(new Request(url.toString()));
   } catch (err: unknown) {
+    // login() throws a Response (redirect) on success — Remix convention
+    // Re-throw it so Remix handles the OAuth redirect
+    if (err instanceof Response) {
+      throw err;
+    }
     const message = err instanceof Error ? err.message : String(err);
     console.error("[auth.login] login() threw:", message);
     return json({ error: `Login failed: ${message}` });
