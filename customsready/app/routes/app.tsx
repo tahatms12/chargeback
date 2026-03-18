@@ -27,18 +27,22 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
         }),
     });
   } catch (billingError) {
+    if (billingError instanceof Response) {
+      throw billingError;
+    }
     console.error("[app.tsx] Billing check error (non-fatal):", billingError);
   }
 
   // First-install: enqueue the initial catalog audit if none has run yet
-  const auditRunCount = await db.auditRun.count({ where: { shopDomain } });
-  if (auditRunCount === 0) {
-    try {
+  try {
+    const auditRunCount = await db.auditRun.count({ where: { shopDomain } });
+    if (auditRunCount === 0) {
       await enqueueCatalogAudit(shopDomain, "install");
-    } catch (err) {
-      // Non-fatal: do not block app loading if Redis is briefly unavailable
-      console.error("[app.tsx] Failed to enqueue initial catalog audit:", err);
     }
+  } catch (err) {
+    // We are logging this to see if Prisma fails here
+    console.error("[app.tsx] Database or queue error:", err);
+    throw err;
   }
 
   return json({ apiKey: process.env.SHOPIFY_API_KEY! });
@@ -83,8 +87,19 @@ export default function App() {
   );
 }
 
-// Shopify App Bridge requires this exact error boundary pattern
 export function ErrorBoundary() {
   const error = useRouteError();
-  return boundary.error(error);
+  console.error("ErrorBoundary in app.tsx caught:", error);
+  return (
+    <div style={{ padding: "2rem", fontFamily: "system-ui, sans-serif" }}>
+      <h1 style={{ color: "#d21c1c" }}>App Route Error</h1>
+      <p style={{ color: "#ff8a8a" }}>
+        {error instanceof Error ? error.message : "Unexpected Server Error in app.tsx"}
+      </p>
+      <pre style={{ background: "#333", padding: "1rem", color: "#fff", overflowX: "auto" }}>
+        {error instanceof Error ? error.stack : JSON.stringify(error, null, 2)}
+      </pre>
+      {boundary.error(error)}
+    </div>
+  );
 }
