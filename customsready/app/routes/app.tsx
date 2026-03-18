@@ -1,5 +1,5 @@
 // app/routes/app.tsx
-import type { LoaderFunctionArgs, HeadersFunction } from "@remix-run/node";
+import type { LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { Link, Outlet, useLoaderData, useRouteError } from "@remix-run/react";
 import { boundary } from "@shopify/shopify-app-remix/server";
@@ -10,9 +10,6 @@ import { authenticate } from "~/shopify.server";
 import { db } from "~/db.server";
 import { enqueueCatalogAudit } from "~/queue.server";
 
-export const headers: HeadersFunction = (headersArgs) => {
-  return boundary.headers(headersArgs);
-};
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session, billing } = await authenticate.admin(request);
