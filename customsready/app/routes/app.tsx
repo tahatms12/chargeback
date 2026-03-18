@@ -1,61 +1,29 @@
-// app/routes/app.tsx
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { Link, Outlet, useLoaderData, useRouteError } from "@remix-run/react";
 import { boundary } from "@shopify/shopify-app-remix/server";
 import { AppProvider } from "@shopify/shopify-app-remix/react";
-import { NavMenu } from "@shopify/app-bridge-react";
 import "@shopify/polaris/build/esm/styles.css";
-import { authenticate, PLAN_NAME } from "~/shopify.server";
+import { authenticate } from "~/shopify.server";
 import { db } from "~/db.server";
 import { enqueueCatalogAudit } from "~/queue.server";
 
-
 export const loader = async ({ request }: LoaderFunctionArgs) => {
+  const { session } = await authenticate.admin(request);
+  const shopDomain = session.shop;
+
+  // First-install: enqueue the initial catalog audit if none has run yet
   try {
-    const { session, billing } = await authenticate.admin(request);
-    const shopDomain = session.shop;
-
-    // Billing gate — redirects to Shopify billing approval if no active plan
-    try {
-      await billing.require({
-        plans: [PLAN_NAME],
-        onFailure: async () =>
-          billing.request({
-            plan: PLAN_NAME,
-            isTest: process.env.NODE_ENV !== "production",
-            trialDays: 14,
-          }),
-      });
-    } catch (billingError) {
-      if (billingError instanceof Response) {
-        throw billingError;
-      }
-      console.error("[app.tsx] Billing check error (non-fatal):", billingError);
+    const auditRunCount = await db.auditRun.count({ where: { shopDomain } });
+    if (auditRunCount === 0) {
+      await enqueueCatalogAudit(shopDomain, "install");
     }
-
-    // First-install: enqueue the initial catalog audit if none has run yet
-    try {
-      const auditRunCount = await db.auditRun.count({ where: { shopDomain } });
-      if (auditRunCount === 0) {
-        await enqueueCatalogAudit(shopDomain, "install");
-      }
-    } catch (err) {
-      // We are logging this to see if Prisma fails here
-      console.error("[app.tsx] Database or queue error:", err);
-      throw err;
-    }
-
-    return json({ apiKey: process.env.SHOPIFY_API_KEY! });
   } catch (err) {
-    if (err instanceof Response) throw err;
-    const errorBody = err instanceof Error ? err.stack : String(err);
-    // Bypass Remix's default production error hiding
-    throw Response.json({ message: errorBody }, {
-      status: 500,
-      statusText: "Explicit App Loader Error",
-    });
+    // Non-fatal — log and continue
+    console.warn("[app.tsx] DB/queue check skipped:", err);
   }
+
+  return json({ apiKey: process.env.SHOPIFY_API_KEY! });
 };
 
 export default function App() {
@@ -63,37 +31,32 @@ export default function App() {
 
   return (
     <AppProvider isEmbeddedApp apiKey={apiKey}>
-        <ui-nav-menu>
-          <Link to="/app" rel="home">
-            Home
-          </Link>
-          <Link to="/app/settings">Settings</Link>
-        </ui-nav-menu>
-        
-        <div className="cr-layout">
-          {/* Glowing Background Orbs */}
-          <div className="cr-orb cr-orb--blue-tl"></div>
-          <div className="cr-orb cr-orb--violet-bl"></div>
-          <div className="cr-orb cr-orb--blue-tr"></div>
-          
-          {/* Custom Header Nav */}
-          <header className="cr-nav">
-            <div className="cr-nav__brand">
-              <span className="cr-nav__logo">⚡</span>
-              <span className="cr-nav__name">CustomsReady</span>
-            </div>
-            <nav className="cr-nav__links">
-              <Link to="/app" className="cr-nav__link">Dashboard</Link>
-              <Link to="/app/settings" className="cr-nav__link">Settings</Link>
-            </nav>
-          </header>
+      <ui-nav-menu>
+        <Link to="/app" rel="home">Home</Link>
+        <Link to="/app/settings">Settings</Link>
+      </ui-nav-menu>
 
-          {/* Main Content Area */}
-          <main className="cr-main">
-            <Outlet />
-          </main>
-        </div>
-      </AppProvider>
+      <div className="cr-layout">
+        <div className="cr-orb cr-orb--blue-tl"></div>
+        <div className="cr-orb cr-orb--violet-bl"></div>
+        <div className="cr-orb cr-orb--blue-tr"></div>
+
+        <header className="cr-nav">
+          <div className="cr-nav__brand">
+            <span className="cr-nav__logo">⚡</span>
+            <span className="cr-nav__name">CustomsReady</span>
+          </div>
+          <nav className="cr-nav__links">
+            <Link to="/app" className="cr-nav__link">Dashboard</Link>
+            <Link to="/app/settings" className="cr-nav__link">Settings</Link>
+          </nav>
+        </header>
+
+        <main className="cr-main">
+          <Outlet />
+        </main>
+      </div>
+    </AppProvider>
   );
 }
 
