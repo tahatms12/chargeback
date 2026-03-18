@@ -23,7 +23,7 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 };
 
 export default function AuthLogin() {
-  const actionData = useActionData<typeof action>();
+  const actionData = useActionData<typeof action>() as any;
   const navigation = useNavigation();
   const [shop, setShop] = useState("");
 

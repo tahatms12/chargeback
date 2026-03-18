@@ -143,7 +143,7 @@ function OrderDetailBlock() {
             <Text fontWeight="semibold" as="span" tone="subdued">
               Line Items
             </Text>
-            {readiness.lines.map((line) => (
+            {readiness.lines.map((line: any) => (
               <LineReadinessRow key={line.lineItemId} line={line} />
             ))}
           </BlockStack>

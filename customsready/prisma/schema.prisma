@@ -136,3 +136,17 @@ model PdfGenerationLog {
   @@index([shopDomain, orderId])
   @@index([shopDomain, generatedAt(sort: Desc)])
 }
+
+model InvoiceRecord {
+  id          String   @id @default(cuid())
+  shopDomain  String
+  orderId     String
+  orderName   String
+  generatedAt DateTime @default(now())
+  declaredValue Float
+  currency    String
+  documentType String  // "COMMERCIAL_INVOICE" | "CN22" | "CN23"
+
+  @@unique([shopDomain, orderId, documentType])
+  @@index([shopDomain])
+}
