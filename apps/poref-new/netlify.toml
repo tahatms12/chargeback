@@ -18,5 +18,5 @@
 
 [[redirects]]
   from = "/*"
-  to = "/.netlify/functions/index"
+  to = "/.netlify/functions/remix-server"
   status = 200
