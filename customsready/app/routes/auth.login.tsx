@@ -28,7 +28,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   url.searchParams.set("shop", shop);
 
   try {
-    return await login(new Request(url.toString()));
+    return await login(new Request(url.toString(), {
+      headers: request.headers,
+    }));
   } catch (err: unknown) {
     // login() throws a Response (redirect) on success — Remix convention
     // Re-throw it so Remix handles the OAuth redirect
