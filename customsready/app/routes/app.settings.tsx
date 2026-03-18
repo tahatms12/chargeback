@@ -27,20 +27,11 @@ const ConfigSchema = z.object({
 // ─── Loader ───────────────────────────────────────────────────────────────────
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { session, billing } = await authenticate.admin(request);
+  const { session } = await authenticate.admin(request);
   const shopDomain = session.shop;
-
-  await billing.require({
-    plans: ["CustomsReady Lite Monthly"],
-    onFailure: async () =>
-      billing.request({ plan: "CustomsReady Lite Monthly", isTest: process.env.NODE_ENV !== "production" }),
-  });
-
   const config = await db.configuration.findUnique({ where: { shopDomain } });
-
   return json({ config });
 };
-
 // ─── Action ───────────────────────────────────────────────────────────────────
 
 export const action = async ({ request }: ActionFunctionArgs) => {
