@@ -1,0 +1,183 @@
+================================================================================
+FOR_AMMAR3 — Session Summary (2026-03-17, ~21:30–23:07 EST)
+================================================================================
+
+This session focused on three things:
+1. Injecting environment variables into all 6 Netlify production sites
+2. Fixing a Redis crash in customsready
+3. Debugging and fixing a cascade of Remix routing errors on customsready
+
+────────────────────────────────────────────────────────────────────────────────
+PHASE 1 — NETLIFY ENV VAR INJECTION (All 6 Sites)
+────────────────────────────────────────────────────────────────────────────────
+
+Netlify CLI not installed. Used Netlify REST API directly with PAT.
+Account slug: tahatms12 | Account ID: 682e4e0d05c8bd4a56385d29
+
+VARS SET ON ALL 6 SITES (DELETE + POST for idempotency):
+
+  craftline-prod     (7cf7d158-7b79-4022-9004-8b2c313ca2a9)
+    DATABASE_URL     → ep-green-bar-ad7i0be8-pooler.c-2.us-east-1 (Neon pooled)
+    SHOPIFY_API_KEY  → d3b042773d9a5f0d124e0658926bd02b
+    SHOPIFY_API_SECRET
+    SHOPIFY_APP_URL  → https://craftline.uplifttechnologies.pro
+    SCOPES           → read_orders,write_orders,read_customers,read_metafields,write_metafields
+    NODE_ENV         → production
+
+  fixitcsv-prod      (3d753e81-5ef4-4e7e-a782-241df11291d5)
+    DATABASE_URL     → ep-billowing-voice-an8rxnmm-pooler.c-6.us-east-1 (Neon pooled)
+    SHOPIFY_API_KEY  → ae643eaf470a54b579b814b2a513eadd
+    SHOPIFY_API_SECRET
+    SHOPIFY_APP_URL  → https://fixitcsv.uplifttechnologies.pro
+    SCOPES           → read_products
+    NODE_ENV         → production
+
+  stagewise-prod     (ee7c482b-0933-44c4-ace2-708f83a42072)
+    DATABASE_URL     → ep-tiny-union-adxmh2gf-pooler.c-2.us-east-1 (Neon pooled)
+    SHOPIFY_API_KEY  → f20219630bf651859ee3cb2945af43e6
+    SHOPIFY_API_SECRET
+    SHOPIFY_APP_URL  → https://stagewise.uplifttechnologies.pro
+    SCOPES           → read_orders,write_orders,read_customers
+    NODE_ENV         → production
+
+  customsready-prod  (bc3ed110-29b6-4983-ae1c-f562190b0c45)
+    DATABASE_URL     → ep-gentle-moon-ad1bsa5i-pooler.c-2.us-east-1 (Neon pooled)
+    SHOPIFY_API_KEY  → b401118ff3d466cd8ac36857e7ac845f
+    SHOPIFY_API_SECRET
+    SHOPIFY_APP_URL  → https://customsready.uplifttechnologies.pro
+    SCOPES           → read_products,read_orders
+    NODE_ENV         → production
+    REDIS_URL        → DELETED (was set to localhost — would crash on Netlify)
+
+  poref-prod         (24a60a1b-f065-4ed2-97ec-c0de876c93ed)
+    DATABASE_URL     → ep-bitter-heart-a4v6jxbk-pooler.us-east-1 (Neon pooled)
+    SHOPIFY_API_KEY  → f1f6c46cef65eb4c90663b2bc88fd1e6
+    SHOPIFY_API_SECRET
+    SHOPIFY_APP_URL  → https://poref.uplifttechnologies.pro
+    SCOPES           → read_orders,write_orders,read_all_orders,read_customers
+    NODE_ENV         → production
+
+  quoteloop-prod     (b579e238-53d5-4253-b431-5576fa33080a)
+    DATABASE_URL     → ep-ancient-sea-am1cw014-pooler.c-5.us-east-1 (Neon pooled)
+    SHOPIFY_API_KEY  → fc83b2d79a0791b27995f678fb80b614
+    SHOPIFY_API_SECRET
+    SHOPIFY_APP_URL  → https://quoteloop.uplifttechnologies.pro
+    SCOPES           → read_draft_orders,write_draft_orders,read_customers
+    NODE_ENV         → production
+
+DATABASE_URL UPDATE — All 6 sites had pgbouncer params appended:
+  ...&pgbouncer=true&connection_limit=1
+  Required for Neon + serverless to prevent connection pool timeout.
+
+────────────────────────────────────────────────────────────────────────────────
+PHASE 2 — CODE FIXES (Committed & Pushed to main)
+────────────────────────────────────────────────────────────────────────────────
+
+COMMIT a754696 — Redis guard fix (customsready/app/queue.server.ts)
+  Problem:  REDIS_URL check existed but ioredis was still instantiated even
+            when env var was absent — caused crash on cold start.
+  Fix:      Wrapped entire Redis instantiation in `if (process.env.REDIS_URL)`
+            block. Added error event listener. Removed `!` non-null assertion.
+
+COMMIT f4a5a15 — Remove all headers exports from all 6 apps
+  Problem:  `export const headers: HeadersFunction` in route files crashes
+            when Remix passes undefined headersArgs on loader failure/redirect.
+  Files:    Craftline/app/routes/app.tsx
+            FixitCSV/app/routes/app.tsx
+            Stagewise/app/routes/app.tsx
+            apps/poref-new/app/routes/app.tsx
+            apps/quoteloop-new/app/routes/app.tsx
+            customsready/app/root.tsx  ← CAUSED NEXT BUG (see below)
+  Also:     Removed HeadersFunction imports + orphaned boundary imports.
+
+COMMIT 403ebd3 — Fix trailing comma in customsready/app/root.tsx
+  Problem:  Removal script left `ScrollRestoration,  }` (trailing comma) in
+            the import — TypeScript syntax error prevented module compilation.
+  Fix:      Cleaned the import line.
+
+COMMIT b52360c — Restore customsready/app/root.tsx fully
+  Problem:  root.tsx still had extraneous loader + addDocumentResponseHeaders.
+            User requested minimal clean Remix root.
+  Fix:      Replaced entire file with minimal valid Remix root:
+              import { Links, Meta, Outlet, Scripts, ScrollRestoration }
+              export default function App() { ... <Outlet /> ... }
+
+COMMIT 084a101 — Fix customsready/app/routes/_index.tsx
+  Problem:  Previous auth fix had `authenticate.admin()` in _index — wrong.
+  Fix:      Added default export (required for Remix route manifest) with
+            redirect logic:
+              ?shop → /auth/login
+              else  → /app
+
+COMMIT 87e41ae — Remove basename from customsready/vite.config.ts
+  Problem:  `basename: "/customsready"` shifted ALL routes off root:
+              _index.tsx registered at /customsready (not /)
+              app.tsx registered at /customsready/app (not /app)
+            Domain is at root, so every request got "No route matches URL /".
+  Fix:      Removed the basename option entirely.
+
+COMMIT 3370b54 — Separate auth routes in customsready
+  Problem:  Shopify SDK requires strict separation:
+              /auth/login must use login() not authenticate.admin()
+  Fix:      Created customsready/app/routes/auth.login.tsx:
+              import { login } from "../shopify.server"
+              export const loader = async ({ request }) => login(request)
+            Replaced _index.tsx with redirect-only logic (no SDK calls).
+  Note:     shopify.server.ts exports `login` as a named export (line 97):
+              export const login = shopify.login
+
+────────────────────────────────────────────────────────────────────────────────
+CURRENT STATE OF CUSTOMSREADY
+────────────────────────────────────────────────────────────────────────────────
+
+Route map (after all fixes):
+  /              → _index.tsx   → redirect to /auth/login or /app
+  /auth/login    → auth.login   → shopify.login(request)
+  /auth/*        → auth.$.tsx   → Shopify OAuth callback handler
+  /app           → app.tsx      → authenticate.admin() + billing gate
+  /app/_index    → app._index   → main dashboard
+  /app/settings  → app.settings → settings page
+
+Known remaining issues on customsready:
+  1. billing.require() calls a plan "CustomsReady Lite Monthly" —
+     if this plan is not configured in shopify.app.toml, billing gate
+     will throw a TypeError. See prior audit (FOR_AMMAR2).
+  2. BullMQ workers (queue.server.ts) need persistent compute — they
+     cannot run in Netlify Functions. Needs Railway/Fly.io deployment.
+  3. REDIS_URL is absent on Netlify (deleted) — queue features degrade
+     gracefully via the guard added in a754696.
+
+────────────────────────────────────────────────────────────────────────────────
+CURRENT STATE OF OTHER 5 APPS
+────────────────────────────────────────────────────────────────────────────────
+
+All 5 other apps (Craftline, FixitCSV, Stagewise, PORef, QuoteLoop):
+  - Env vars set on Netlify ✓
+  - DATABASE_URL has pgbouncer params ✓
+  - headers exports removed ✓
+  - No vite.config basename issues found
+  - Builds triggered via git push
+
+URLs to validate once builds complete:
+  https://craftline.uplifttechnologies.pro
+  https://fixitcsv.uplifttechnologies.pro
+  https://stagewise.uplifttechnologies.pro
+  https://customsready.uplifttechnologies.pro
+  https://poref.uplifttechnologies.pro
+  https://quoteloop.uplifttechnologies.pro
+
+────────────────────────────────────────────────────────────────────────────────
+COMMITS THIS SESSION (chronological)
+────────────────────────────────────────────────────────────────────────────────
+
+  a754696  fix: guard Redis/Queue instantiation behind REDIS_URL env var check
+  95558ed  chore: trigger redeploy — env vars now set on all 6 Netlify sites
+  fb63928  fix(customsready): remove headers export that crashes on loader failure
+  f4a5a15  fix: remove all headers exports from all route files across all 6 apps
+  403ebd3  fix(customsready): remove trailing comma in root.tsx — syntax error
+  b52360c  fix(customsready): restore root.tsx — broken by headers removal script
+  084a101  fix(customsready): add default export to _index.tsx
+  87e41ae  fix(customsready): remove basename /customsready from vite.config
+  3370b54  fix(customsready): separate auth routes — auth.login/login(), _index redirect-only
+
+================================================================================
