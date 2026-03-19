@@ -4,38 +4,44 @@ import { authenticate } from "~/shopify.server";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { admin } = await authenticate.admin(request);
-  const response = await admin.graphql(
-    `#graphql
-    query getRecentOrders {
-      orders(first: 25, sortKey: CREATED_AT, reverse: true) {
-        edges {
-          node {
-            id
-            name
-            createdAt
-            displayFinancialStatus
-            displayFulfillmentStatus
-            totalPriceSet {
-              shopMoney {
-                amount
-                currencyCode
+  
+  let orders: any[] = [];
+  try {
+    const response = await admin.graphql(
+      `#graphql
+      query getRecentOrders {
+        orders(first: 25, sortKey: CREATED_AT, reverse: true) {
+          edges {
+            node {
+              id
+              name
+              createdAt
+              displayFinancialStatus
+              displayFulfillmentStatus
+              totalPriceSet {
+                shopMoney {
+                  amount
+                  currencyCode
+                }
               }
             }
           }
         }
-      }
-    }`
-  );
+      }`
+    );
 
-  const { data } = await response.json();
-  const orders = data.orders.edges.map(({ node }: any) => ({
-    id: node.id.split("/").pop() as string,
-    name: node.name,
-    createdAt: node.createdAt,
-    financialStatus: node.displayFinancialStatus,
-    fulfillmentStatus: node.displayFulfillmentStatus,
-    total: `${node.totalPriceSet.shopMoney.amount} ${node.totalPriceSet.shopMoney.currencyCode}`,
-  }));
+    const { data } = await response.json();
+    orders = data.orders.edges.map(({ node }: any) => ({
+      id: node.id.split("/").pop() as string,
+      name: node.name,
+      createdAt: node.createdAt,
+      financialStatus: node.displayFinancialStatus,
+      fulfillmentStatus: node.displayFulfillmentStatus,
+      total: `${node.totalPriceSet.shopMoney.amount} ${node.totalPriceSet.shopMoney.currencyCode}`,
+    }));
+  } catch (err) {
+    console.warn('[app._index] Orders query failed:', err);
+  }
 
   return json({ orders });
 }

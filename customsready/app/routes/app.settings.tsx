@@ -29,7 +29,14 @@ const ConfigSchema = z.object({
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session } = await authenticate.admin(request);
   const shopDomain = session.shop;
-  const config = await db.configuration.findUnique({ where: { shopDomain } });
+
+  let config = null;
+  try {
+    config = await db.configuration.findUnique({ where: { shopDomain } });
+  } catch (err) {
+    console.warn('[settings] DB fetch failed:', err);
+  }
+
   return json({ config });
 };
 // ─── Action ───────────────────────────────────────────────────────────────────

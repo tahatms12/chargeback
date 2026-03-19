@@ -2,6 +2,7 @@ import { vitePlugin as remix } from "@remix-run/dev";
 import { defineConfig } from "vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 import { netlifyPlugin } from "@netlify/remix-adapter/plugin";
+import tailwindcss from "@tailwindcss/vite";
 
 export default defineConfig({
   server: { port: Number(process.env.PORT ?? 3000), hmr: false },
@@ -9,8 +10,9 @@ export default defineConfig({
     noExternal: [/^@shopify\//],
   },
   plugins: [
+    tailwindcss(),
     remix({
-      basename: "/fixitcsv",
+      basename: "/",
       ignoredRouteFiles: ["**/.*"],
       future: {
         v3_fetcherPersist: true,
