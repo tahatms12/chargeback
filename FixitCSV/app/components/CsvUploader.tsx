@@ -3,7 +3,7 @@ import { useState } from "react";
 import type { ValidationResult } from "~/lib/csv-validator.client";
 import { useI18n } from "~/lib/i18n";
 
-export function CsvUploader({ rowsUsed, rowLimit, hasPlan, onDone }: { rowsUsed: number; rowLimit: number; hasPlan: boolean; onDone: (res: ValidationResult) => void }) {
+export function CsvUploader({ rowsUsed, rowLimit, hasPlan, onDone }: { rowsUsed: number; rowLimit: number; hasPlan: boolean; onDone: (res: ValidationResult, rawCsv: string) => void }) {
   const [paywall, setPaywall] = useState<string | null>(null);
   const { locale, t } = useI18n();
 
@@ -18,7 +18,7 @@ export function CsvUploader({ rowsUsed, rowLimit, hasPlan, onDone }: { rowsUsed:
       return;
     }
     setPaywall(null);
-    onDone(res);
+    onDone(res, text);
   };
 
   return (

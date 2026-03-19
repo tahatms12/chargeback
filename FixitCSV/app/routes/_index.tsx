@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
-import type { LoaderFunctionArgs } from "@remix-run/node";
+import type { LoaderFunctionArgs, LinksFunction } from "@remix-run/node";
 import { redirect } from "@remix-run/node";
+import tailwindStyles from "../tailwind.css?url";
+
+export const links: LinksFunction = () => [
+  { rel: "stylesheet", href: tailwindStyles },
+];
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const url = new URL(request.url);
@@ -37,9 +42,9 @@ export default function Index() {
             <a href="#how-it-works" className="hover:text-white transition">How it works</a>
             <a href="#pricing" className="hover:text-white transition">Pricing</a>
           </div>
-          <button className="bg-white text-black rounded-full px-5 py-2 text-sm font-semibold hover:bg-white/90 transition shadow-lg">
+          <a href="/auth/login" className="bg-white text-black rounded-full px-5 py-2 text-sm font-semibold hover:bg-white/90 transition shadow-lg inline-block text-center decoration-none">
             Fix my CSV →
-          </button>
+          </a>
         </div>
       </nav>
 
@@ -73,12 +78,12 @@ export default function Index() {
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center mt-10">
-          <button className="bg-white text-black rounded-full px-8 py-3.5 font-semibold hover:bg-white/90 transition shadow-lg shadow-white/10">
+          <a href="/auth/login" className="bg-white text-black rounded-full px-8 py-3.5 font-semibold hover:bg-white/90 transition shadow-lg shadow-white/10 inline-block text-center decoration-none">
             Fix my CSV free →
-          </button>
-          <button className="bg-transparent border border-white/20 text-white rounded-full px-8 py-3.5 font-semibold hover:bg-white/5 transition">
+          </a>
+          <a href="#how-it-works" className="bg-transparent border border-white/20 text-white rounded-full px-8 py-3.5 font-semibold hover:bg-white/5 transition inline-block text-center decoration-none">
             See how it works
-          </button>
+          </a>
         </div>
 
         {/* Hero Visual Output */}
@@ -231,9 +236,9 @@ export default function Index() {
           Your next import is one upload away.
         </h2>
         <div className="mt-10">
-          <button className="bg-white text-black rounded-full px-10 py-4 text-lg font-bold hover:bg-white/90 transition shadow-xl shadow-white/10">
+          <a href="/auth/login" className="bg-white text-black rounded-full px-10 py-4 text-lg font-bold hover:bg-white/90 transition shadow-xl shadow-white/10 inline-block text-center decoration-none">
             Fix my CSV free →
-          </button>
+          </a>
           <p className="text-sm text-white/30 mt-4">No account required. No credit card.</p>
         </div>
       </section>

@@ -17,6 +17,7 @@
     "node": "20"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@netlify/remix-adapter": "^3.0.0",
     "@prisma/client": "^6.19.2",
     "@remix-run/node": "^2.13.1",
