@@ -38,5 +38,18 @@ function AppShell({ apiKey }: { apiKey: string }) {
 }
 
 export function ErrorBoundary() {
-  return boundary.error(useRouteError());
+  const error = useRouteError();
+  console.error("ErrorBoundary in app.tsx caught:", error);
+  return (
+    <div style={{ padding: "2rem", fontFamily: "system-ui, sans-serif" }}>
+      <h1 style={{ color: "#d21c1c" }}>App Route Error</h1>
+      <p style={{ color: "#ff8a8a" }}>
+        {error instanceof Error ? error.message : "Unexpected Server Error in app.tsx"}
+      </p>
+      <pre style={{ background: "#333", padding: "1rem", color: "#fff", overflowX: "auto" }}>
+        {error instanceof Error ? error.stack : JSON.stringify(error, null, 2)}
+      </pre>
+      {boundary.error(error)}
+    </div>
+  );
 }

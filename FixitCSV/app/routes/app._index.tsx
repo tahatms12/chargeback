@@ -14,11 +14,18 @@ import { getUsageForMonth, incrementUsage } from "~/lib/usage.server";
 import { authenticate } from "~/shopify.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { session, billing } = await authenticate.admin(request);
+  const { session } = await authenticate.admin(request);
   const month = new Date().toISOString().slice(0, 7);
-  const rowsUsed = await getUsageForMonth(session.shop, month);
-  const check = await billing.check({ plans: [PAID_PLAN_NAME], isTest: process.env.NODE_ENV !== "production" });
-  return json({ rowsUsed, rowLimit: FREE_TIER_ROW_LIMIT, hasPlan: check.hasActivePayment });
+  
+  let rowsUsed = 0;
+  try {
+    rowsUsed = await getUsageForMonth(session.shop, month);
+  } catch (err) {
+    console.warn('[app._index] DB fetch failed:', err);
+  }
+  
+  // Custom apps don't use Billing API
+  return json({ rowsUsed, rowLimit: FREE_TIER_ROW_LIMIT, hasPlan: true });
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
