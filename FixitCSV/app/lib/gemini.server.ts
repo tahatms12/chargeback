@@ -3,7 +3,10 @@ import Papa from "papaparse";
 import { validateCsv } from "./csv-validator.shared";
 import type { Locale } from "./i18n";
 
-const API_KEY = process.env.GEMINI_API_KEY || "AIzaSyB6bwtRflNcLMLzt4paDr4tBFEA_2zAEmQ";
+const API_KEY = process.env.GEMINI_API_KEY as string;
+if (!API_KEY) {
+  throw new Error("GEMINI_API_KEY environment variable is missing.");
+}
 const genAI = new GoogleGenerativeAI(API_KEY);
 
 export async function repairCsvWithGemini(csvContent: string, locale: Locale = "en"): Promise<string> {
