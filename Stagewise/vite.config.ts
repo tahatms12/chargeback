@@ -10,7 +10,6 @@ export default defineConfig({
   },
   plugins: [
     remix({
-      basename: "/stagewise",
       ignoredRouteFiles: ["**/.*"],
       future: {
         v3_fetcherPersist: true,
