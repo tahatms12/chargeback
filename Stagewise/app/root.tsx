@@ -1,12 +1,12 @@
 // app/root.tsx
 import {
   Links,
-  LiveReload,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
-} from "@remix-run/react";
+} from '@remix-run/react';
+
 
 export default function App() {
   return (
