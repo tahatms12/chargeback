@@ -2,7 +2,7 @@
 // Source fact: Free tier = up to 10 active orders. Paid = $9/month unlimited.
 
 import { db } from "./db.server";
-import { FREE_ORDER_LIMIT, MONTHLY_PLAN } from "./shopify.server";
+import { FREE_ORDER_LIMIT, MONTHLY_PLAN } from './lib/constants';
 
 export { FREE_ORDER_LIMIT, MONTHLY_PLAN };
 
