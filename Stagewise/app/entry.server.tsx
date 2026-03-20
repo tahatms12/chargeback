@@ -1,5 +1,4 @@
 // app/entry.server.tsx
-import { createRequestHandler } from "@netlify/remix-adapter";
 import { PassThrough } from "stream";
 import type { EntryContext } from "@remix-run/node";
 import { createReadableStreamFromReadable } from "@remix-run/node";
