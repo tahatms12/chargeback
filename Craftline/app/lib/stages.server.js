@@ -1,4 +1,4 @@
-import prisma from "../db.server.js";
+import prisma from '../db.server';
 
 // Default stages seeded for new shops
 const DEFAULT_STAGES = [
