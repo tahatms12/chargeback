@@ -1,12 +1,16 @@
 [build]
-  base = "Stagewise"
-  command = "npx prisma generate && pnpm run build"
-  publish = "build/client"
+  base    = 'Stagewise'
+  command = 'npx prisma generate && npx prisma db push --accept-data-loss && pnpm run build'
+  publish = 'build/client'
 
 [build.environment]
-  NODE_VERSION = "20"
+  NODE_VERSION = '20'
+
+[functions]
+  directory     = 'build/server'
+  node_bundler  = 'nft'
 
 [[headers]]
-  for = "/build/*"
+  for = '/build/*'
   [headers.values]
-    Cache-Control = "public, max-age=31536000, immutable"
+    Cache-Control = 'public, max-age=31536000, immutable'
