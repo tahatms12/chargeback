@@ -14,9 +14,6 @@ scopes = "read_orders,write_orders,read_customers"
 
 [auth]
 redirect_urls = [
-  "https://stagewise-prod.netlify.app/auth/callback",
-  "https://stagewise-prod.netlify.app/auth/shopify/callback",
-  "https://stagewise-prod.netlify.app/api/auth/callback",
   "https://stagewise.uplifttechnologies.pro/auth/callback",
   "https://stagewise.uplifttechnologies.pro/auth/shopify/callback",
   "https://stagewise.uplifttechnologies.pro/api/auth/callback"
