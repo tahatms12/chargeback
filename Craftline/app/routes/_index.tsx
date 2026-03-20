@@ -1,9 +1,11 @@
-import type { LoaderFunctionArgs } from "@remix-run/node";
-import { redirect } from "@remix-run/node";
-import { authenticate } from "../shopify.server";
+import type { LoaderFunctionArgs } from '@remix-run/node';
+import { redirect } from '@remix-run/node';
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  await authenticate.admin(request);
-
-  return redirect("/app");
+  const url = new URL(request.url);
+  const shop = url.searchParams.get('shop');
+  if (shop) return redirect('/auth/login?shop=' + shop);
+  return redirect('/app');
 };
+
+export default function Index() { return null; }
