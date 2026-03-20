@@ -17,7 +17,7 @@ import {
 import { useState, useCallback } from "react";
 import { authenticate } from "~/shopify.server";
 import { sendTestEmail } from "~/lib/email.server";
-import prisma from "~/db.server";
+import { db as prisma } from '~/db.server';
 
 export const loader = async ({ request }) => {
   const { session } = await authenticate.admin(request);
