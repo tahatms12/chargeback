@@ -1,4 +1,4 @@
-import prisma from "../db.server.js";
+import prisma from '../db.server';
 
 /**
  * Returns all active queue orders for the shop, grouped by stageId.
