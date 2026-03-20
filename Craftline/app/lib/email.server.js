@@ -1,5 +1,4 @@
 import nodemailer from "nodemailer";
-import prisma from "../db.server.js";
 
 /**
  * Replaces template variables in a string.
