@@ -10,7 +10,6 @@ export default defineConfig({
   },
   plugins: [
     remix({
-      basename: "/craftline",
       ignoredRouteFiles: ["**/.*"],
       future: {
         v3_fetcherPersist: true,
