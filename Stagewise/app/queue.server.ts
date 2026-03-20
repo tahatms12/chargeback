@@ -73,6 +73,15 @@ function delay(ms: number): Promise<void> {
 export function startEmailQueuePoller(): void {
   if (process.env.NODE_ENV === "test") return;
 
+  // Netlify Functions are serverless — setInterval does not persist between
+  // invocations. Use the /api/email-queue HTTP endpoint with an external
+  // cron job (Upstash QStash, GitHub Actions schedule, etc.) instead.
+  if (process.env.NETLIFY) {
+    console.log('[email-queue] Serverless env detected — in-process poller disabled.');
+    console.log('[email-queue] Use POST /api/email-queue to trigger batch processing.');
+    return;
+  }
+  
   const run = async () => {
     try {
       const result = await processEmailQueue();
