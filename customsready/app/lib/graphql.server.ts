@@ -113,7 +113,6 @@ export const AUDIT_PRODUCTS_QUERY = `#graphql
             id
             title
             price
-            weight
             inventoryItem {
               id
               harmonizedSystemCode
@@ -139,7 +138,6 @@ export const REAUDIT_PRODUCT_QUERY = `#graphql
           id
           title
           price
-          weight
           inventoryItem {
             id
             harmonizedSystemCode
@@ -219,8 +217,6 @@ export const ORDER_FOR_INVOICE_QUERY = `#graphql
           variant {
             id
             sku
-            weight
-            weightUnit
             inventoryItem {
               id
               harmonizedSystemCode
