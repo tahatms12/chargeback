@@ -77,10 +77,9 @@ export async function fetchAndMapOrder(admin: any, orderId: string): Promise<Com
 
   const lineItems: LineItemCustoms[] = order.lineItems.edges.map(({ node }: any) => {
     let weightGrams = 0;
-   const measurement = node.variant?.inventoryItem?.measurement?.weight;
-    if (measurement) {
-      const w = measurement.value;
-      switch(measurement.unit) {
+    if (node.variant && node.variant.weight && node.variant.weightUnit) {
+      const w = parseFloat(node.variant.weight);
+      switch(node.variant.weightUnit) {
         case "KILOGRAMS": weightGrams = w * 1000; break;
         case "GRAMS": weightGrams = w; break;
         case "POUNDS": weightGrams = w * 453.592; break;
@@ -90,17 +89,13 @@ export async function fetchAndMapOrder(admin: any, orderId: string): Promise<Com
     
     let hsCode = "";
     let countryOfOrigin = "US"; // default
-    // Prefer InventoryItem native fields (API 2025-01+)
-    hsCode = node.variant?.inventoryItem?.harmonizedSystemCode || "";
-    countryOfOrigin = node.variant?.inventoryItem?.countryCodeOfOrigin || "US";
-    
-    // Fall back to metafields, then keyword lookup
-    if (!hsCode) {
-      for (const edge of (node.variant?.metafields?.edges ?? [])) {
+    if (node.variant && node.variant.metafields) {
+      for (const edge of node.variant.metafields.edges) {
         if (edge.node.key === "hs_code") hsCode = edge.node.value;
         if (edge.node.key === "country_of_origin") countryOfOrigin = edge.node.value;
       }
     }
+    
     if (!hsCode) {
       hsCode = lookupHsCode(node.title) || "";
     }
