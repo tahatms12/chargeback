@@ -15,7 +15,7 @@ import { authenticate } from "~/shopify.server";
 import { repairCsvWithGemini } from "~/lib/gemini.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { session } = await authenticate.admin(request);
+  const { session, billing } = await authenticate.admin(request);
   const month = new Date().toISOString().slice(0, 7);
   
   let rowsUsed = 0;
@@ -25,7 +25,12 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
     console.warn('[app._index] DB fetch failed:', err);
   }
   
-  return json({ rowsUsed, rowLimit: FREE_TIER_ROW_LIMIT, hasPlan: true });
+  const { hasActivePayment } = await billing.check({
+    plans: [PAID_PLAN_NAME],
+    isTest: true,
+  });
+  
+  return json({ rowsUsed, rowLimit: FREE_TIER_ROW_LIMIT, hasPlan: Boolean(hasActivePayment) });
 };
 
 export const action = async ({ request }: ActionFunctionArgs) => {
@@ -62,7 +67,7 @@ export default function Index() {
   const { t, locale } = useI18n();
 
   const isFixing = nav.state === "submitting" && nav.formData?.get("intent") === "fix";
-  const fixedCsv = actionData?.fixedCsv;
+  const fixedCsv = (actionData as any)?.fixedCsv;
 
   const onDone = (res: ValidationResult, text: string) => {
     setResult(res);

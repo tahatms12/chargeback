@@ -7,10 +7,13 @@ import "@shopify/polaris/build/esm/styles.css";
 import { authenticate } from "~/shopify.server";
 import { db } from "~/db.server";
 import { enqueueCatalogAudit } from "~/queue.server";
+import { requireBilling } from "~/lib/billing.server";
 
 export const loader = async ({ request }: LoaderFunctionArgs) => {
-  const { session } = await authenticate.admin(request);
+  const { session, billing } = await authenticate.admin(request);
   const shopDomain = session.shop;
+
+  await requireBilling(billing, shopDomain);
 
   // First-install: enqueue the initial catalog audit if none has run yet
   try {

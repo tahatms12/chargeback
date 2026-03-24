@@ -25,9 +25,18 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     }
 
     // ── GDPR: Customer data redaction ────────────────────────────────────────
-    // We do not store any customer PII, so there is nothing to delete.
     case "CUSTOMERS_REDACT": {
-      logger.info({ shop, topic }, "GDPR customers/redact — no PII stored");
+      const webhookPayload = payload as any;
+      if (webhookPayload?.orders_to_redact && Array.isArray(webhookPayload.orders_to_redact)) {
+        const orderGids = webhookPayload.orders_to_redact.map((id: number | string) => toGid("Order", String(id)));
+        await db.invoiceRecord.deleteMany({
+          where: { shopDomain: shop, orderId: { in: orderGids } }
+        });
+        await db.pdfGenerationLog.deleteMany({
+          where: { shopDomain: shop, orderId: { in: orderGids } }
+        });
+      }
+      logger.info({ shop, topic }, "GDPR customers/redact — deleted invoice records");
       return new Response(null, { status: 200 });
     }
 
@@ -88,6 +97,7 @@ async function deleteAllShopData(shopDomain: string): Promise<void> {
   try {
     // Delete in dependency order
     await db.$transaction([
+      db.invoiceRecord.deleteMany({ where: { shopDomain } }),
       db.pdfGenerationLog.deleteMany({ where: { shopDomain } }),
       db.productAuditRecord.deleteMany({ where: { shopDomain } }),
       db.auditRun.deleteMany({ where: { shopDomain } }),

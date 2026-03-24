@@ -1,0 +1,129 @@
+═══════════════════════════════════════════════════════════════
+MEGA BLUEPRINT — FOR_AMMARFIXITCSV
+Generated: 2026-03-19
+Purpose: The Decisive Fix Guide for Bootstrapping Shopify Apps
+Based on: The FixitCSV Transformation
+═══════════════════════════════════════════════════════════════
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OVERVIEW & INTENT
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+This document serves as the master blueprint for taking any broken, legacy, or freshly scavenged Shopify Remix app (starting from the state "FixitCSV" was initially in) and upgrading it into a fully working, production-ready embedded application on Netlify. 
+
+If you are cloning an older Shopify app template or deploying a new app in the Uplift Technologies monorepo, follow this checklist sequentially to guarantee it works.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+1. THE ROUTING FIX (THE "BLANK SCREEN / 404" BUG)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[WHAT WAS BROKEN]
+The application would load a blank white screen inside the Shopify Admin or throw `Error: No route matches URL "/"`. 
+[ROOT CAUSE] 
+In `vite.config.ts` or `remix.config.js`, the router was initialized with a `basename` matching the subfolder (e.g., `basename: "/fixitcsv"`). However, Netlify deploys the app at the domain root (`/`), causing all route matching to fail.
+[THE DECISIVE FIX]
+- Open `vite.config.ts`.
+- Locate the `remix({ basename: "/YOUR_APP_NAME" })` plugin initialization.
+- Delete the basename property entirely, or set it to `/`: 
+  `remix({ basename: "/" })`
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+2. THE AUTHENTICATION & LOGIN LOOP FIX
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[WHAT WAS BROKEN]
+Users experienced `Detected call to shopify.authenticate.admin() from configured login path` or got stuck in infinite auth redirects when installing the app.
+[ROOT CAUSE]
+Shopify's newer embedded auth strategy strictly separates the "Login Initiation" from the "Authenticated Admin" boundaries. The default catch-all route was handling both poorly.
+[THE DECISIVE FIX]
+- **Step A:** In `app/shopify.server.ts`, explicitly declare the auth path:
+  ```typescript
+  export const shopify = shopifyApp({
+    // ...other config
+    auth: {
+      path: "/auth/login",
+      callbackPath: "/auth/callback",
+    },
+    future: { unstable_newEmbeddedAuthStrategy: true }
+  });
+  ```
+- **Step B:** Create a dedicated login route `app/routes/auth.login.tsx`. This file MUST call `shopify.login(request)` and NEVER `authenticate.admin()`:
+  ```typescript
+  export const loader = async ({ request }: LoaderFunctionArgs) => {
+    return await shopify.login(request);
+  };
+  export const action = async ({ request }: ActionFunctionArgs) => {
+    return await shopify.login(request);
+  };
+  ```
+- **Step C:** Ensure `app/routes/auth.$.tsx` uses `authenticate.admin(request)` to handle callbacks and errors.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+3. THE PRODUCTION DATABASE FIX (PRISMA ERROR 500)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[WHAT WAS BROKEN]
+After deploying to Netlify and installing the app on a store, the app throws a 500 Server Error (`MissingSessionTableError` or `PrismaClientInitializationError`).
+[ROOT CAUSE]
+Local development uses a SQLite file (`dev.sqlite`), but production uses PostgreSQL. The build command `pnpm run build` compiles the code but never creates the Prisma tables (like `Session`) in the Postgres database.
+[THE DECISIVE FIX]
+- Open `netlify.toml` for the specific app.
+- Update the `command` variable to force Prisma to push the schema before building:
+  ```toml
+  [build]
+    command = "npx prisma generate && npx prisma db push --accept-data-loss && pnpm run build"
+  ```
+- *Note:* `--accept-data-loss` is required to bypass interactive prompts in Netlify's CI/CD environment if migration tracks are missing.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+4. PRISMA SESSION SCHEMA UPGRADE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[WHAT WAS BROKEN]
+The `@shopify/shopify-app-session-storage-prisma` library periodically updates its required database schema. Older app schemas cause initialization crashes when paired with newer library versions.
+[THE DECISIVE FIX]
+- Open `prisma/schema.prisma`.
+- Ensure the `Session` model contains ALL of the following fields perfectly mapping to Shopify's upstream requirements:
+  ```prisma
+  model Session {
+    id                  String    @id
+    shop                String
+    state               String
+    isOnline            Boolean   @default(false)
+    scope               String?
+    expires             DateTime?
+    accessToken         String
+    userId              BigInt?
+    firstName           String?
+    lastName            String?
+    email               String?
+    accountOwner        Boolean   @default(false)
+    locale              String?
+    collaborator        Boolean?  @default(false)
+    emailVerified       Boolean?  @default(false)
+    refreshToken        String?
+    refreshTokenExpires DateTime?
+
+    @@index([shop])
+  }
+  ```
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+5. THE CSS POLARIS COLLISION FIX
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[WHAT WAS BROKEN]
+Adding Tailwind CSS globally via `app/root.tsx` corrupted the layout of Shopify Polaris components inside the embedded admin.
+[ROOT CAUSE]
+Tailwind v4's reset layer (`@tailwind base`) overrides default button, input, and typography variables that Polaris relies on to render correctly.
+[THE DECISIVE FIX]
+- Do NOT import `tailwind.css` into `app/root.tsx` via the `links()` export.
+- Instead, only import `tailwind.css` into specific frontend, unauthenticated marketing routes (e.g., `app/routes/_index.tsx`) where Polaris is not rendering.
+- For authenticated routes (`app/routes/app.*.tsx`), strictly use Polaris components or locally scoped CSS modules.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+SUMMARY CHECKLIST FOR FUTURE APPS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[ ] 1. Check `vite.config.ts` - Remove `basename`.
+[ ] 2. Create `auth.login.tsx` and map `auth.path` in `shopify.server.ts`.
+[ ] 3. Update `Session` model in `schema.prisma`.
+[ ] 4. Inject `npx prisma db push --accept-data-loss` into `netlify.toml`.
+[ ] 5. Isolate Tailwind CSS from Polaris routes.
+[ ] 6. (Optional) Inject any missing `.env` variables (e.g., GEMINI_API_KEY) into Netlify Dashboard matching the code.
+
+Following this exact procedure will resurrect any scavenged app in this monorepo to a production-ready, installable state.
+═══════════════════════════════════════════════════════════════

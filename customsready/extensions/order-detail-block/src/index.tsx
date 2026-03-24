@@ -11,8 +11,6 @@ import {
   Button,
   Divider,
   Banner,
-  SkeletonDisplayText,
-  SkeletonBodyText,
   Box,
   Icon,
 } from "@shopify/ui-extensions-react/admin";
@@ -104,8 +102,7 @@ function OrderDetailBlock() {
     <AdminBlock title="Customs Readiness">
       {loading && (
         <BlockStack gap="200">
-          <SkeletonDisplayText size="small" />
-          <SkeletonBodyText lines={3} />
+          <Text>Loading customs readiness...</Text>
         </BlockStack>
       )}
 

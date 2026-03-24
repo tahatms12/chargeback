@@ -1,52 +1,46 @@
 // app/lib/billing.server.ts
 import { db } from "../db.server";
 import { logger } from "./logger.server";
-
-type BillingContext = {
-  require: (opts: {
-    plans: string[];
-    onFailure: () => Promise<void>;
-  }) => Promise<void>;
-  check: (opts: {
-    plans: string[];
-    isTest: boolean;
-  }) => Promise<{ hasActivePayment: boolean }>;
-  request: (opts: { plan: string; isTest: boolean }) => Promise<void>;
-};
+import { PLAN_NAME } from "~/shopify.server";
 
 /**
  * Require an active billing subscription.
  * Redirects to Shopify billing approval if no active plan found.
  */
 export async function requireBilling(
-  billing: BillingContext,
+  billing: any,
   shopDomain: string
 ): Promise<void> {
-  try {
-    await billing.require({
-      plans: ["CustomsReady Lite Monthly"],
-      onFailure: async () => {
-        await billing.request({
-          plan: "CustomsReady Lite Monthly",
-          isTest: process.env.NODE_ENV !== "production",
-        });
-      },
-    });
+  const isTest = process.env.NODE_ENV !== "production";
+  
+  // billing.require automatically throws a redirect Response if the plan is not active.
+  const billingCheck = await billing.require({
+    plans: [PLAN_NAME],
+    isTest: isTest,
+    onFailure: async () => {
+      // Sometimes billing.require needs explicit onFailure to redirect
+      await billing.request({
+        plan: PLAN_NAME,
+        isTest: isTest,
+      });
+    },
+  });
 
+  // If this line is reached, billing is active.
+  try {
     await db.installation.updateMany({
       where: { shopDomain },
       data: { billingStatus: "active" },
     });
   } catch (err) {
-    logger.warn({ shopDomain, error: String(err) }, "Billing gate triggered");
-    throw err;
+    logger.error({ shopDomain, error: String(err) }, "Failed to update billing status");
   }
 }
 
-export async function checkBillingActive(billing: BillingContext): Promise<boolean> {
+export async function checkBillingActive(billing: any): Promise<boolean> {
   try {
     const status = await billing.check({
-      plans: ["CustomsReady Lite Monthly"],
+      plans: [PLAN_NAME],
       isTest: process.env.NODE_ENV !== "production",
     });
     return status.hasActivePayment;

@@ -1,49 +1,34 @@
-name = "CustomsReady Lite"
+# Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
+
 client_id = "b401118ff3d466cd8ac36857e7ac845f"
+name = "CustomsReady Lite"
 application_url = "https://customsready.uplifttechnologies.pro"
 embedded = true
 
 [build]
 automatically_update_urls_on_dev = true
 dev_store_url = ""
-include_config_on_deploy = true
-
-[access_scopes]
-scopes = "read_products,read_orders"
-
-[auth]
-redirect_urls = [
-  "https://customsready.uplifttechnologies.pro/auth/callback",
-  "https://customsready.uplifttechnologies.pro/auth/shopify/callback",
-  "https://customsready.uplifttechnologies.pro/api/auth/callback"
-]
 
 [webhooks]
-api_version = "2025-01"
+api_version = "2026-01"
 
   [[webhooks.subscriptions]]
-  topics = ["customers/data_request"]
+  topics = [ "app/uninstalled", "products/create", "products/update" ]
   uri = "/webhooks"
 
-  [[webhooks.subscriptions]]
-  topics = ["customers/redact"]
-  uri = "/webhooks"
+[webhooks.privacy_compliance]
+customer_deletion_url = "https://customsready.uplifttechnologies.pro/webhooks"
+customer_data_request_url = "https://customsready.uplifttechnologies.pro/webhooks"
+shop_deletion_url = "https://customsready.uplifttechnologies.pro/webhooks"
 
-  [[webhooks.subscriptions]]
-  topics = ["shop/redact"]
-  uri = "/webhooks"
+[access_scopes]
+# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
+scopes = "read_orders,read_products"
+optional_scopes = [ ]
+use_legacy_install_flow = false
 
-  [[webhooks.subscriptions]]
-  topics = ["products/create"]
-  uri = "/webhooks"
-
-  [[webhooks.subscriptions]]
-  topics = ["products/update"]
-  uri = "/webhooks"
-
-  [[webhooks.subscriptions]]
-  topics = ["app/uninstalled"]
-  uri = "/webhooks"
+[auth]
+redirect_urls = [ ]
 
 [pos]
 embedded = false

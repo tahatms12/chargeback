@@ -1,0 +1,17 @@
+========================================
+🤖 CUSTOMSREADY LITE FULL AUTO-CAPTURE
+========================================
+
+Connecting to your local Chrome Profile to skip 2FA...
+❌ Failed to launch Chrome. Please make sure all regular Chrome windows are CLOSED before the bot runs!
+browserType.launchPersistentContext: Timeout 180000ms exceeded.
+Call log:
+[2m  - <launching> C:\Program Files\Google\Chrome\Application\chrome.exe --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-extensions --disable-features=AvoidUnnecessaryBeforeUnloadCheckSync,BoundaryEventDispatchTracksNodeRemoval,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --disable-infobars --disable-search-engine-choice-screen --disable-sync --enable-unsafe-swiftshader --no-sandbox --disable-blink-features=AutomationControlled --user-data-dir=C:\Users\Admin\AppData\Local\Google\Chrome\User Data --remote-debugging-pipe about:blank[22m
+[2m  - <launched> pid=23148[22m
+[2m  - [pid=23148][err][22m
+[2m  - [pid=23148][err] DevTools remote debugging requires a non-default data directory. Specify this using --user-data-dir.[22m
+[2m  - [pid=23148][err] [23148:24404:0324/022415.704:ERROR:google_apis\gcm\engine\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT[22m
+[2m  - [pid=23148][err] [23148:24404:0324/022445.111:ERROR:google_apis\gcm\engine\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT[22m
+[2m  - [pid=23148][err] [23148:24404:0324/022540.925:ERROR:google_apis\gcm\engine\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT[22m
+[2m  - [pid=23148][err] [23148:24404:0324/022702.227:ERROR:google_apis\gcm\engine\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT[22m
+

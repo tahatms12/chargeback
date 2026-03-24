@@ -1,5 +1,11 @@
+api_version = "2026-01"
+
+[[extensions]]
 name = "Order Detail Block"
 handle = "order-detail-block"
+
+uid = "a3a8c09b-d6bc-6e30-5874-ead76ba7c4ee51cbe863"
+
 type = "ui_extension"
 
 [[extensions.targeting]]

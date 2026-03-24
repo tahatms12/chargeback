@@ -17,7 +17,17 @@ const shopify = shopifyApp({
   },
   sessionStorage: new PrismaSessionStorage(db),
   distribution: AppDistribution.AppStore,
-  future: { unstable_newEmbeddedAuthStrategy: true },
+  billing: {
+    [PAID_PLAN_NAME]: {
+      lineItems: [
+        {
+          amount: PAID_PLAN_PRICE,
+          currencyCode: "USD",
+          interval: BillingInterval.Every30Days,
+        },
+      ],
+    },
+  },
   webhooks: {
     APP_UNINSTALLED: { deliveryMethod: DeliveryMethod.Http, callbackUrl: "/webhooks" },
     CUSTOMERS_DATA_REQUEST: { deliveryMethod: DeliveryMethod.Http, callbackUrl: "/webhooks" },
