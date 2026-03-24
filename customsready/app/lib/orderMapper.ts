@@ -90,13 +90,17 @@ export async function fetchAndMapOrder(admin: any, orderId: string): Promise<Com
     
     let hsCode = "";
     let countryOfOrigin = "US"; // default
-    if (node.variant && node.variant.metafields) {
-      for (const edge of node.variant.metafields.edges) {
+    // Prefer InventoryItem native fields (API 2025-01+)
+    hsCode = node.variant?.inventoryItem?.harmonizedSystemCode || "";
+    countryOfOrigin = node.variant?.inventoryItem?.countryCodeOfOrigin || "US";
+    
+    // Fall back to metafields, then keyword lookup
+    if (!hsCode) {
+      for (const edge of (node.variant?.metafields?.edges ?? [])) {
         if (edge.node.key === "hs_code") hsCode = edge.node.value;
         if (edge.node.key === "country_of_origin") countryOfOrigin = edge.node.value;
       }
     }
-    
     if (!hsCode) {
       hsCode = lookupHsCode(node.title) || "";
     }
