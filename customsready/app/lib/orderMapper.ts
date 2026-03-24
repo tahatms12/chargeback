@@ -30,9 +30,17 @@ export async function fetchAndMapOrder(admin: any, orderId: string): Promise<Com
               originalUnitPriceSet {
                 shopMoney { amount }
               }
-              variant {
-                weight
-                weightUnit
+             variant {
+                inventoryItem {
+                  measurement {
+                    weight {
+                      unit
+                      value
+                    }
+                  }
+                  harmonizedSystemCode
+                  countryCodeOfOrigin
+                }
                 metafields(first: 2, namespace: "customsready") {
                   edges {
                     node {
