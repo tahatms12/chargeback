@@ -77,9 +77,10 @@ export async function fetchAndMapOrder(admin: any, orderId: string): Promise<Com
 
   const lineItems: LineItemCustoms[] = order.lineItems.edges.map(({ node }: any) => {
     let weightGrams = 0;
-    if (node.variant && node.variant.weight && node.variant.weightUnit) {
-      const w = parseFloat(node.variant.weight);
-      switch(node.variant.weightUnit) {
+   const measurement = node.variant?.inventoryItem?.measurement?.weight;
+    if (measurement) {
+      const w = measurement.value;
+      switch(measurement.unit) {
         case "KILOGRAMS": weightGrams = w * 1000; break;
         case "GRAMS": weightGrams = w; break;
         case "POUNDS": weightGrams = w * 453.592; break;
