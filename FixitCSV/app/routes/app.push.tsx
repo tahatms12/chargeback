@@ -4,16 +4,24 @@ import Papa from "papaparse";
 import { authenticate } from "~/shopify.server";
 import { normalizeHeader } from "~/lib/shopify-csv-spec";
 
-// ------------------------------------------------------------------
-// GraphQL mutation for creating a single product
-// ------------------------------------------------------------------
+// ---------------------------------------------------------------------------
+// GraphQL mutations (Shopify Admin API 2025-01)
+// ---------------------------------------------------------------------------
+
 const PRODUCT_CREATE_MUTATION = `#graphql
-  mutation productCreate($input: ProductInput!) {
-    productCreate(input: $input) {
+  mutation productCreate($product: ProductCreateInput!, $media: [CreateMediaInput!]) {
+    productCreate(product: $product, media: $media) {
       product {
         id
         title
         handle
+        variants(first: 1) {
+          edges {
+            node {
+              id
+            }
+          }
+        }
       }
       userErrors {
         field
@@ -23,95 +31,79 @@ const PRODUCT_CREATE_MUTATION = `#graphql
   }
 `;
 
-type ProductRow = Record<string, string>;
-
-// ------------------------------------------------------------------
-// Map a normalized CSV row → Shopify ProductInput
-// ------------------------------------------------------------------
-function rowToProductInput(row: ProductRow) {
-  const title = row["Title"] ?? "";
-  const handle = row["Handle"] ?? "";
-  const bodyHtml = row["Body (HTML)"] ?? "";
-  const vendor = row["Vendor"] ?? "";
-  const productType = row["Type"] ?? "";
-  const tags = row["Tags"] ? row["Tags"].split(",").map((t) => t.trim()).filter(Boolean) : [];
-  const status = (row["Status"] ?? "").toUpperCase() || "ACTIVE";
-
-  const variantPrice = row["Variant Price"] ?? "0";
-  const compareAtPrice = row["Variant Compare At Price"] ?? undefined;
-  const sku = row["Variant SKU"] ?? "";
-  const inventoryQty = parseInt(row["Variant Inventory Qty"] ?? "0", 10) || 0;
-  const inventoryPolicy = (row["Variant Inventory Policy"] ?? "deny").toUpperCase();
-  const requiresShipping = (row["Variant Requires Shipping"] ?? "true").toLowerCase() !== "false";
-  const taxable = (row["Variant Taxable"] ?? "true").toLowerCase() !== "false";
-  const barcode = row["Variant Barcode"] ?? undefined;
-  const imageUrl = row["Image Src"] ?? undefined;
-
-  const input: Record<string, unknown> = {
-    title,
-    handle: handle || undefined,
-    bodyHtml,
-    vendor: vendor || undefined,
-    productType: productType || undefined,
-    tags,
-    status: ["ACTIVE", "DRAFT", "ARCHIVED"].includes(status) ? status : "ACTIVE",
-    variants: [
-      {
-        price: variantPrice,
-        compareAtPrice: compareAtPrice || undefined,
-        sku: sku || undefined,
-        barcode: barcode || undefined,
-        requiresShipping,
-        taxable,
-        inventoryManagement: "SHOPIFY",
-        inventoryPolicy: inventoryPolicy === "CONTINUE" ? "CONTINUE" : "DENY",
-        inventoryQuantities: [
-          {
-            availableQuantity: inventoryQty,
-            locationId: "", // filled in per-shop below
-          },
-        ],
-      },
-    ],
-  };
-
-  if (imageUrl) {
-    input.images = [{ src: imageUrl }];
-  }
-
-  return input;
-}
-
-// ------------------------------------------------------------------
-// Get the default location ID for this shop
-// ------------------------------------------------------------------
-async function getDefaultLocationId(admin: any): Promise<string | null> {
-  const response = await admin.graphql(`#graphql
-    query {
-      locations(first: 1) {
-        edges {
-          node { id }
-        }
+const VARIANT_PRICE_MUTATION = `#graphql
+  mutation productVariantsBulkUpdate($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {
+    productVariantsBulkUpdate(productId: $productId, variants: $variants) {
+      productVariants {
+        id
+        price
+      }
+      userErrors {
+        field
+        message
       }
     }
-  `);
-  const data = await response.json();
-  return data?.data?.locations?.edges?.[0]?.node?.id ?? null;
+  }
+`;
+
+// ---------------------------------------------------------------------------
+// Types
+// ---------------------------------------------------------------------------
+type ProductRow = Record<string, string>;
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function rowToProductCreateInput(row: ProductRow) {
+  const title = (row["Title"] ?? "").trim();
+  const handle = (row["Handle"] ?? "").trim() || undefined;
+  const descriptionHtml = (row["Body (HTML)"] ?? "").trim() || undefined;
+  const vendor = (row["Vendor"] ?? "").trim() || undefined;
+  const productType = (row["Type"] ?? "").trim() || undefined;
+  const rawTags = (row["Tags"] ?? "").trim();
+  const tags = rawTags ? rawTags.split(",").map((t) => t.trim()).filter(Boolean) : undefined;
+  const rawStatus = (row["Status"] ?? "").trim().toUpperCase();
+  const status = (["ACTIVE", "DRAFT", "ARCHIVED"].includes(rawStatus) ? rawStatus : "ACTIVE") as "ACTIVE" | "DRAFT" | "ARCHIVED";
+
+  const product: Record<string, unknown> = { title, status };
+  if (handle) product.handle = handle;
+  if (descriptionHtml) product.descriptionHtml = descriptionHtml;
+  if (vendor) product.vendor = vendor;
+  if (productType) product.productType = productType;
+  if (tags?.length) product.tags = tags;
+
+  // Media (images) — passed as separate top-level arg
+  const imageSrc = (row["Image Src"] ?? "").trim();
+  const media = imageSrc
+    ? [{ originalSource: imageSrc, mediaContentType: "IMAGE" }]
+    : undefined;
+
+  return { product, media };
 }
 
-// ------------------------------------------------------------------
+async function getDefaultLocationId(admin: any): Promise<string | null> {
+  try {
+    const res = await admin.graphql(`#graphql
+      query { locations(first: 1) { edges { node { id } } } }
+    `);
+    const data = await res.json();
+    return data?.data?.locations?.edges?.[0]?.node?.id ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Action
-// ------------------------------------------------------------------
+// ---------------------------------------------------------------------------
 export const action = async ({ request }: ActionFunctionArgs) => {
   const { admin } = await authenticate.admin(request);
   const form = await request.formData();
   const csv = form.get("csv") as string;
 
-  if (!csv) {
-    return json({ ok: false, error: "No CSV provided" }, { status: 400 });
-  }
+  if (!csv) return json({ ok: false, error: "No CSV provided" }, { status: 400 });
 
-  // Parse with header normalization
   const parsed = Papa.parse<ProductRow>(csv, {
     header: true,
     skipEmptyLines: true,
@@ -119,11 +111,9 @@ export const action = async ({ request }: ActionFunctionArgs) => {
   });
 
   const rows = parsed.data;
-  if (rows.length === 0) {
-    return json({ ok: false, error: "CSV has no data rows" }, { status: 400 });
-  }
+  if (rows.length === 0) return json({ ok: false, error: "CSV has no data rows" }, { status: 400 });
 
-  // Group rows by handle — each handle = one product (variant rows skip)
+  // Deduplicate by handle — first row per handle is the product
   const seenHandles = new Set<string>();
   const productRows: ProductRow[] = [];
   for (const row of rows) {
@@ -133,7 +123,6 @@ export const action = async ({ request }: ActionFunctionArgs) => {
     productRows.push(row);
   }
 
-  // Get default location for inventory
   const locationId = await getDefaultLocationId(admin);
 
   let created = 0;
@@ -142,37 +131,65 @@ export const action = async ({ request }: ActionFunctionArgs) => {
 
   for (const row of productRows) {
     try {
-      const input = rowToProductInput(row);
+      const { product, media } = rowToProductCreateInput(row);
 
-      // Inject real location ID into inventory quantities
-      if (locationId && Array.isArray(input.variants)) {
-        for (const v of input.variants as any[]) {
-          if (v.inventoryQuantities?.[0]) {
-            v.inventoryQuantities[0].locationId = locationId;
-          }
-        }
-      }
-
-      const response = await admin.graphql(PRODUCT_CREATE_MUTATION, {
-        variables: { input },
+      // Step 1: Create the product
+      const createRes = await admin.graphql(PRODUCT_CREATE_MUTATION, {
+        variables: { product, ...(media ? { media } : {}) },
       });
+      const createData = await createRes.json();
+      const createResult = createData?.data?.productCreate;
 
-      const data = await response.json();
-      const result = data?.data?.productCreate;
-
-      if (result?.userErrors?.length > 0) {
+      if (createResult?.userErrors?.length > 0) {
         failed++;
         errors.push({
-          title: row["Title"] ?? "Unknown",
-          messages: result.userErrors.map((e: any) => `${e.field?.join(".") ?? ""}: ${e.message}`),
+          title: (row["Title"] ?? "Unknown").trim(),
+          messages: createResult.userErrors.map((e: any) =>
+            `${e.field?.join?.(".") ?? "field"}: ${e.message}`
+          ),
         });
-      } else {
-        created++;
+        continue;
       }
+
+      const productId = createResult?.product?.id;
+      const variantId = createResult?.product?.variants?.edges?.[0]?.node?.id;
+
+      // Step 2: Update variant price + inventory if we have a variant ID
+      if (productId && variantId) {
+        const price = (row["Variant Price"] ?? "0").trim();
+        const compareAtPrice = (row["Variant Compare At Price"] ?? "").trim() || undefined;
+        const sku = (row["Variant SKU"] ?? "").trim() || undefined;
+        const barcode = (row["Variant Barcode"] ?? "").trim() || undefined;
+        const requiresShipping = (row["Variant Requires Shipping"] ?? "true").toLowerCase() !== "false";
+        const taxable = (row["Variant Taxable"] ?? "true").toLowerCase() !== "false";
+        const inventoryQty = parseInt(row["Variant Inventory Qty"] ?? "0", 10) || 0;
+
+        const variantInput: Record<string, unknown> = {
+          id: variantId,
+          price,
+          requiresShipping,
+          taxable,
+        };
+        if (compareAtPrice) variantInput.compareAtPrice = compareAtPrice;
+        if (sku) variantInput.sku = sku;
+        if (barcode) variantInput.barcode = barcode;
+        if (locationId && inventoryQty > 0) {
+          variantInput.inventoryQuantities = [{
+            availableQuantity: inventoryQty,
+            locationId,
+          }];
+        }
+
+        await admin.graphql(VARIANT_PRICE_MUTATION, {
+          variables: { productId, variants: [variantInput] },
+        });
+      }
+
+      created++;
     } catch (err: any) {
       failed++;
       errors.push({
-        title: row["Title"] ?? "Unknown",
+        title: (row["Title"] ?? "Unknown").trim(),
         messages: [err.message ?? "Unknown error"],
       });
     }

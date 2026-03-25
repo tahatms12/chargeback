@@ -1,7 +1,21 @@
 import type { ActionFunctionArgs, LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
 import { useActionData, useLoaderData, useNavigation, useSubmit } from "@remix-run/react";
-import { BlockStack, Banner, Button, Card, InlineStack, Layout, Modal, Page, Text } from "@shopify/polaris";
+import {
+  Badge,
+  Banner,
+  BlockStack,
+  Button,
+  Card,
+  Divider,
+  InlineStack,
+  Layout,
+  Modal,
+  Page,
+  ProgressBar,
+  Text,
+  Tooltip,
+} from "@shopify/polaris";
 import { useState, useCallback } from "react";
 import { CsvUploader } from "~/components/CsvUploader";
 import { ErrorTable } from "~/components/ErrorTable";
@@ -20,19 +34,9 @@ import { processAndEnrichCsv } from "~/lib/gemini.server";
 export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session, billing } = await authenticate.admin(request);
   const month = new Date().toISOString().slice(0, 7);
-
   let rowsUsed = 0;
-  try {
-    rowsUsed = await getUsageForMonth(session.shop, month);
-  } catch (err) {
-    console.warn("[app._index] DB fetch failed:", err);
-  }
-
-  const { hasActivePayment } = await billing.check({
-    plans: [PAID_PLAN_NAME],
-    isTest: true,
-  });
-
+  try { rowsUsed = await getUsageForMonth(session.shop, month); } catch {}
+  const { hasActivePayment } = await billing.check({ plans: [PAID_PLAN_NAME], isTest: true });
   return json({ rowsUsed, rowLimit: FREE_TIER_ROW_LIMIT, hasPlan: Boolean(hasActivePayment) });
 };
 
@@ -42,7 +46,6 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
 export const action = async ({ request }: ActionFunctionArgs) => {
   const { session } = await authenticate.admin(request);
   const form = await request.formData();
-
   const intent = form.get("intent");
 
   if (intent === "fix") {
@@ -72,11 +75,11 @@ export default function Index() {
   const actionData = useActionData<typeof action>();
   const [result, setResult] = useState<ValidationResult | null>(null);
   const [rawCsv, setRawCsv] = useState<string | null>(null);
-
-  // Push-to-store state
   const [isPushModalOpen, setIsPushModalOpen] = useState(false);
   const [isPushing, setIsPushing] = useState(false);
-  const [pushResult, setPushResult] = useState<{ created: number; failed: number; errors: { title: string; messages: string[] }[] } | null>(null);
+  const [pushResult, setPushResult] = useState<{
+    created: number; failed: number; errors: { title: string; messages: string[] }[];
+  } | null>(null);
 
   const submit = useSubmit();
   const nav = useNavigation();
@@ -84,6 +87,7 @@ export default function Index() {
 
   const isFixing = nav.state === "submitting" && nav.formData?.get("intent") === "fix";
   const fixedCsv = (actionData as any)?.fixedCsv as string | null ?? null;
+  const fixError = (actionData as any)?.error as string | null ?? null;
 
   const onDone = (res: ValidationResult, text: string) => {
     setResult(res);
@@ -132,35 +136,103 @@ export default function Index() {
     }
   }, [fixedCsv]);
 
+  // Determine what stage we're in
+  const stage: "idle" | "validated" | "enriched" = fixedCsv ? "enriched" : result ? "validated" : "idle";
+
   return (
-    <Page title={t("page.title")} titleMetadata={<LanguageSelector />}>
+    <Page
+      title="FixitCSV"
+      subtitle="Upload any product CSV — we normalize, enrich, and push it to your store."
+      titleMetadata={<LanguageSelector />}
+    >
       <Layout>
         <Layout.Section>
-          <BlockStack gap="300">
+          <BlockStack gap="500">
+            {/* Usage banner */}
             <UsageBanner hasPlan={hasPlan} rowsUsed={rowsUsed} rowLimit={rowLimit} />
 
+            {/* Step 1: Upload */}
             <Card>
-              <BlockStack gap="200">
-                <Text as="h2" variant="headingMd">{t("upload.title")}</Text>
-                <Text as="p" tone="subdued">{t("upload.desc")}</Text>
+              <BlockStack gap="300">
+                <InlineStack align="space-between">
+                  <BlockStack gap="100">
+                    <Text as="h2" variant="headingMd">Step 1 — Upload your CSV</Text>
+                    <Text as="p" tone="subdued">
+                      Any format works: Shopify export, WooCommerce, supplier files, or custom spreadsheets.
+                    </Text>
+                  </BlockStack>
+                  {stage !== "idle" && <Badge tone="success">✓ Uploaded</Badge>}
+                </InlineStack>
                 <CsvUploader rowsUsed={rowsUsed} rowLimit={rowLimit} hasPlan={hasPlan} onDone={onDone} />
               </BlockStack>
             </Card>
 
+            {/* Step 2: Review + Fix */}
             {result ? (
               <Card>
                 <BlockStack gap="300">
+                  <InlineStack align="space-between">
+                    <BlockStack gap="100">
+                      <Text as="h2" variant="headingMd">Step 2 — Review &amp; Enrich</Text>
+                      <Text as="p" tone="subdued">
+                        {result.passed
+                          ? "Your CSV is valid. Click Fix & Enrich to normalize headers and let AI fill in any missing product details."
+                          : "Issues detected. Click Fix & Enrich to auto-correct headers, fill missing fields, and produce a clean Shopify-ready file."}
+                      </Text>
+                    </BlockStack>
+                    {stage === "enriched" && <Badge tone="success">✓ Enriched</Badge>}
+                  </InlineStack>
+
                   <ErrorTable result={result} />
 
-                  {/* Push result banner */}
+                  {/* Fix error */}
+                  {fixError ? (
+                    <Banner tone="critical">
+                      <Text as="p">Enrichment failed: {fixError}. Please try again.</Text>
+                    </Banner>
+                  ) : null}
+
+                  {/* Progress indicator while fixing */}
+                  {isFixing ? (
+                    <BlockStack gap="200">
+                      <Text as="p" tone="subdued">Normalizing headers and enriching missing data…</Text>
+                      <ProgressBar progress={undefined as any} size="small" />
+                    </BlockStack>
+                  ) : null}
+
+                  {!fixedCsv && !isFixing ? (
+                    <Button variant="primary" size="large" loading={isFixing} onClick={handleFix} fullWidth>
+                      Fix &amp; Enrich
+                    </Button>
+                  ) : null}
+                </BlockStack>
+              </Card>
+            ) : null}
+
+            {/* Step 3: Download or Push */}
+            {fixedCsv ? (
+              <Card>
+                <BlockStack gap="300">
+                  <BlockStack gap="100">
+                    <Text as="h2" variant="headingMd">Step 3 — Export or Push to Store</Text>
+                    <Text as="p" tone="subdued">
+                      Your CSV is clean, enriched, and in Shopify's exact column format. Choose what to do next.
+                    </Text>
+                  </BlockStack>
+
+                  <Divider />
+
+                  {/* Push result */}
                   {pushResult ? (
                     <Banner
-                      title={pushResult.failed === 0
-                        ? `✓ ${pushResult.created} product${pushResult.created !== 1 ? "s" : ""} added to your store`
-                        : `${pushResult.created} added · ${pushResult.failed} failed`}
-                      tone={pushResult.failed === 0 ? "success" : "warning"}
+                      tone={pushResult.failed === 0 ? "success" : pushResult.created > 0 ? "warning" : "critical"}
+                      title={
+                        pushResult.failed === 0
+                          ? `✓ ${pushResult.created} product${pushResult.created !== 1 ? "s" : ""} added to your store successfully`
+                          : `${pushResult.created} added · ${pushResult.failed} failed`
+                      }
                     >
-                      {pushResult.errors.length > 0 && (
+                      {pushResult.errors.length > 0 ? (
                         <BlockStack gap="100">
                           {pushResult.errors.slice(0, 5).map((e, i) => (
                             <Text key={i} as="p" tone="subdued">
@@ -171,31 +243,53 @@ export default function Index() {
                             <Text as="p" tone="subdued">…and {pushResult.errors.length - 5} more</Text>
                           )}
                         </BlockStack>
-                      )}
+                      ) : null}
                     </Banner>
                   ) : null}
 
-                  {/* Action buttons */}
-                  {!fixedCsv && !result.passed ? (
-                    <Button variant="primary" loading={isFixing} onClick={handleFix}>
-                      Fix & Enrich
-                    </Button>
-                  ) : null}
-
-                  {fixedCsv ? (
-                    <InlineStack gap="300">
-                      <Button variant="primary" tone="success" onClick={handleDownload}>
+                  <InlineStack gap="300" align="start">
+                    <Tooltip content="Download a Shopify-compatible CSV file to import manually">
+                      <Button size="large" onClick={handleDownload}>
                         Download Shopify CSV
                       </Button>
-                      <Button variant="primary" loading={isPushing} onClick={() => setIsPushModalOpen(true)}>
+                    </Tooltip>
+                    <Tooltip content="Create these products directly in your Shopify store — no import needed">
+                      <Button variant="primary" size="large" loading={isPushing} onClick={() => setIsPushModalOpen(true)}>
                         Push to Store
                       </Button>
-                    </InlineStack>
-                  ) : null}
+                    </Tooltip>
+                  </InlineStack>
                 </BlockStack>
               </Card>
             ) : null}
           </BlockStack>
+        </Layout.Section>
+
+        {/* Sidebar help */}
+        <Layout.Section variant="oneThird">
+          <Card>
+            <BlockStack gap="200">
+              <Text as="h3" variant="headingSm">What FixitCSV does</Text>
+              <BlockStack gap="100">
+                <Text as="p" tone="subdued">✓ Accepts any CSV format — supplier exports, WooCommerce, Google Sheets</Text>
+                <Text as="p" tone="subdued">✓ Normalizes 170+ alternate column names to Shopify format</Text>
+                <Text as="p" tone="subdued">✓ AI fills missing titles, descriptions, tags, and handles</Text>
+                <Text as="p" tone="subdued">✓ Outputs in Shopify's exact column order</Text>
+                <Text as="p" tone="subdued">✓ Push directly to your store — no manual import step</Text>
+              </BlockStack>
+            </BlockStack>
+          </Card>
+
+          {!hasPlan ? (
+            <Card>
+              <BlockStack gap="200">
+                <Text as="h3" variant="headingSm">Free tier: {rowsUsed}/{rowLimit} rows used</Text>
+                <ProgressBar progress={(rowsUsed / rowLimit) * 100} size="small" tone={rowsUsed >= rowLimit ? "critical" : "highlight"} />
+                <Text as="p" tone="subdued">Upgrade to Pro for unlimited rows and priority enrichment.</Text>
+                <Button url="/app/billing" variant="plain">Upgrade to Pro ($7/month) →</Button>
+              </BlockStack>
+            </Card>
+          ) : null}
         </Layout.Section>
       </Layout>
 
@@ -209,20 +303,15 @@ export default function Index() {
           loading: isPushing,
           onAction: handlePushToStore,
         }}
-        secondaryActions={[
-          {
-            content: "Cancel",
-            onAction: () => setIsPushModalOpen(false),
-          },
-        ]}
+        secondaryActions={[{ content: "Cancel", onAction: () => setIsPushModalOpen(false) }]}
       >
         <Modal.Section>
           <BlockStack gap="200">
             <Text as="p">
-              This will create new products directly in your Shopify store using the enriched CSV data.
+              This will create new products directly in your Shopify store using the enriched data.
             </Text>
             <Text as="p" tone="subdued">
-              Each product handle is treated as unique — existing products with the same handle will not be overwritten. Remaining products will continue if any individual product fails.
+              Products with the same handle as an existing product will be skipped. If any product fails, the rest will still be created.
             </Text>
           </BlockStack>
         </Modal.Section>
