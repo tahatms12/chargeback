@@ -1,5 +1,5 @@
 import Papa from "papaparse";
-import { ALL_KNOWN_HEADERS, BARCODE_PATTERN, BOOLEAN_FIELDS, ENUM_FIELDS, HANDLE_PATTERN, NUMERIC_FIELDS, REQUIRED_HEADERS, URL_FIELDS, URL_PATTERN } from "~/lib/shopify-csv-spec";
+import { ALL_KNOWN_HEADERS, BARCODE_PATTERN, BOOLEAN_FIELDS, ENUM_FIELDS, HANDLE_PATTERN, NUMERIC_FIELDS, REQUIRED_HEADERS, URL_FIELDS, URL_PATTERN, normalizeHeader } from "~/lib/shopify-csv-spec";
 import type { Locale } from "~/lib/i18n";
 import { translate } from "~/lib/i18n";
 
@@ -21,12 +21,19 @@ const isBoolean = (v: string) => ["true", "false"].includes(v.trim().toLowerCase
 
 export function validateCsv(content: string, locale: Locale = "en", t: Translate = (key, vars) => translate(locale, key, vars)): ValidationResult {
   const result: ValidationResult = { totalRows: 0, errors: [], warnings: [], headerErrors: [], unknownHeaders: [], passed: false };
-  const parsed = Papa.parse<Record<string, string>>(content, { header: true, skipEmptyLines: true, transformHeader: (h) => h.trim() });
+
+  // Normalize headers on parse — maps any alias format to official Shopify Title Case
+  const parsed = Papa.parse<Record<string, string>>(content, {
+    header: true,
+    skipEmptyLines: true,
+    transformHeader: (h) => normalizeHeader(h),
+  });
   const headers = parsed.meta.fields ?? [];
 
   for (const required of REQUIRED_HEADERS) {
     if (!headers.includes(required)) result.headerErrors.push(t("validation.missingRequiredColumn", { column: required }));
   }
+  // Only flag headers as unknown if they're not a known Shopify header AND not a known alias
   for (const h of headers) if (!ALL_KNOWN_HEADERS.includes(h)) result.unknownHeaders.push(h);
   if (result.headerErrors.length) return result;
 
