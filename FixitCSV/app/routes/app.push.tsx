@@ -164,21 +164,20 @@ export const action = async ({ request }: ActionFunctionArgs) => {
         const taxable = (row["Variant Taxable"] ?? "true").toLowerCase() !== "false";
         const inventoryQty = parseInt(row["Variant Inventory Qty"] ?? "0", 10) || 0;
 
+        // Build inventory item (sku + requires shipping live here per schema)
+        const inventoryItem: Record<string, unknown> = { requiresShipping };
+        if (sku) inventoryItem.sku = sku;
+
         const variantInput: Record<string, unknown> = {
           id: variantId,
           price,
-          requiresShipping,
           taxable,
+          inventoryItem,
         };
         if (compareAtPrice) variantInput.compareAtPrice = compareAtPrice;
-        if (sku) variantInput.sku = sku;
         if (barcode) variantInput.barcode = barcode;
-        if (locationId && inventoryQty > 0) {
-          variantInput.inventoryQuantities = [{
-            availableQuantity: inventoryQty,
-            locationId,
-          }];
-        }
+        // Note: inventory quantity is not set here — merchants adjust stock in Shopify after import
+
 
         await admin.graphql(VARIANT_PRICE_MUTATION, {
           variables: { productId, variants: [variantInput] },

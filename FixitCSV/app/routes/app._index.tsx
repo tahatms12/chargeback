@@ -183,7 +183,7 @@ export default function Index() {
                     {stage === "enriched" && <Badge tone="success">✓ Enriched</Badge>}
                   </InlineStack>
 
-                  <ErrorTable result={result} />
+                  <ErrorTable result={result} isEnriched={stage === "enriched"} />
 
                   {/* Fix error */}
                   {fixError ? (
