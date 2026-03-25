@@ -67,7 +67,8 @@ function rowToProductCreateInput(row: ProductRow) {
   const status = (["ACTIVE", "DRAFT", "ARCHIVED"].includes(rawStatus) ? rawStatus : "ACTIVE") as "ACTIVE" | "DRAFT" | "ARCHIVED";
 
   const product: Record<string, unknown> = { title, status };
-  if (handle) product.handle = handle;
+  // Don't pass handle — let Shopify auto-generate it from the title.
+  // This avoids "handle already in use" errors when previous push attempts left draft products.
   if (descriptionHtml) product.descriptionHtml = descriptionHtml;
   if (vendor) product.vendor = vendor;
   if (productType) product.productType = productType;

@@ -35,10 +35,12 @@ export function validateCsv(content: string, locale: Locale = "en", t: Translate
   }
   // Only flag headers as unknown if they're not a known Shopify header AND not a known alias
   for (const h of headers) if (!ALL_KNOWN_HEADERS.includes(h)) result.unknownHeaders.push(h);
+
+  // Always count rows first so totalRows is correct even when header errors exist
+  result.totalRows = parsed.data.length;
   if (result.headerErrors.length) return result;
 
   const rows = parsed.data;
-  result.totalRows = rows.length;
   const firstSeen = new Map<string, number>();
   const handleOptionNames = new Map<string, { o1?: string; o2?: string; o3?: string }>();
 
