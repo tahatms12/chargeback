@@ -1,0 +1,137 @@
+// prisma/schema.dev.prisma - SQLite version for local development
+// Usage: DATABASE_URL="file:./dev.sqlite" npx prisma db push --schema=prisma/schema.dev.prisma
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.sqlite"
+}
+
+model Session {
+  id                  String    @id
+  shop                String
+  state               String
+  isOnline            Boolean   @default(false)
+  scope               String?
+  expires             DateTime?
+  accessToken         String
+  userId              BigInt?
+  firstName           String?
+  lastName            String?
+  email               String?
+  accountOwner        Boolean   @default(false)
+  locale              String?
+  collaborator        Boolean?  @default(false)
+  emailVerified       Boolean?  @default(false)
+  refreshToken        String?
+  refreshTokenExpires DateTime?
+
+  @@index([shop])
+}
+
+model Installation {
+  id            String    @id @default(cuid())
+  shopDomain    String    @unique
+  accessToken   String
+  billingStatus String    @default("pending")
+  planName      String?
+  trialEndsAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([shopDomain])
+}
+
+model Configuration {
+  id                  String   @id @default(cuid())
+  shopDomain          String   @unique
+  sellerName          String?
+  sellerAddressLine1  String?
+  sellerAddressLine2  String?
+  sellerCity          String?
+  sellerStateProvince String?
+  sellerPostalCode    String?
+  sellerCountryCode   String?
+  sellerContactEmail  String?
+  sellerContactPhone  String?
+  homeCountry         String?
+  defaultCurrency     String?
+  exemptTags          String   @default("[]")
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@index([shopDomain])
+}
+
+model ProductAuditRecord {
+  id                   String   @id @default(cuid())
+  shopDomain           String
+  productId            String
+  variantId            String
+  inventoryItemId      String?
+  productTitle         String
+  variantTitle         String?
+  vendor               String?
+  productType          String?
+  hasHsCode            Boolean  @default(false)
+  hasCoo               Boolean  @default(false)
+  harmonizedSystemCode String?
+  countryCodeOfOrigin  String?
+  fixStatus            String   @default("needs_review")
+  orderCount30d        Int      @default(0)
+  lastAuditedAt        DateTime @default(now())
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  @@unique([shopDomain, variantId])
+  @@index([shopDomain])
+}
+
+model AuditRun {
+  id                String    @id @default(cuid())
+  shopDomain        String
+  status            String    @default("queued")
+  triggeredBy       String    @default("manual")
+  startedAt         DateTime?
+  completedAt       DateTime?
+  totalProducts     Int       @default(0)
+  totalVariants     Int       @default(0)
+  processedVariants Int       @default(0)
+  missingHs         Int       @default(0)
+  missingCoo        Int       @default(0)
+  missingBoth       Int       @default(0)
+  errorSummary      String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([shopDomain])
+}
+
+model PdfGenerationLog {
+  id                 String   @id @default(cuid())
+  shopDomain         String
+  orderId            String
+  orderName          String?
+  completenessStatus String?
+  generatedAt        DateTime @default(now())
+  createdAt          DateTime @default(now())
+
+  @@index([shopDomain])
+}
+
+model InvoiceRecord {
+  id            String   @id @default(cuid())
+  shopDomain    String
+  orderId       String
+  orderName     String
+  generatedAt   DateTime @default(now())
+  declaredValue Float
+  currency      String
+  documentType  String
+
+  @@index([shopDomain])
+}

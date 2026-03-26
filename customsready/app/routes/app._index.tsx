@@ -7,10 +7,12 @@ export async function loader({ request }: LoaderFunctionArgs) {
   
   let orders: any[] = [];
   try {
+    // Query both placed orders AND draft orders so the dashboard
+    // is populated even when the store only has drafts.
     const response = await admin.graphql(
       `#graphql
-      query getRecentOrders {
-        orders(first: 25, sortKey: CREATED_AT, reverse: true) {
+      query getDashboardOrders {
+        orders(first: 20, sortKey: CREATED_AT, reverse: true) {
           edges {
             node {
               id
@@ -27,6 +29,22 @@ export async function loader({ request }: LoaderFunctionArgs) {
             }
           }
         }
+        draftOrders(first: 20, sortKey: UPDATED_AT, reverse: true) {
+          edges {
+            node {
+              id
+              name
+              createdAt
+              status
+              totalPriceSet {
+                shopMoney {
+                  amount
+                  currencyCode
+                }
+              }
+            }
+          }
+        }
       }`
     );
 
@@ -34,14 +52,34 @@ export async function loader({ request }: LoaderFunctionArgs) {
     if (json.errors?.length) {
       console.error('[app._index] GraphQL errors:', JSON.stringify(json.errors));
     }
-    orders = (json.data?.orders?.edges ?? []).map(({ node }: any) => ({
+
+    const placedOrders = (json.data?.orders?.edges ?? []).map(({ node }: any) => ({
       id: node.id.split("/").pop() as string,
+      gid: node.id,
       name: node.name,
       createdAt: node.createdAt,
       financialStatus: node.displayFinancialStatus,
       fulfillmentStatus: node.displayFulfillmentStatus,
       total: `${node.totalPriceSet.shopMoney.amount} ${node.totalPriceSet.shopMoney.currencyCode}`,
+      isDraft: false,
     }));
+
+    const draftOrders = (json.data?.draftOrders?.edges ?? []).map(({ node }: any) => ({
+      id: node.id.split("/").pop() as string,
+      gid: node.id,
+      name: node.name,
+      createdAt: node.createdAt,
+      financialStatus: node.status ?? "DRAFT",
+      fulfillmentStatus: "UNFULFILLED",
+      total: `${node.totalPriceSet.shopMoney.amount} ${node.totalPriceSet.shopMoney.currencyCode}`,
+      isDraft: true,
+    }));
+
+    // Merge: placed orders first, then drafts
+    orders = [...placedOrders, ...draftOrders].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    ).slice(0, 25);
+
   } catch (err) {
     console.error('[app._index] Orders query failed:', err);
   }
@@ -62,10 +100,11 @@ export default function Index() {
   };
 
   const getFinancialBadgeClass = (status: string) => {
-    switch (status) {
+    switch (status?.toUpperCase()) {
       case 'PAID': return 'cr-badge cr-badge--green';
       case 'PENDING': return 'cr-badge cr-badge--amber';
       case 'REFUNDED': return 'cr-badge cr-badge--violet';
+      case 'DRAFT': return 'cr-badge cr-badge--default';
       default: return 'cr-badge cr-badge--default';
     }
   };
@@ -83,7 +122,7 @@ export default function Index() {
           <div className="cr-stat__number animate-count-up" style={{ animationDelay: '100ms' }}>
              {orders.length}
           </div>
-          <span className="cr-stat__sub">Currently synced from Shopify</span>
+          <span className="cr-stat__sub">Orders &amp; drafts synced from Shopify</span>
         </div>
         <div className="cr-card cr-stat hoverable">
           <span className="cr-eyebrow">Avg Action Time</span>
@@ -118,17 +157,20 @@ export default function Index() {
               </tr>
             </thead>
             <tbody>
-              {orders.map((order: any, index: number) => {
+              {orders.map((order: any) => {
                 return (
                   <tr 
                     key={order.id} 
                     className="cr-table__row" 
-                    onClick={() => navigate(`/app/orders/${order.id}`)}
+                    onClick={() => navigate(order.isDraft ? `/app/orders/draft_${order.id}` : `/app/orders/${order.id}`)}
                     style={{ cursor: 'pointer' }}
                   >
                     <td>
                       <span className="cr-mono" style={{ color: 'var(--cr-text-primary)', fontWeight: 600 }}>
                         {order.name}
+                        {order.isDraft && (
+                          <span className="cr-badge cr-badge--default" style={{ marginLeft: '8px', fontSize: '10px' }}>Draft</span>
+                        )}
                       </span>
                     </td>
                     <td><span className="cr-body-text">{new Date(order.createdAt).toLocaleDateString()}</span></td>

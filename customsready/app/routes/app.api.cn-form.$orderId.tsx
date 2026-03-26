@@ -19,17 +19,22 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   
   const isCN23 = data.totalDeclaredValue > 400;
 
-  // Record it in DB
-  await db.invoiceRecord.create({
-    data: {
-      shopDomain: session.shop,
-      orderId: orderId,
-      invoiceType: isCN23 ? "CN23" : "CN22",
-      totalValue: data.totalDeclaredValue,
-      currency: data.currency,
-      destinationCountry: data.buyerDetails.country,
-    }
-  });
+  // Record it in DB — fields match InvoiceRecord model in schema.prisma
+  try {
+    await db.invoiceRecord.create({
+      data: {
+        shopDomain: session.shop,
+        orderId: orderId,
+        orderName: data.orderName,
+        declaredValue: data.totalDeclaredValue,
+        currency: data.currency,
+        documentType: isCN23 ? "CN23" : "CN22",
+      }
+    });
+  } catch (dbErr) {
+    // Non-fatal — log but don't fail the PDF download
+    console.warn('[cn-form] DB record failed:', dbErr);
+  }
 
   const DocComponent = isCN23 ? CN23Doc : CN22Doc;
   const pdfBuffer = await renderToBuffer(React.createElement(DocComponent, { data }));

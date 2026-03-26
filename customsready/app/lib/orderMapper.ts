@@ -1,53 +1,50 @@
 import { lookupHsCode } from "./hsCodes";
 import type { CommercialInvoiceData, LineItemCustoms } from "~/types/customs";
 
-export async function fetchAndMapOrder(admin: any, orderId: string): Promise<CommercialInvoiceData> {
-  const response = await admin.graphql(
-    `#graphql
-    query getOrderDetails($id: ID!) {
-      order(id: $id) {
+const ORDER_DETAIL_QUERY = `#graphql
+  query getOrderDetails($id: ID!) {
+    order(id: $id) {
+      name
+      createdAt
+      currencyCode
+      email
+      totalPriceSet {
+        shopMoney { amount }
+      }
+      shippingAddress {
         name
-        createdAt
-        currencyCode
-        email
-        totalPriceSet {
-          shopMoney { amount }
-        }
-        shippingAddress {
-          name
-          address1
-          address2
-          city
-          provinceCode
-          zip
-          countryCodeV2
-          phone
-        }
-        lineItems(first: 50) {
-          edges {
-            node {
-              title
-              quantity
-              originalUnitPriceSet {
-                shopMoney { amount }
-              }
-              variant {
-                inventoryItem {
-                  measurement {
-                    weight {
-                      unit
-                      value
-                    }
+        address1
+        address2
+        city
+        provinceCode
+        zip
+        countryCodeV2
+        phone
+      }
+      lineItems(first: 50) {
+        edges {
+          node {
+            title
+            quantity
+            originalUnitPriceSet {
+              shopMoney { amount }
+            }
+            variant {
+              inventoryItem {
+                measurement {
+                  weight {
+                    unit
+                    value
                   }
-                  harmonizedSystemCode
-                  countryCodeOfOrigin
                 }
-                metafields(first: 2, namespace: "customsready") {
-                  edges {
-                    node {
-                      key
-                      value
-                    }
+                harmonizedSystemCode
+                countryCodeOfOrigin
+              }
+              metafields(first: 2, namespace: "customsready") {
+                edges {
+                  node {
+                    key
+                    value
                   }
                 }
               }
@@ -55,28 +52,85 @@ export async function fetchAndMapOrder(admin: any, orderId: string): Promise<Com
           }
         }
       }
-      shop {
+    }
+    shop {
+      name
+      billingAddress {
+        address1
+        city
+        zip
+        countryCodeV2
+      }
+    }
+  }
+`;
+
+const DRAFT_ORDER_DETAIL_QUERY = `#graphql
+  query getDraftOrderDetails($id: ID!) {
+    draftOrder(id: $id) {
+      name
+      createdAt
+      currencyCode
+      email
+      totalPriceSet {
+        shopMoney { amount }
+      }
+      shippingAddress {
         name
-        billingAddress {
-          address1
-          city
-          zip
-          countryCodeV2
+        address1
+        address2
+        city
+        provinceCode
+        zip
+        countryCodeV2
+        phone
+      }
+      lineItems(first: 50) {
+        edges {
+          node {
+            title
+            quantity
+            originalUnitPriceSet {
+              shopMoney { amount }
+            }
+            variant {
+              inventoryItem {
+                measurement {
+                  weight {
+                    unit
+                    value
+                  }
+                }
+                harmonizedSystemCode
+                countryCodeOfOrigin
+              }
+              metafields(first: 2, namespace: "customsready") {
+                edges {
+                  node {
+                    key
+                    value
+                  }
+                }
+              }
+            }
+          }
         }
       }
-    }`,
-    { variables: { id: `gid://shopify/Order/${orderId}` } }
-  );
-  
-  const { data } = await response.json();
-  const order = data.order;
-  const shopData = data.shop;
-  
-  if (!order || !order.shippingAddress) {
-    throw new Error("Order not found or missing shipping address");
+    }
+    shop {
+      name
+      billingAddress {
+        address1
+        city
+        zip
+        countryCodeV2
+      }
+    }
   }
+`;
 
-  const lineItems: LineItemCustoms[] = order.lineItems.edges.map(({ node }: any) => {
+function mapLineItems(edges: any[]): LineItemCustoms[] {
+  return edges.map(({ node }: any) => {
     let weightGrams = 0;
     const measurement = node.variant?.inventoryItem?.measurement?.weight;
     if (measurement) {
@@ -88,12 +142,10 @@ export async function fetchAndMapOrder(admin: any, orderId: string): Promise<Com
         case "OUNCES": weightGrams = w * 28.3495; break;
       }
     }
-    
-    let hsCode = "";
-    let countryOfOrigin = "US";
-    hsCode = node.variant?.inventoryItem?.harmonizedSystemCode || "";
-    countryOfOrigin = node.variant?.inventoryItem?.countryCodeOfOrigin || "US";
-    
+
+    let hsCode = node.variant?.inventoryItem?.harmonizedSystemCode || "";
+    let countryOfOrigin = node.variant?.inventoryItem?.countryCodeOfOrigin || "US";
+
     if (!hsCode) {
       for (const edge of (node.variant?.metafields?.edges ?? [])) {
         if (edge.node.key === "hs_code") hsCode = edge.node.value;
@@ -106,6 +158,7 @@ export async function fetchAndMapOrder(admin: any, orderId: string): Promise<Com
 
     return {
       title: node.title,
+      description: "",
       quantity: node.quantity,
       unitPrice: parseFloat(node.originalUnitPriceSet.shopMoney.amount),
       totalPrice: parseFloat(node.originalUnitPriceSet.shopMoney.amount) * node.quantity,
@@ -114,12 +167,19 @@ export async function fetchAndMapOrder(admin: any, orderId: string): Promise<Com
       countryOfOrigin,
     };
   });
+}
 
+function buildInvoiceData(
+  order: any,
+  shopData: any,
+  orderId: string
+): CommercialInvoiceData {
+  const lineItems = mapLineItems(order.lineItems.edges);
   const totalDeclaredValue = lineItems.reduce((acc, item) => acc + item.totalPrice, 0);
 
   return {
-    orderDate: new Date(order.createdAt).toISOString().split('T')[0],
-    orderId: orderId,
+    orderDate: new Date(order.createdAt).toISOString().split("T")[0],
+    orderId,
     orderName: order.name,
     currency: order.currencyCode,
     totalDeclaredValue,
@@ -128,15 +188,72 @@ export async function fetchAndMapOrder(admin: any, orderId: string): Promise<Com
       address: `${shopData.billingAddress?.address1 || ""}, ${shopData.billingAddress?.city || ""}`,
     },
     buyerDetails: {
-      name: order.shippingAddress.name || "",
-      addressLine1: order.shippingAddress.address1 || "",
-      addressLine2: order.shippingAddress.address2 || "",
-      city: order.shippingAddress.city || "",
-      province: order.shippingAddress.provinceCode || "",
-      zip: order.shippingAddress.zip || "",
-      country: order.shippingAddress.countryCodeV2 || "",
+      name: order.shippingAddress?.name || "",
+      addressLine1: order.shippingAddress?.address1 || "",
+      addressLine2: order.shippingAddress?.address2 || "",
+      city: order.shippingAddress?.city || "",
+      province: order.shippingAddress?.provinceCode || "",
+      zip: order.shippingAddress?.zip || "",
+      country: order.shippingAddress?.countryCodeV2 || "",
       email: order.email || "",
     },
     lineItems,
   };
+}
+
+/**
+ * Fetch and map an order by its numeric ID.
+ * Supports both placed orders and draft orders.
+ * Draft orders have IDs prefixed with "draft_" (e.g. "draft_12345").
+ */
+export async function fetchAndMapOrder(
+  admin: any,
+  orderId: string
+): Promise<CommercialInvoiceData> {
+  const isDraft = orderId.startsWith("draft_");
+  const numericId = isDraft ? orderId.replace("draft_", "") : orderId;
+
+  if (isDraft) {
+    const gid = `gid://shopify/DraftOrder/${numericId}`;
+    const response = await admin.graphql(DRAFT_ORDER_DETAIL_QUERY, {
+      variables: { id: gid },
+    });
+    const { data } = await response.json();
+    const order = data.draftOrder;
+    const shopData = data.shop;
+
+    if (!order) {
+      throw new Error(`Draft order ${numericId} not found`);
+    }
+
+    if (!order.shippingAddress) {
+      // Draft orders may not have a shipping address — use placeholder
+      order.shippingAddress = {
+        name: "N/A",
+        address1: "",
+        address2: "",
+        city: "",
+        provinceCode: "",
+        zip: "",
+        countryCodeV2: "N/A",
+        phone: "",
+      };
+    }
+
+    return buildInvoiceData(order, shopData, orderId);
+  } else {
+    const gid = `gid://shopify/Order/${numericId}`;
+    const response = await admin.graphql(ORDER_DETAIL_QUERY, {
+      variables: { id: gid },
+    });
+    const { data } = await response.json();
+    const order = data.order;
+    const shopData = data.shop;
+
+    if (!order || !order.shippingAddress) {
+      throw new Error("Order not found or missing shipping address");
+    }
+
+    return buildInvoiceData(order, shopData, orderId);
+  }
 }

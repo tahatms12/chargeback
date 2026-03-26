@@ -16,17 +16,22 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
   const invoiceData = await fetchAndMapOrder(admin, orderId);
   
-  // Record it in DB
-  await db.invoiceRecord.create({
-    data: {
-      shopDomain: session.shop,
-      orderId: orderId,
-      invoiceType: "COMMERCIAL_INVOICE",
-      totalValue: invoiceData.totalDeclaredValue,
-      currency: invoiceData.currency,
-      destinationCountry: invoiceData.buyerDetails.country,
-    }
-  });
+  // Record it in DB — fields match InvoiceRecord model in schema.prisma
+  try {
+    await db.invoiceRecord.create({
+      data: {
+        shopDomain: session.shop,
+        orderId: orderId,
+        orderName: invoiceData.orderName,
+        declaredValue: invoiceData.totalDeclaredValue,
+        currency: invoiceData.currency,
+        documentType: "COMMERCIAL_INVOICE",
+      }
+    });
+  } catch (dbErr) {
+    // Non-fatal — log but don't fail the PDF download
+    console.warn('[invoice] DB record failed:', dbErr);
+  }
 
   const pdfBuffer = await renderToBuffer(React.createElement(CommercialInvoiceDoc, { data: invoiceData }));
 
