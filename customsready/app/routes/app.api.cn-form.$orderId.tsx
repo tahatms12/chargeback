@@ -38,7 +38,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="${isCN23 ? 'CN23' : 'CN22'}_${orderId}.pdf"`,
+      "Content-Disposition": `attachment; filename="${isCN23 ? 'CN23' : 'CN22'}_${orderId}.pdf"`,
     },
   });
 }

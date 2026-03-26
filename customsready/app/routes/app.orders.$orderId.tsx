@@ -1,4 +1,4 @@
-import { json, type LoaderFunctionArgs } from "@remix-run/node";
+import { json, type LoaderFunctionArgs, type ActionFunctionArgs } from "@remix-run/node";
 import { useLoaderData, useFetcher } from "@remix-run/react";
 import { useNavigate } from "@remix-run/react";
 import { authenticate } from "~/shopify.server";
@@ -19,6 +19,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 export default function OrderDetails() {
   const { orderId, invoiceData } = useLoaderData<typeof loader>();
   const fetcher = useFetcher<any>();
+  const emailFetcher = useFetcher<any>();
   const navigate = useNavigate();
   
   const calculateDuties = () => {
@@ -33,8 +34,20 @@ export default function OrderDetails() {
     );
   };
 
+  const sendEmailToCustomer = () => {
+    emailFetcher.submit(
+      {},
+      { method: "POST", action: `/app/api/send-customs-email/${orderId}` }
+    );
+  };
+
   const dutyEstimate = fetcher.data?.estimate;
   const isCalculating = fetcher.state !== "idle";
+  const isSendingEmail = emailFetcher.state !== "idle";
+  const emailResult = emailFetcher.data;
+
+  const customerEmail = invoiceData.buyerDetails.email;
+  const hasEmail = !!customerEmail;
 
   return (
     <div className="cr-dashboard animate-fade-in-up">
@@ -52,15 +65,61 @@ export default function OrderDetails() {
              <span className="cr-body-text">{invoiceData.buyerDetails.country} Destination</span>
            </div>
         </div>
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-           <button className="cr-btn cr-btn--secondary" onClick={() => window.open(`/app/api/cn-form/${orderId}`, '_blank')}>
-              Generate CN22/CN23
-           </button>
-           <button className="cr-btn cr-btn--primary" onClick={() => window.open(`/app/api/invoice/${orderId}`, '_blank')}>
-              Commercial Invoice
+        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+           {/* Download buttons — use <a> with target="_top" to break out of Shopify iframe */}
+           <a
+             className="cr-btn cr-btn--secondary"
+             href={`/app/api/cn-form/${orderId}`}
+             target="_top"
+             download
+           >
+             ⬇ CN22/CN23
+           </a>
+           <a
+             className="cr-btn cr-btn--primary"
+             href={`/app/api/invoice/${orderId}`}
+             target="_top"
+             download
+           >
+             ⬇ Commercial Invoice
+           </a>
+           {/* Email customer button */}
+           <button
+             className="cr-btn"
+             style={{
+               background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
+               color: '#fff',
+               border: 'none',
+               opacity: !hasEmail || isSendingEmail ? 0.6 : 1,
+               cursor: !hasEmail || isSendingEmail ? 'not-allowed' : 'pointer',
+             }}
+             onClick={sendEmailToCustomer}
+             disabled={!hasEmail || isSendingEmail}
+             title={!hasEmail ? 'No customer email on this order' : `Email ${customerEmail}`}
+           >
+             {isSendingEmail ? 'Sending...' : '✉ Email Customer'}
            </button>
         </div>
       </header>
+
+      {/* Email status toast */}
+      {emailResult && (
+        <div
+          style={{
+            marginBottom: '20px',
+            padding: '14px 20px',
+            borderRadius: '12px',
+            background: emailResult.success ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
+            border: `1px solid ${emailResult.success ? 'rgba(34,197,94,0.4)' : 'rgba(239,68,68,0.4)'}`,
+            color: emailResult.success ? '#86efac' : '#fca5a5',
+            fontSize: '14px',
+          }}
+        >
+          {emailResult.success
+            ? `✓ Customs notification sent to ${emailResult.customerEmail || customerEmail}`
+            : `✗ Email failed: ${emailResult.error}`}
+        </div>
+      )}
 
       {/* Main Grid Layout */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px', alignItems: 'start' }}>
@@ -126,7 +185,7 @@ export default function OrderDetails() {
 
           <div className="cr-card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 className="cr-card-title" style={{ margin: 0 }}>Duty & Tax Estimation</h2>
+              <h2 className="cr-card-title" style={{ margin: 0 }}>Duty &amp; Tax Estimation</h2>
               <button 
                 className="cr-btn cr-btn--secondary" 
                 onClick={calculateDuties} 
@@ -183,6 +242,11 @@ export default function OrderDetails() {
                <span style={{ marginTop: '8px', display: 'inline-flex' }}>
                  <span className="cr-badge cr-badge--default">{invoiceData.buyerDetails.country}</span>
                </span>
+               {customerEmail && (
+                 <span style={{ marginTop: '8px', fontSize: '12px', color: 'var(--cr-text-secondary)' }}>
+                   ✉ {customerEmail}
+                 </span>
+               )}
             </div>
           </div>
           
@@ -197,6 +261,31 @@ export default function OrderDetails() {
             <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <span className="cr-body-text" style={{ color: '#fff' }}>Total Value</span>
               <span className="cr-mono" style={{ color: '#fff' }}>{invoiceData.totalDeclaredValue.toFixed(2)} {invoiceData.currency}</span>
+            </div>
+          </div>
+
+          {/* PDF Documents card */}
+          <div className="cr-card">
+            <h2 className="cr-card-title">Download Documents</h2>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <a
+                className="cr-btn cr-btn--secondary"
+                href={`/app/api/cn-form/${orderId}`}
+                target="_top"
+                download
+                style={{ textAlign: 'center', display: 'block' }}
+              >
+                ⬇ CN22 / CN23 Form
+              </a>
+              <a
+                className="cr-btn cr-btn--primary"
+                href={`/app/api/invoice/${orderId}`}
+                target="_top"
+                download
+                style={{ textAlign: 'center', display: 'block' }}
+              >
+                ⬇ Commercial Invoice
+              </a>
             </div>
           </div>
         </div>

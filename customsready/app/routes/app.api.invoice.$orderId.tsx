@@ -34,7 +34,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     status: 200,
     headers: {
       "Content-Type": "application/pdf",
-      "Content-Disposition": `inline; filename="Commercial_Invoice_${orderId}.pdf"`,
+      "Content-Disposition": `attachment; filename="Commercial_Invoice_${orderId}.pdf"`,
     },
   });
 }

@@ -9,6 +9,7 @@ export async function fetchAndMapOrder(admin: any, orderId: string): Promise<Com
         name
         createdAt
         currencyCode
+        email
         totalPriceSet {
           shopMoney { amount }
         }
@@ -134,7 +135,7 @@ export async function fetchAndMapOrder(admin: any, orderId: string): Promise<Com
       province: order.shippingAddress.provinceCode || "",
       zip: order.shippingAddress.zip || "",
       country: order.shippingAddress.countryCodeV2 || "",
-      email: "",
+      email: order.email || "",
     },
     lineItems,
   };

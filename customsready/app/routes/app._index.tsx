@@ -30,8 +30,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
       }`
     );
 
-    const { data } = await response.json();
-    orders = data.orders.edges.map(({ node }: any) => ({
+    const json = await response.json() as any;
+    if (json.errors?.length) {
+      console.error('[app._index] GraphQL errors:', JSON.stringify(json.errors));
+    }
+    orders = (json.data?.orders?.edges ?? []).map(({ node }: any) => ({
       id: node.id.split("/").pop() as string,
       name: node.name,
       createdAt: node.createdAt,
@@ -40,7 +43,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
       total: `${node.totalPriceSet.shopMoney.amount} ${node.totalPriceSet.shopMoney.currencyCode}`,
     }));
   } catch (err) {
-    console.warn('[app._index] Orders query failed:', err);
+    console.error('[app._index] Orders query failed:', err);
   }
 
   return json({ orders });
