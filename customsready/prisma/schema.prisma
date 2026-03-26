@@ -60,8 +60,9 @@ model Configuration {
   sellerContactEmail  String?
   sellerContactPhone  String?
   homeCountry         String?  // ISO 3166-1 alpha-2, e.g. "US"
-  defaultCurrency     String?  // ISO 4217, e.g. "USD"
+  defaultCurrency     String?
   exemptTags          String[] @default([])
+  aiLookupCount       Int      @default(0)
   createdAt           DateTime @default(now())
   updatedAt           DateTime @updatedAt
 

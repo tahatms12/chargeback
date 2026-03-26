@@ -1,21 +1,30 @@
-import { type LoaderFunctionArgs } from "@remix-run/node";
+import { json, type ActionFunctionArgs } from "@remix-run/node";
 import { authenticate } from "~/shopify.server";
 import { renderToBuffer } from "~/pdf/pdfUtils";
 import { CN22Doc } from "~/pdf/CN22";
 import { CN23Doc } from "~/pdf/CN23";
 import { db } from "~/db.server";
-import { fetchAndMapOrder } from "~/lib/orderMapper";
 import React from "react";
+import type { CommercialInvoiceData } from "~/types/customs";
 
-export async function loader({ request, params }: LoaderFunctionArgs) {
+export async function action({ request, params }: ActionFunctionArgs) {
+  if (request.method !== "POST") {
+    return json({ error: "Method not allowed" }, { status: 405 });
+  }
+
   const { admin, session } = await authenticate.admin(request);
   const orderId = params.orderId;
   
   if (!orderId) {
-    throw new Response("Missing order ID", { status: 400 });
+    return json({ error: "Missing order ID" }, { status: 400 });
   }
 
-  const data = await fetchAndMapOrder(admin, orderId);
+  const payload = await request.json();
+  const data = payload.invoiceData as CommercialInvoiceData;
+
+  if (!data) {
+    return json({ error: "Missing invoiceData payload" }, { status: 400 });
+  }
   
   const isCN23 = data.totalDeclaredValue > 400;
 
@@ -38,12 +47,10 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
 
   const DocComponent = isCN23 ? CN23Doc : CN22Doc;
   const pdfBuffer = await renderToBuffer(React.createElement(DocComponent, { data }));
+  const pdfBase64 = pdfBuffer.toString("base64");
 
-  return new Response(pdfBuffer as any, {
-    status: 200,
-    headers: {
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="${isCN23 ? 'CN23' : 'CN22'}_${orderId}.pdf"`,
-    },
+  return json({
+    pdfBase64,
+    filename: `${isCN23 ? 'CN23' : 'CN22'}_${orderId.replace('draft_', '')}.pdf`
   });
 }

@@ -1,8 +1,9 @@
-import { json, type LoaderFunctionArgs, type ActionFunctionArgs } from "@remix-run/node";
-import { useLoaderData, useFetcher } from "@remix-run/react";
-import { useNavigate } from "@remix-run/react";
+import { json, type LoaderFunctionArgs } from "@remix-run/node";
+import { useLoaderData, useFetcher, useNavigate } from "@remix-run/react";
 import { authenticate } from "~/shopify.server";
 import { fetchAndMapOrder } from "~/lib/orderMapper";
+import { useState, useEffect } from "react";
+import type { LineItemCustoms } from "~/types/customs";
 
 export async function loader({ request, params }: LoaderFunctionArgs) {
   const { admin } = await authenticate.admin(request);
@@ -20,15 +21,32 @@ export default function OrderDetails() {
   const { orderId, invoiceData } = useLoaderData<typeof loader>();
   const fetcher = useFetcher<any>();
   const emailFetcher = useFetcher<any>();
+  const invoiceFetcher = useFetcher<any>();
+  const cnFetcher = useFetcher<any>();
+  const aiFetcher = useFetcher<any>();
   const navigate = useNavigate();
+
+  // Local state for editable line items
+  const [lineItems, setLineItems] = useState<LineItemCustoms[]>(invoiceData.lineItems);
+  const [activeAiRowIndex, setActiveAiRowIndex] = useState<number | null>(null);
+  const [aiError, setAiError] = useState<string | null>(null);
+
+  // Recalculate total value based on edits
+  const totalValue = lineItems.reduce((acc, item) => acc + (item.unitPrice * item.quantity), 0);
   
+  const currentInvoiceData = {
+    ...invoiceData,
+    lineItems,
+    totalDeclaredValue: totalValue
+  };
+
   const calculateDuties = () => {
     fetcher.submit(
       { 
         destinationCountry: invoiceData.buyerDetails.country,
-        totalValue: invoiceData.totalDeclaredValue,
+        totalValue: totalValue,
         currency: invoiceData.currency,
-        hsCode: invoiceData.lineItems[0]?.hsCode || ""
+        hsCode: lineItems[0]?.hsCode || ""
       },
       { method: "POST", action: "/app/api/duties", encType: "application/json" }
     );
@@ -41,11 +59,91 @@ export default function OrderDetails() {
     );
   };
 
-  const dutyEstimate = fetcher.data?.estimate;
+  const handleDownloadInvoice = () => {
+    invoiceFetcher.submit(
+      { invoiceData: currentInvoiceData },
+      { method: "POST", action: `/app/api/invoice/${orderId}`, encType: "application/json" }
+    );
+  };
+
+  const handleDownloadCN = () => {
+    cnFetcher.submit(
+      { invoiceData: currentInvoiceData },
+      { method: "POST", action: `/app/api/cn-form/${orderId}`, encType: "application/json" }
+    );
+  };
+
+  const suggestHsCode = (index: number, title: string) => {
+    setActiveAiRowIndex(index);
+    setAiError(null);
+    aiFetcher.submit(
+      { productTitle: title },
+      { method: "POST", action: "/app/api/ai/suggest-hs-code", encType: "application/json" }
+    );
+  };
+
+  // Listen for AI results
+  useEffect(() => {
+    if (aiFetcher.state === "idle" && aiFetcher.data && activeAiRowIndex !== null) {
+      if (aiFetcher.data.success && aiFetcher.data.hsCode) {
+        const newItems = [...lineItems];
+        newItems[activeAiRowIndex].hsCode = aiFetcher.data.hsCode;
+        setLineItems(newItems);
+        shopify.toast.show(`AI: ${aiFetcher.data.hsCode} (Trials left: ${aiFetcher.data.usageRemaining})`);
+      } else if (aiFetcher.data.error) {
+        setAiError(aiFetcher.data.error);
+        shopify.toast.show(aiFetcher.data.error, { isError: true });
+      }
+      setActiveAiRowIndex(null);
+    }
+  }, [aiFetcher.state, aiFetcher.data]);
+
+  // Download PDF helper
+  const triggerDownload = (base64: string, filename: string) => {
+    const byteCharacters = atob(base64);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+    }
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], { type: 'application/pdf' });
+    const link = document.createElement('a');
+    link.href = window.URL.createObjectURL(blob);
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  useEffect(() => {
+    if (invoiceFetcher.state === "idle" && invoiceFetcher.data?.pdfBase64) {
+      triggerDownload(invoiceFetcher.data.pdfBase64, invoiceFetcher.data.filename);
+    }
+  }, [invoiceFetcher.state, invoiceFetcher.data]);
+
+  useEffect(() => {
+    if (cnFetcher.state === "idle" && cnFetcher.data?.pdfBase64) {
+      triggerDownload(cnFetcher.data.pdfBase64, cnFetcher.data.filename);
+    }
+  }, [cnFetcher.state, cnFetcher.data]);
+
+  const updateLineItem = (index: number, field: keyof LineItemCustoms, value: string | number) => {
+    const newItems = [...lineItems];
+    newItems[index] = { ...newItems[index], [field]: value };
+    // Recalculate total price if unit price or quantity changes
+    if (field === 'unitPrice' || field === 'quantity') {
+      newItems[index].totalPrice = newItems[index].unitPrice * newItems[index].quantity;
+    }
+    setLineItems(newItems);
+  };
+
   const isCalculating = fetcher.state !== "idle";
   const isSendingEmail = emailFetcher.state !== "idle";
+  const isDownloadingInvoice = invoiceFetcher.state !== "idle";
+  const isDownloadingCN = cnFetcher.state !== "idle";
+  
+  const dutyEstimate = fetcher.data?.estimate;
   const emailResult = emailFetcher.data;
-
   const customerEmail = invoiceData.buyerDetails.email;
   const hasEmail = !!customerEmail;
 
@@ -58,7 +156,7 @@ export default function OrderDetails() {
               &larr; Back to Orders
            </button>
            <h1 className="cr-hero-title" style={{ fontSize: '2rem', marginBottom: '8px' }}>
-             Order {invoiceData.orderId}
+             Order {invoiceData.orderId.replace('draft_', '')}
            </h1>
            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
              <span className="cr-badge cr-badge--violet">Ready for Customs</span>
@@ -66,24 +164,20 @@ export default function OrderDetails() {
            </div>
         </div>
         <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
-           {/* Download buttons — use <a> with target="_top" to break out of Shopify iframe */}
-           <a
+           <button
              className="cr-btn cr-btn--secondary"
-             href={`/app/api/cn-form/${orderId}`}
-             target="_top"
-             download
+             onClick={handleDownloadCN}
+             disabled={isDownloadingCN}
            >
-             ⬇ CN22/CN23
-           </a>
-           <a
+             {isDownloadingCN ? "Generating..." : "⬇ CN22/CN23"}
+           </button>
+           <button
              className="cr-btn cr-btn--primary"
-             href={`/app/api/invoice/${orderId}`}
-             target="_top"
-             download
+             onClick={handleDownloadInvoice}
+             disabled={isDownloadingInvoice}
            >
-             ⬇ Commercial Invoice
-           </a>
-           {/* Email customer button */}
+             {isDownloadingInvoice ? "Generating..." : "⬇ Commercial Invoice"}
+           </button>
            <button
              className="cr-btn"
              style={{
@@ -102,79 +196,106 @@ export default function OrderDetails() {
         </div>
       </header>
 
-      {/* Email status toast */}
-      {emailResult && (
-        <div
-          style={{
-            marginBottom: '20px',
-            padding: '14px 20px',
-            borderRadius: '12px',
-            background: emailResult.success ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
-            border: `1px solid ${emailResult.success ? 'rgba(34,197,94,0.4)' : 'rgba(239,68,68,0.4)'}`,
-            color: emailResult.success ? '#86efac' : '#fca5a5',
-            fontSize: '14px',
-          }}
-        >
-          {emailResult.success
-            ? `✓ Customs notification sent to ${emailResult.customerEmail || customerEmail}`
-            : `✗ Email failed: ${emailResult.error}`}
-        </div>
-      )}
-
       {/* Main Grid Layout */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: '24px', alignItems: 'start' }}>
         
         {/* Left Column (Main Content) */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           
-          {/* Step Indicators */}
           <div className="cr-card">
-            <h2 className="cr-card-title">Documentation Progress</h2>
-            <div className="cr-steps-container">
-              <div className="cr-step-connector"></div>
-              <div className="cr-step cr-step--complete">
-                <div className="cr-step-circle">✓</div>
-                <div className="cr-step-label">Order Sync</div>
-              </div>
-              <div className="cr-step cr-step--active">
-                <div className="cr-step-circle">2</div>
-                <div className="cr-step-label">HS Code Check</div>
-              </div>
-              <div className="cr-step">
-                <div className="cr-step-circle">3</div>
-                <div className="cr-step-label">Ready to Print</div>
-              </div>
-            </div>
-          </div>
+            <h2 className="cr-card-title">Editable Line Items (Customs Info)</h2>
+            <p className="cr-body-text" style={{ marginBottom: '20px', color: 'var(--cr-text-secondary)' }}>
+              Modify descriptions, HS codes, or values before generating documents. 
+            </p>
 
-          <div className="cr-card">
-            <h2 className="cr-card-title">Line Items (Customs Info)</h2>
+            {aiError && (
+              <div style={{ marginBottom: '16px', padding: '12px', background: '#fee2e2', color: '#991b1b', borderRadius: '8px', fontSize: '13px' }}>
+                {aiError}
+              </div>
+            )}
+            
             <div style={{ overflowX: 'auto' }}>
               <table className="cr-table">
                 <thead>
                   <tr>
-                    <th>Item</th>
-                    <th style={{ textAlign: 'center' }}>Qty</th>
-                    <th>HS Code</th>
-                    <th>Origin</th>
-                    <th style={{ textAlign: 'right' }}>Total</th>
+                    <th>Item & Description</th>
+                    <th style={{ width: '80px' }}>Qty</th>
+                    <th style={{ width: '160px' }}>HS Code</th>
+                    <th style={{ width: '80px' }}>Origin</th>
+                    <th style={{ textAlign: 'right', width: '100px' }}>Unit Value</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {invoiceData.lineItems.map((item: any, idx: number) => (
-                    <tr key={idx} className="cr-table__row">
-                      <td><span className="cr-body-text" style={{ color: 'var(--cr-text-primary)' }}>{item.title}</span></td>
-                      <td style={{ textAlign: 'center' }}><span className="cr-mono">{item.quantity}</span></td>
+                  {lineItems.map((item, index) => (
+                    <tr key={index} className="cr-table__row">
                       <td>
-                        <span className={item.hsCode ? 'cr-badge cr-badge--blue' : 'cr-badge cr-badge--amber'}>
-                           {item.hsCode || "Missing"}
-                        </span>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          <span className="cr-body-text" style={{ fontWeight: 500 }}>{item.title}</span>
+                          <input 
+                            type="text" 
+                            className="cr-input" 
+                            placeholder="Customs description (e.g. Cotton T-Shirt)"
+                            value={item.description || item.title}
+                            onChange={(e) => updateLineItem(index, 'description', e.target.value)}
+                            style={{ 
+                              padding: '6px 10px', 
+                              border: '1px solid var(--cr-border)', 
+                              borderRadius: '6px', 
+                              fontSize: '13px',
+                              width: '100%' 
+                            }}
+                          />
+                        </div>
                       </td>
-                      <td><span className="cr-mono">{item.countryOfOrigin}</span></td>
+                      <td>
+                        <input 
+                          type="number" 
+                          min="1"
+                          value={item.quantity}
+                          onChange={(e) => updateLineItem(index, 'quantity', parseInt(e.target.value) || 1)}
+                          style={{ padding: '6px', border: '1px solid var(--cr-border)', borderRadius: '6px', width: '60px' }}
+                        />
+                      </td>
+                      <td>
+                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                          <input 
+                            type="text" 
+                            value={item.hsCode}
+                            placeholder="e.g. 610910"
+                            onChange={(e) => updateLineItem(index, 'hsCode', e.target.value)}
+                            style={{ padding: '6px', border: '1px solid var(--cr-border)', borderRadius: '6px', width: '90px' }}
+                          />
+                          <button 
+                            className="cr-btn cr-btn--secondary" 
+                            style={{ padding: '6px 8px', fontSize: '12px', minWidth: 'auto', height: 'auto' }}
+                            onClick={() => suggestHsCode(index, item.title)}
+                            disabled={activeAiRowIndex === index}
+                            title="Suggest HS Code using AI (3 free trials)"
+                          >
+                            {activeAiRowIndex === index ? '⏳' : '🤖 AI'}
+                          </button>
+                        </div>
+                      </td>
+                      <td>
+                        <input 
+                          type="text" 
+                          value={item.countryOfOrigin}
+                          maxLength={2}
+                          placeholder="US"
+                          onChange={(e) => updateLineItem(index, 'countryOfOrigin', e.target.value.toUpperCase())}
+                          style={{ padding: '6px', border: '1px solid var(--cr-border)', borderRadius: '6px', width: '50px', textTransform: 'uppercase' }}
+                        />
+                      </td>
                       <td style={{ textAlign: 'right' }}>
-                        <span className="cr-mono">
-                          {item.totalPrice.toFixed(2)} {invoiceData.currency}
-                        </span>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' }}>
+                          <input 
+                            type="number" 
+                            step="0.01"
+                            value={item.unitPrice}
+                            onChange={(e) => updateLineItem(index, 'unitPrice', parseFloat(e.target.value) || 0)}
+                            style={{ padding: '6px', border: '1px solid var(--cr-border)', borderRadius: '6px', width: '80px', textAlign: 'right' }}
+                          />
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -182,114 +303,79 @@ export default function OrderDetails() {
               </table>
             </div>
           </div>
+        </div>
 
-          <div className="cr-card">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 className="cr-card-title" style={{ margin: 0 }}>Duty &amp; Tax Estimation</h2>
+        {/* Right Column (Sidebar) */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <div className="cr-card" style={{ padding: '24px' }}>
+            <h3 className="cr-card-title" style={{ fontSize: '14px', color: 'var(--cr-text-secondary)', marginBottom: '16px' }}>
+              Destination Address
+            </h3>
+            <div className="cr-body-text" style={{ fontSize: '15px', lineHeight: '1.5' }}>
+               <strong>{invoiceData.buyerDetails.name || 'N/A'}</strong><br />
+               {invoiceData.buyerDetails.addressLine1}
+               {invoiceData.buyerDetails.addressLine2 && <><br />{invoiceData.buyerDetails.addressLine2}</>}
+               <br />
+               {invoiceData.buyerDetails.city}, {invoiceData.buyerDetails.province} {invoiceData.buyerDetails.zip}<br />
+               {invoiceData.buyerDetails.country}
+            </div>
+            {customerEmail && (
+              <div style={{ marginTop: '12px', fontSize: '13px', color: 'var(--cr-text-secondary)' }}>
+                ✉ {customerEmail}
+              </div>
+            )}
+            {!customerEmail && (
+              <div style={{ marginTop: '12px', fontSize: '13px', padding: '6px 10px', background: 'var(--cr-surface-sunken)', borderRadius: '6px', display: 'inline-block' }}>
+                No email attached
+              </div>
+            )}
+          </div>
+
+          <div className="cr-card" style={{ padding: '24px' }}>
+            <h3 className="cr-card-title" style={{ fontSize: '14px', color: 'var(--cr-text-secondary)', marginBottom: '16px' }}>
+              Updated Summary
+            </h3>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px' }}>
+               <span className="cr-body-text">Total Items</span>
+               <span className="cr-mono">{lineItems.reduce((acc, item) => acc + item.quantity, 0)}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', borderTop: '1px solid var(--cr-border)', paddingTop: '16px' }}>
+               <span className="cr-body-text" style={{ fontWeight: 600 }}>Total Value</span>
+               <span className="cr-mono" style={{ fontWeight: 600 }}>{totalValue.toFixed(2)} {invoiceData.currency}</span>
+            </div>
+          </div>
+          
+          {/* Moved Duty Estimation to Sidebar for space */}
+          <div className="cr-card" style={{ padding: '24px' }}>
+            <h3 className="cr-card-title" style={{ fontSize: '14px', color: 'var(--cr-text-secondary)', marginBottom: '16px' }}>
+              Duty & Tax Estimation (Beta)
+            </h3>
+            <div className="cr-body-text" style={{ marginBottom: '16px', fontSize: '13px', color: 'var(--cr-text-secondary)' }}>
+              Estimate duties for {invoiceData.buyerDetails.country} based on {totalValue.toFixed(2)} {invoiceData.currency}.
+            </div>
+            {dutyEstimate ? (
+              <div style={{ background: 'var(--cr-surface-sunken)', padding: '16px', borderRadius: '8px' }}>
+                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                   <span className="cr-body-text" style={{ fontSize: '13px' }}>Estimated Duties</span>
+                   <span className="cr-mono" style={{ fontSize: '13px', fontWeight: 600 }}>{dutyEstimate.estimatedDuties} {invoiceData.currency}</span>
+                 </div>
+                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                   <span className="cr-body-text" style={{ fontSize: '13px' }}>Estimated Taxes</span>
+                   <span className="cr-mono" style={{ fontSize: '13px', fontWeight: 600 }}>{dutyEstimate.estimatedTaxes} {invoiceData.currency}</span>
+                 </div>
+              </div>
+            ) : (
               <button 
                 className="cr-btn cr-btn--secondary" 
-                onClick={calculateDuties} 
+                style={{ width: '100%' }}
+                onClick={calculateDuties}
                 disabled={isCalculating}
               >
                 {isCalculating ? "Calculating..." : "Calculate Estimate"}
               </button>
-            </div>
-            
-            <p className="cr-body-text" style={{ marginBottom: '24px' }}>
-              Destination: <strong style={{ color: '#fff' }}>{invoiceData.buyerDetails.country}</strong> &nbsp;|&nbsp; 
-              Declared Value: <strong style={{ color: '#fff' }}>{invoiceData.totalDeclaredValue.toFixed(2)} {invoiceData.currency}</strong>
-            </p>
-
-            {isCalculating && !dutyEstimate && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '16px' }}>
-                <div className="cr-skeleton" style={{ width: '100%' }}></div>
-                <div className="cr-skeleton" style={{ width: '80%' }}></div>
-                <div className="cr-skeleton" style={{ width: '90%' }}></div>
-              </div>
-            )}
-
-            {dutyEstimate && (
-              <div className="animate-fade-in" style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                  <span className="cr-body-text">Estimated Duties:</span>
-                  <span className="cr-mono" style={{ color: '#fff' }}>${(dutyEstimate.dutiesAmount || 0).toFixed(2)} USD</span>
-                </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                  <span className="cr-body-text">Estimated Taxes (VAT/GST):</span>
-                  <span className="cr-mono" style={{ color: '#fff' }}>${(dutyEstimate.taxesAmount || 0).toFixed(2)} USD</span>
-                </div>
-                <hr className="cr-divider" style={{ margin: '12px 0' }} />
-                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                  <span style={{ fontWeight: 600, color: 'var(--cr-text-primary)' }}>Total Customs Estimate:</span>
-                  <span className="cr-mono" style={{ fontWeight: 700, color: 'var(--cr-success)' }}>
-                    ${(dutyEstimate.totalCustomsAmount || 0).toFixed(2)} USD
-                  </span>
-                </div>
-              </div>
             )}
           </div>
         </div>
-
-        {/* Right Column (Sidebar details) */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          <div className="cr-card">
-            <h2 className="cr-card-title">Destination Address</h2>
-            <div className="cr-body-text" style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-               <strong style={{ color: '#fff' }}>{invoiceData.buyerDetails.name}</strong>
-               <span>{invoiceData.buyerDetails.addressLine1}</span>
-               {invoiceData.buyerDetails.addressLine2 && <span>{invoiceData.buyerDetails.addressLine2}</span>}
-               <span>{invoiceData.buyerDetails.city}, {invoiceData.buyerDetails.province} {invoiceData.buyerDetails.zip}</span>
-               <span style={{ marginTop: '8px', display: 'inline-flex' }}>
-                 <span className="cr-badge cr-badge--default">{invoiceData.buyerDetails.country}</span>
-               </span>
-               {customerEmail && (
-                 <span style={{ marginTop: '8px', fontSize: '12px', color: 'var(--cr-text-secondary)' }}>
-                   ✉ {customerEmail}
-                 </span>
-               )}
-            </div>
-          </div>
-          
-          <div className="cr-card hoverable">
-            <h2 className="cr-card-title">Summary</h2>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span className="cr-body-text">Items</span>
-              <span className="cr-mono">{invoiceData.lineItems.length}</span>
-            </div>
-
-            <hr className="cr-divider" style={{ margin: '12px 0' }} />
-            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-              <span className="cr-body-text" style={{ color: '#fff' }}>Total Value</span>
-              <span className="cr-mono" style={{ color: '#fff' }}>{invoiceData.totalDeclaredValue.toFixed(2)} {invoiceData.currency}</span>
-            </div>
-          </div>
-
-          {/* PDF Documents card */}
-          <div className="cr-card">
-            <h2 className="cr-card-title">Download Documents</h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <a
-                className="cr-btn cr-btn--secondary"
-                href={`/app/api/cn-form/${orderId}`}
-                target="_top"
-                download
-                style={{ textAlign: 'center', display: 'block' }}
-              >
-                ⬇ CN22 / CN23 Form
-              </a>
-              <a
-                className="cr-btn cr-btn--primary"
-                href={`/app/api/invoice/${orderId}`}
-                target="_top"
-                download
-                style={{ textAlign: 'center', display: 'block' }}
-              >
-                ⬇ Commercial Invoice
-              </a>
-            </div>
-          </div>
-        </div>
-
       </div>
     </div>
   );

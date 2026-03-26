@@ -1,30 +1,39 @@
-import { type LoaderFunctionArgs } from "@remix-run/node";
+import { json, type ActionFunctionArgs } from "@remix-run/node";
 import { authenticate } from "~/shopify.server";
 import { renderToBuffer } from "~/pdf/pdfUtils";
 import { CommercialInvoiceDoc } from "~/pdf/CommercialInvoice";
 import { db } from "~/db.server";
-import { fetchAndMapOrder } from "~/lib/orderMapper";
 import React from "react";
+import type { CommercialInvoiceData } from "~/types/customs";
 
-export async function loader({ request, params }: LoaderFunctionArgs) {
+export async function action({ request, params }: ActionFunctionArgs) {
+  if (request.method !== "POST") {
+    return json({ error: "Method not allowed" }, { status: 405 });
+  }
+
   const { admin, session } = await authenticate.admin(request);
   const orderId = params.orderId;
   
   if (!orderId) {
-    throw new Response("Missing order ID", { status: 400 });
+    return json({ error: "Missing order ID" }, { status: 400 });
   }
 
-  const invoiceData = await fetchAndMapOrder(admin, orderId);
-  
+  const payload = await request.json();
+  const invoiceDataData = payload.invoiceData as CommercialInvoiceData;
+
+  if (!invoiceDataData) {
+    return json({ error: "Missing invoiceData payload" }, { status: 400 });
+  }
+
   // Record it in DB — fields match InvoiceRecord model in schema.prisma
   try {
     await db.invoiceRecord.create({
       data: {
         shopDomain: session.shop,
         orderId: orderId,
-        orderName: invoiceData.orderName,
-        declaredValue: invoiceData.totalDeclaredValue,
-        currency: invoiceData.currency,
+        orderName: invoiceDataData.orderName,
+        declaredValue: invoiceDataData.totalDeclaredValue,
+        currency: invoiceDataData.currency,
         documentType: "COMMERCIAL_INVOICE",
       }
     });
@@ -33,13 +42,11 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
     console.warn('[invoice] DB record failed:', dbErr);
   }
 
-  const pdfBuffer = await renderToBuffer(React.createElement(CommercialInvoiceDoc, { data: invoiceData }));
+  const pdfBuffer = await renderToBuffer(React.createElement(CommercialInvoiceDoc, { data: invoiceDataData }));
+  const pdfBase64 = pdfBuffer.toString("base64");
 
-  return new Response(pdfBuffer as any, {
-    status: 200,
-    headers: {
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="Commercial_Invoice_${orderId}.pdf"`,
-    },
+  return json({
+    pdfBase64,
+    filename: `Commercial_Invoice_${orderId.replace('draft_', '')}.pdf`
   });
 }
