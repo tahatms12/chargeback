@@ -1,7 +1,6 @@
 import type { LoaderFunctionArgs } from "@remix-run/node";
 import { json } from "@remix-run/node";
-import { Link, Outlet, useLoaderData, useRouteError } from "@remix-run/react";
-import { boundary } from "@shopify/shopify-app-remix/server";
+import { Link, Outlet, useLoaderData } from "@remix-run/react";
 import { AppProvider } from "@shopify/shopify-app-remix/react";
 import "@shopify/polaris/build/esm/styles.css";
 import { authenticate } from "~/shopify.server";
@@ -13,7 +12,16 @@ export const loader = async ({ request }: LoaderFunctionArgs) => {
   const { session, billing } = await authenticate.admin(request);
   const shopDomain = session.shop;
 
-  await requireBilling(billing, shopDomain);
+  // Billing gate — throws a redirect Response if subscription is required.
+  // Must re-throw Responses so Remix handles the billing redirect correctly.
+  try {
+    await requireBilling(billing, shopDomain);
+  } catch (err) {
+    if (err instanceof Response) throw err;
+    // Non-Response errors from billing (e.g. DB) — log and continue so
+    // the app still loads rather than showing a broken screen.
+    console.warn("[app.tsx] requireBilling error (non-fatal):", err);
+  }
 
   // First-install: enqueue the initial catalog audit if none has run yet
   try {
@@ -60,22 +68,5 @@ export default function App() {
         </main>
       </div>
     </AppProvider>
-  );
-}
-
-export function ErrorBoundary() {
-  const error = useRouteError();
-  console.error("ErrorBoundary in app.tsx caught:", error);
-  return (
-    <div style={{ padding: "2rem", fontFamily: "system-ui, sans-serif" }}>
-      <h1 style={{ color: "#d21c1c" }}>App Route Error</h1>
-      <p style={{ color: "#ff8a8a" }}>
-        {error instanceof Error ? error.message : "Unexpected Server Error in app.tsx"}
-      </p>
-      <pre style={{ background: "#333", padding: "1rem", color: "#fff", overflowX: "auto" }}>
-        {error instanceof Error ? error.stack : JSON.stringify(error, null, 2)}
-      </pre>
-      {boundary.error(error)}
-    </div>
   );
 }

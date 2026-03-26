@@ -19,11 +19,6 @@ const shopify = shopifyApp({
   apiVersion: API_VERSION,
   scopes: process.env.SCOPES?.split(","),
   appUrl: process.env.SHOPIFY_APP_URL!,
-  authPathPrefix: "/auth",
-  auth: {
-    path: "/auth",
-    callbackPath: "/auth/callback",
-  },
   sessionStorage: new PrismaSessionStorage(db),
   distribution: AppDistribution.AppStore,
   future: {
@@ -69,20 +64,28 @@ const shopify = shopifyApp({
   hooks: {
     afterAuth: async ({ session }) => {
       // Upsert installation record after OAuth completes
-      await db.installation.upsert({
-        where: { shopDomain: session.shop },
-        create: {
-          shopDomain: session.shop,
-          accessToken: session.accessToken ?? "",
-          billingStatus: "pending",
-        },
-        update: {
-          accessToken: session.accessToken ?? "",
-        },
-      });
+      try {
+        await db.installation.upsert({
+          where: { shopDomain: session.shop },
+          create: {
+            shopDomain: session.shop,
+            accessToken: session.accessToken ?? "",
+            billingStatus: "pending",
+          },
+          update: {
+            accessToken: session.accessToken ?? "",
+          },
+        });
+      } catch (err) {
+        console.error("[afterAuth] Failed to upsert installation:", err);
+      }
 
       // Register webhooks declared in the webhooks config above
-      shopify.registerWebhooks({ session });
+      try {
+        await shopify.registerWebhooks({ session });
+      } catch (err) {
+        console.error("[afterAuth] Failed to register webhooks:", err);
+      }
     },
   },
 });

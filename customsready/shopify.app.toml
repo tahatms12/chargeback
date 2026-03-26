@@ -28,7 +28,9 @@ optional_scopes = [ ]
 use_legacy_install_flow = false
 
 [auth]
-redirect_urls = [ ]
+redirect_urls = [
+  "https://customsready.uplifttechnologies.pro/auth/callback"
+]
 
 [pos]
 embedded = false
