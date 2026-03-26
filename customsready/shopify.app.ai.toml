@@ -1,7 +1,9 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
-client_id = "aacbcf67f49150c977c7fec30ef95d17"
-name = "customsready: AI Powered"
+# ── ARCHIVED: CustomsReady Lite (submission variant) ──────────────────────────
+# Not the active deployment. Use shopify.app.toml for the deployed AI Powered app.
+client_id = "b401118ff3d466cd8ac36857e7ac845f"
+name = "CustomsReady Lite"
 application_url = "https://customsready.uplifttechnologies.pro"
 embedded = true
 
@@ -22,13 +24,14 @@ customer_data_request_url = "https://customsready.uplifttechnologies.pro/webhook
 shop_deletion_url = "https://customsready.uplifttechnologies.pro/webhooks"
 
 [access_scopes]
-# Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
 scopes = "read_orders,read_products"
 optional_scopes = [ ]
 use_legacy_install_flow = false
 
 [auth]
-redirect_urls = [ ]
+redirect_urls = [
+  "https://customsready.uplifttechnologies.pro/auth/callback"
+]
 
 [pos]
 embedded = false
