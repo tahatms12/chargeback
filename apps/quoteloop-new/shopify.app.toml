@@ -6,15 +6,13 @@ embedded = true
 [build]
 automatically_update_urls_on_dev = true
 dev_store_url = ""
+include_config_on_deploy = true
 
 [access_scopes]
 scopes = "read_draft_orders,write_draft_orders,read_customers"
 
 [auth]
 redirect_urls = [
-  "https://quoteloop-prod.netlify.app/auth/callback",
-  "https://quoteloop-prod.netlify.app/auth/shopify/callback",
-  "https://quoteloop-prod.netlify.app/api/auth/callback",
   "https://quoteloop.uplifttechnologies.pro/auth/callback",
   "https://quoteloop.uplifttechnologies.pro/auth/shopify/callback",
   "https://quoteloop.uplifttechnologies.pro/api/auth/callback"
@@ -38,6 +36,11 @@ api_version = "2025-04"
   [[webhooks.subscriptions]]
   topics = ["shop/redact"]
   uri = "/webhooks"
+
+[webhooks.privacy_compliance]
+customer_deletion_url = "https://quoteloop.uplifttechnologies.pro/webhooks"
+customer_data_request_url = "https://quoteloop.uplifttechnologies.pro/webhooks"
+shop_deletion_url = "https://quoteloop.uplifttechnologies.pro/webhooks"
 
 [pos]
 embedded = false

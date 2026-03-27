@@ -7,6 +7,9 @@ dist
 .shopify
 prisma/dev.db
 prisma/dev.db-journal
+prisma/dev.sqlite
+prisma/dev.sqlite-shm
+prisma/dev.sqlite-wal
 
 # Vite cache
 **/*.timestamp-*.mjs

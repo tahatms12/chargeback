@@ -3,19 +3,12 @@ client_id = "f1f6c46cef65eb4c90663b2bc88fd1e6"
 application_url = "https://poref.uplifttechnologies.pro"
 embedded = true
 
-
 [auth]
 redirect_urls = [
   "https://poref.uplifttechnologies.pro/auth/callback",
   "https://poref.uplifttechnologies.pro/auth/shopify/callback",
   "https://poref.uplifttechnologies.pro/api/auth/callback"
 ]
-
-[access]
-admin = true
-
-[access.admin]
-direct_api_mode = "online"
 
 [access_scopes]
 # read_all_orders justified: merchants require search across historical orders
@@ -28,32 +21,31 @@ api_version = "2025-04"
   [[webhooks.subscriptions]]
   topics = ["orders/create"]
   uri = "/webhooks"
-  compliance_topics = false
 
   [[webhooks.subscriptions]]
   topics = ["orders/updated"]
   uri = "/webhooks"
-  compliance_topics = false
 
   [[webhooks.subscriptions]]
   topics = ["app/uninstalled"]
   uri = "/webhooks"
-  compliance_topics = false
 
   [[webhooks.subscriptions]]
   topics = ["customers/data_request"]
   uri = "/webhooks"
-  compliance_topics = true
 
   [[webhooks.subscriptions]]
   topics = ["customers/redact"]
   uri = "/webhooks"
-  compliance_topics = true
 
   [[webhooks.subscriptions]]
   topics = ["shop/redact"]
   uri = "/webhooks"
-  compliance_topics = true
+
+[webhooks.privacy_compliance]
+customer_deletion_url = "https://poref.uplifttechnologies.pro/webhooks"
+customer_data_request_url = "https://poref.uplifttechnologies.pro/webhooks"
+shop_deletion_url = "https://poref.uplifttechnologies.pro/webhooks"
 
 [app_proxy]
 url = "https://poref.uplifttechnologies.pro/proxy"

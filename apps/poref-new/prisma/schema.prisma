@@ -34,7 +34,7 @@ model Installation {
   id                  String    @id @default(cuid())
   shopDomain          String    @unique
   offlineAccessToken  String    // encrypted at rest via env-keyed AES-256-GCM
-  billingStatus       BillingStatus @default(PENDING)
+  billingStatus       String @default("PENDING")
   appSubscriptionId   String?
   planName            String    @default("basic")
   installedAt         DateTime  @default(now())
@@ -49,8 +49,8 @@ model Configuration {
   id                           String   @id @default(cuid())
   shopDomain                   String   @unique
   fieldLabel                   String   @default("PO / Reference Number")
-  enforcementMode              EnforcementMode @default(OPTIONAL)
-  requiredTags                 String[] // PostgreSQL text[] - customer tags that trigger required enforcement
+  enforcementMode              String @default("OPTIONAL")
+  requiredTags                 String @default("[]") // Fallback for postgres text[]
   posEnabled                   Boolean  @default(true)
   orderPrinterSnippetVersion   Int      @default(1)
   notificationSnippetVersion   Int      @default(1)
@@ -67,7 +67,7 @@ model ReferenceIndex {
   orderGid           String        // gid://shopify/Order/...
   orderName          String        // "#1001"
   referenceValue     String
-  sourceChannel      SourceChannel @default(ONLINE)
+  sourceChannel      String @default("ONLINE")
   customerTagMatch   Boolean       @default(false)
   missingReference   Boolean       @default(false)
   createdAt          DateTime      @default(now())
@@ -85,8 +85,8 @@ model AuditLog {
   id         String     @id @default(cuid())
   shopDomain String
   orderId    String
-  action     AuditAction
-  actorType  ActorType
+  action     String
+  actorType  String
   oldValue   String?
   newValue   String?
   notes      String?
@@ -102,61 +102,11 @@ model WebhookEvent {
   topic       String
   eventId     String   // X-Shopify-Webhook-Id header
   processedAt DateTime @default(now())
-  status      WebhookStatus @default(OK)
+  status      String @default("OK")
   error       String?
 
   @@unique([shopDomain, topic, eventId])   // idempotency key
   @@index([shopDomain, topic])
 }
 
-// ─── Enums ───────────────────────────────────────────────────────────────────
 
-enum BillingStatus {
-  PENDING
-  ACTIVE
-  CANCELLED
-  EXPIRED
-  FROZEN
-}
-
-enum EnforcementMode {
-  ALL        // required for all buyers
-  TAGGED     // required only for tagged customers
-  OPTIONAL   // field shown, not required
-}
-
-enum SourceChannel {
-  ONLINE
-  POS
-  MANUAL   // added/edited via order action
-  API      // set via external API call (future)
-}
-
-enum AuditAction {
-  CREATED_FROM_CHECKOUT
-  CREATED_FROM_POS
-  CREATED_MANUAL
-  UPDATED_MANUAL
-  UPDATED_WEBHOOK
-  DELETED
-  GDPR_REDACTED
-}
-
-enum AuditActorType {
-  WEBHOOK
-  STAFF
-  SYSTEM
-}
-
-// Prisma doesn't allow enum renaming - using string alias in code
-enum ActorType {
-  WEBHOOK
-  STAFF
-  SYSTEM
-}
-
-enum WebhookStatus {
-  OK
-  ERROR
-  SKIPPED
-}

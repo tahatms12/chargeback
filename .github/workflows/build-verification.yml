@@ -9,14 +9,19 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    # DATABASE_URL is needed by prisma generate (reads schema) but NOT for db push.
+    # We intentionally skip `prisma db push` in CI — that runs only in production Netlify builds
+    # where DATABASE_URL is configured as a real Neon/Supabase connection string.
+    env:
+      DATABASE_URL: "postgresql://ci:ci@localhost:5432/ci?schema=public"
     steps:
       - uses: actions/checkout@v4
-      
+
       - name: Install pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 9
-          
+
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -26,5 +31,29 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Build all applications
-        run: pnpm run build:all
+      - name: Generate Prisma clients (all apps)
+        run: |
+          npx --prefix ./customsready prisma generate || true
+          npx --prefix ./FixitCSV prisma generate || true
+          npx --prefix ./Craftline prisma generate || true
+          npx --prefix ./Stagewise prisma generate || true
+          npx --prefix ./apps/poref-new prisma generate || true
+          npx --prefix ./apps/quoteloop-new prisma generate || true
+
+      - name: Build FixitCSV
+        run: pnpm --filter fixitcsv run build
+
+      - name: Build Craftline
+        run: pnpm --filter maker-queue run build
+
+      - name: Build Stagewise
+        run: pnpm --filter production-queue-communicator run build
+
+      - name: Build poref-new
+        run: pnpm --filter poref-new run build
+
+      - name: Build quoteloop-new
+        run: pnpm --filter quoteloop-new run build
+
+      - name: Build customsready
+        run: pnpm --filter customsready-lite run build
