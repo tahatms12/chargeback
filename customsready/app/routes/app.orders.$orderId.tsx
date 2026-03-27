@@ -26,16 +26,20 @@ export default function OrderDetails() {
   const aiFetcher = useFetcher<any>();
   const navigate = useNavigate();
 
-  // Local state for editable line items
+  // Local state for editable items
   const [lineItems, setLineItems] = useState<LineItemCustoms[]>(invoiceData.lineItems);
+  const [buyerDetails, setBuyerDetails] = useState(invoiceData.buyerDetails);
+  
   const [activeAiRowIndex, setActiveAiRowIndex] = useState<number | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [autoAiTriggered, setAutoAiTriggered] = useState(false);
 
   // Recalculate total value based on edits
   const totalValue = lineItems.reduce((acc, item) => acc + (item.unitPrice * item.quantity), 0);
   
   const currentInvoiceData = {
     ...invoiceData,
+    buyerDetails,
     lineItems,
     totalDeclaredValue: totalValue
   };
@@ -54,21 +58,21 @@ export default function OrderDetails() {
 
   const sendEmailToCustomer = () => {
     emailFetcher.submit(
-      {},
-      { method: "POST", action: `/app/api/send-customs-email/${orderId}` }
+      { email: buyerDetails.email, name: buyerDetails.name } as any,
+      { method: "POST", action: `/app/api/send-customs-email/${orderId}`, encType: "application/json" }
     );
   };
 
   const handleDownloadInvoice = () => {
     invoiceFetcher.submit(
-      { invoiceData: currentInvoiceData },
+      { invoiceData: currentInvoiceData } as any,
       { method: "POST", action: `/app/api/invoice/${orderId}`, encType: "application/json" }
     );
   };
 
   const handleDownloadCN = () => {
     cnFetcher.submit(
-      { invoiceData: currentInvoiceData },
+      { invoiceData: currentInvoiceData } as any,
       { method: "POST", action: `/app/api/cn-form/${orderId}`, encType: "application/json" }
     );
   };
@@ -89,14 +93,29 @@ export default function OrderDetails() {
         const newItems = [...lineItems];
         newItems[activeAiRowIndex].hsCode = aiFetcher.data.hsCode;
         setLineItems(newItems);
-        shopify.toast.show(`AI: ${aiFetcher.data.hsCode} (Trials left: ${aiFetcher.data.usageRemaining})`);
+        (shopify as any).toast.show(`AI: ${aiFetcher.data.hsCode} (Trials left: ${aiFetcher.data.usageRemaining})`);
       } else if (aiFetcher.data.error) {
         setAiError(aiFetcher.data.error);
-        shopify.toast.show(aiFetcher.data.error, { isError: true });
+        (shopify as any).toast.show(aiFetcher.data.error, { isError: true });
       }
       setActiveAiRowIndex(null);
     }
   }, [aiFetcher.state, aiFetcher.data]);
+
+  // Auto-trigger AI on page load for the first item missing an HS code
+  // If we iterated all of them at once, we might exhaust trials immediately, 
+  // so we trigger sequentially via activeAiRowIndex state tracking if needed, 
+  // or just trigger the first empty one automatically.
+  useEffect(() => {
+    if (!autoAiTriggered && aiFetcher.state === "idle" && activeAiRowIndex === null) {
+      const firstMissingIndex = lineItems.findIndex(i => !i.hsCode && i.title !== "Dummy 3");
+      if (firstMissingIndex !== -1 && !aiError) {
+        suggestHsCode(firstMissingIndex, lineItems[firstMissingIndex].title);
+      } else {
+        setAutoAiTriggered(true); // Don't trigger again if all are full or error occurred
+      }
+    }
+  }, [lineItems, autoAiTriggered, aiFetcher.state, activeAiRowIndex, aiError]);
 
   // Download PDF helper
   const triggerDownload = (base64: string, filename: string) => {
@@ -137,6 +156,10 @@ export default function OrderDetails() {
     setLineItems(newItems);
   };
 
+  const updateBuyerDetail = (field: keyof typeof buyerDetails, value: string) => {
+    setBuyerDetails({ ...buyerDetails, [field]: value });
+  };
+
   const isCalculating = fetcher.state !== "idle";
   const isSendingEmail = emailFetcher.state !== "idle";
   const isDownloadingInvoice = invoiceFetcher.state !== "idle";
@@ -144,8 +167,8 @@ export default function OrderDetails() {
   
   const dutyEstimate = fetcher.data?.estimate;
   const emailResult = emailFetcher.data;
-  const customerEmail = invoiceData.buyerDetails.email;
-  const hasEmail = !!customerEmail;
+  const customerEmail = buyerDetails.email;
+  const hasEmail = !!customerEmail && customerEmail.includes('@');
 
   return (
     <div className="cr-dashboard animate-fade-in-up">
@@ -189,7 +212,7 @@ export default function OrderDetails() {
              }}
              onClick={sendEmailToCustomer}
              disabled={!hasEmail || isSendingEmail}
-             title={!hasEmail ? 'No customer email on this order' : `Email ${customerEmail}`}
+             title={!hasEmail ? 'No valid customer email attached' : `Email ${customerEmail}`}
            >
              {isSendingEmail ? 'Sending...' : '✉ Email Customer'}
            </button>
@@ -311,24 +334,74 @@ export default function OrderDetails() {
             <h3 className="cr-card-title" style={{ fontSize: '14px', color: 'var(--cr-text-secondary)', marginBottom: '16px' }}>
               Destination Address
             </h3>
-            <div className="cr-body-text" style={{ fontSize: '15px', lineHeight: '1.5' }}>
-               <strong>{invoiceData.buyerDetails.name || 'N/A'}</strong><br />
-               {invoiceData.buyerDetails.addressLine1}
-               {invoiceData.buyerDetails.addressLine2 && <><br />{invoiceData.buyerDetails.addressLine2}</>}
-               <br />
-               {invoiceData.buyerDetails.city}, {invoiceData.buyerDetails.province} {invoiceData.buyerDetails.zip}<br />
-               {invoiceData.buyerDetails.country}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <input 
+                className="cr-input" 
+                placeholder="Name" 
+                value={buyerDetails.name} 
+                onChange={(e) => updateBuyerDetail('name', e.target.value)} 
+                style={{ width: '100%', padding: '6px 10px', fontSize: '13px' }}
+              />
+              <input 
+                className="cr-input" 
+                placeholder="Address Line 1" 
+                value={buyerDetails.addressLine1} 
+                onChange={(e) => updateBuyerDetail('addressLine1', e.target.value)} 
+                style={{ width: '100%', padding: '6px 10px', fontSize: '13px' }}
+              />
+              <input 
+                className="cr-input" 
+                placeholder="Address Line 2 (Optional)" 
+                value={buyerDetails.addressLine2 || ''} 
+                onChange={(e) => updateBuyerDetail('addressLine2', e.target.value)} 
+                style={{ width: '100%', padding: '6px 10px', fontSize: '13px' }}
+              />
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <input 
+                  className="cr-input" 
+                  placeholder="City" 
+                  value={buyerDetails.city} 
+                  onChange={(e) => updateBuyerDetail('city', e.target.value)} 
+                  style={{ width: '100%', padding: '6px 10px', fontSize: '13px' }}
+                />
+                <input 
+                  className="cr-input" 
+                  placeholder="State/Prov" 
+                  value={buyerDetails.province || ''} 
+                  onChange={(e) => updateBuyerDetail('province', e.target.value)} 
+                  style={{ width: '60px', padding: '6px 10px', fontSize: '13px' }}
+                />
+                <input 
+                  className="cr-input" 
+                  placeholder="Zip" 
+                  value={buyerDetails.zip} 
+                  onChange={(e) => updateBuyerDetail('zip', e.target.value)} 
+                  style={{ width: '80px', padding: '6px 10px', fontSize: '13px' }}
+                />
+              </div>
+              <input 
+                className="cr-input" 
+                placeholder="Country (e.g. US)" 
+                value={buyerDetails.country} 
+                onChange={(e) => updateBuyerDetail('country', e.target.value.toUpperCase())} 
+                maxLength={2}
+                style={{ width: '80px', padding: '6px 10px', fontSize: '13px', textTransform: 'uppercase' }}
+              />
             </div>
-            {customerEmail && (
-              <div style={{ marginTop: '12px', fontSize: '13px', color: 'var(--cr-text-secondary)' }}>
-                ✉ {customerEmail}
+            
+            <div style={{ marginTop: '16px', borderTop: '1px solid var(--cr-border)', paddingTop: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '13px', color: 'var(--cr-text-secondary)' }}>✉</span>
+                <input 
+                  type="email"
+                  className="cr-input" 
+                  placeholder="Customer Email (for tracking)" 
+                  value={buyerDetails.email || ''} 
+                  onChange={(e) => updateBuyerDetail('email', e.target.value)} 
+                  style={{ width: '100%', padding: '6px 10px', fontSize: '13px' }}
+                />
               </div>
-            )}
-            {!customerEmail && (
-              <div style={{ marginTop: '12px', fontSize: '13px', padding: '6px 10px', background: 'var(--cr-surface-sunken)', borderRadius: '6px', display: 'inline-block' }}>
-                No email attached
-              </div>
-            )}
+            </div>
           </div>
 
           <div className="cr-card" style={{ padding: '24px' }}>

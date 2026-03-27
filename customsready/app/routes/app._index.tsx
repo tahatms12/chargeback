@@ -28,23 +28,6 @@ export async function loader({ request }: LoaderFunctionArgs) {
               }
             }
           }
-        }
-        draftOrders(first: 20, sortKey: UPDATED_AT, reverse: true) {
-          edges {
-            node {
-              id
-              name
-              createdAt
-              status
-              totalPriceSet {
-                shopMoney {
-                  amount
-                  currencyCode
-                }
-              }
-            }
-          }
-        }
       }`
     );
 
@@ -64,20 +47,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
       isDraft: false,
     }));
 
-    const draftOrders = (json.data?.draftOrders?.edges ?? []).map(({ node }: any) => ({
-      id: node.id.split("/").pop() as string,
-      gid: node.id,
-      name: node.name,
-      createdAt: node.createdAt,
-      financialStatus: node.status ?? "DRAFT",
-      fulfillmentStatus: "UNFULFILLED",
-      total: `${node.totalPriceSet.shopMoney.amount} ${node.totalPriceSet.shopMoney.currencyCode}`,
-      isDraft: true,
-    }));
-
-    // Merge: placed orders first, then drafts
-    orders = [...placedOrders, ...draftOrders].sort(
-      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    orders = placedOrders.sort(
+      (a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     ).slice(0, 25);
 
   } catch (err) {
