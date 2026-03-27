@@ -1,5 +1,5 @@
 import { json, type LoaderFunctionArgs } from "@remix-run/node";
-import { useLoaderData, useFetcher, useNavigate } from "@remix-run/react";
+import { useLoaderData, useFetcher, useNavigate, useRouteError, isRouteErrorResponse } from "@remix-run/react";
 import { authenticate } from "~/shopify.server";
 import { fetchAndMapOrder } from "~/lib/orderMapper";
 import { useState, useEffect } from "react";
@@ -380,3 +380,48 @@ export default function OrderDetails() {
     </div>
   );
 }
+
+export function ErrorBoundary() {
+  const error = useRouteError();
+  const navigate = useNavigate();
+  
+  let errorMessage = "An unknown error occurred";
+  if (isRouteErrorResponse(error)) {
+    errorMessage = error.data || error.statusText;
+  } else if (error instanceof Error) {
+    errorMessage = error.message;
+  }
+
+  return (
+    <div className="cr-dashboard animate-fade-in-up">
+      <header style={{ marginBottom: '32px' }}>
+         <button className="cr-btn cr-btn--ghost" onClick={() => navigate('/app')} style={{ paddingLeft: 0, marginBottom: '8px' }}>
+            &larr; Back to Orders
+         </button>
+         <h1 className="cr-hero-title" style={{ fontSize: '2rem', color: '#991b1b' }}>
+           Order Could Not Be Loaded
+         </h1>
+      </header>
+      <div className="cr-card" style={{ padding: '32px', textAlign: 'center' }}>
+        <div style={{ fontSize: '48px', marginBottom: '16px' }}>⚠️</div>
+        <p className="cr-body-text" style={{ fontSize: '16px', color: 'var(--cr-text-secondary)' }}>
+          We encountered an error while trying to load this order's details.
+        </p>
+        <div style={{ 
+          marginTop: '24px', 
+          padding: '16px', 
+          background: '#fee2e2', 
+          color: '#991b1b', 
+          borderRadius: '8px',
+          display: 'inline-block',
+          textAlign: 'left',
+          maxWidth: '100%'
+        }}>
+          <strong>Error Details:</strong><br/>
+          <span style={{ fontFamily: 'monospace', fontSize: '13px' }}>{errorMessage}</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+

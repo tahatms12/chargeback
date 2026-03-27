@@ -246,12 +246,34 @@ export async function fetchAndMapOrder(
     const response = await admin.graphql(ORDER_DETAIL_QUERY, {
       variables: { id: gid },
     });
-    const { data } = await response.json();
-    const order = data.order;
-    const shopData = data.shop;
+    
+    const json = await response.json();
+    
+    if (json.errors) {
+      console.error(`GraphQL errors for order ${numericId}:`, json.errors);
+      throw new Error(`Shopify API Error: ${json.errors[0]?.message || "Access denied or invalid ID"}`);
+    }
 
-    if (!order || !order.shippingAddress) {
-      throw new Error("Order not found or missing shipping address");
+    const data = json.data;
+    if (!data || !data.order) {
+      throw new Error(`Order ${numericId} not found or inaccessible`);
+    }
+
+    const order = data.order;
+    const shopData = data.shop || { name: "Unknown Shop" };
+
+    if (!order.shippingAddress) {
+      // Placed orders might lack a shipping address (e.g. digital goods, POS)
+      order.shippingAddress = {
+        name: order.name || "N/A",
+        address1: "No Shipping Address",
+        address2: "",
+        city: "",
+        provinceCode: "",
+        zip: "",
+        countryCodeV2: "N/A",
+        phone: "",
+      };
     }
 
     return buildInvoiceData(order, shopData, orderId);
