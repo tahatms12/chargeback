@@ -430,11 +430,11 @@ export default function OrderDetails() {
               <div style={{ background: 'var(--cr-surface-sunken)', padding: '16px', borderRadius: '8px' }}>
                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                    <span className="cr-body-text" style={{ fontSize: '13px' }}>Estimated Duties</span>
-                   <span className="cr-mono" style={{ fontSize: '13px', fontWeight: 600 }}>{dutyEstimate.estimatedDuties} {invoiceData.currency}</span>
+                   <span className="cr-mono" style={{ fontSize: '13px', fontWeight: 600 }}>{dutyEstimate.dutyAmount} {invoiceData.currency}</span>
                  </div>
                  <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                    <span className="cr-body-text" style={{ fontSize: '13px' }}>Estimated Taxes</span>
-                   <span className="cr-mono" style={{ fontSize: '13px', fontWeight: 600 }}>{dutyEstimate.estimatedTaxes} {invoiceData.currency}</span>
+                   <span className="cr-mono" style={{ fontSize: '13px', fontWeight: 600 }}>{dutyEstimate.taxAmount} {invoiceData.currency}</span>
                  </div>
               </div>
             ) : (

@@ -1,6 +1,7 @@
 import { json, type LoaderFunctionArgs } from "@remix-run/node";
-import { useLoaderData, useNavigate } from "@remix-run/react";
+import { useLoaderData, useNavigate, useFetcher } from "@remix-run/react";
 import { authenticate } from "~/shopify.server";
+import { useEffect } from "react";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { admin } = await authenticate.admin(request);
@@ -29,6 +30,22 @@ export async function loader({ request }: LoaderFunctionArgs) {
             }
           }
         }
+        draftOrders(first: 20, query: "tag:CustomsReady_Manual", sortKey: UPDATED_AT, reverse: true) {
+          edges {
+            node {
+              id
+              name
+              createdAt
+              status
+              totalPriceSet {
+                shopMoney {
+                  amount
+                  currencyCode
+                }
+              }
+            }
+          }
+        }
       }`
     );
 
@@ -48,7 +65,18 @@ export async function loader({ request }: LoaderFunctionArgs) {
       isDraft: false,
     }));
 
-    orders = placedOrders.sort(
+    const draftOrders = (json.data?.draftOrders?.edges ?? []).map(({ node }: any) => ({
+      id: node.id.split("/").pop() as string,
+      gid: node.id,
+      name: node.name,
+      createdAt: node.createdAt,
+      financialStatus: node.status ?? "DRAFT",
+      fulfillmentStatus: "UNFULFILLED",
+      total: `${node.totalPriceSet?.shopMoney?.amount || "0"} ${node.totalPriceSet?.shopMoney?.currencyCode || "USD"}`,
+      isDraft: true,
+    }));
+
+    orders = [...placedOrders, ...draftOrders].sort(
       (a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
     ).slice(0, 25);
 
@@ -62,6 +90,21 @@ export async function loader({ request }: LoaderFunctionArgs) {
 export default function Index() {
   const { orders } = useLoaderData<typeof loader>();
   const navigate = useNavigate();
+  const createFetcher = useFetcher<any>();
+
+  useEffect(() => {
+    if (createFetcher.state === "idle" && createFetcher.data) {
+      if (createFetcher.data.success && createFetcher.data.orderId) {
+        navigate(`/app/orders/${createFetcher.data.orderId}`);
+      } else if (createFetcher.data.error) {
+        (shopify as any).toast.show(createFetcher.data.error, { isError: true });
+      }
+    }
+  }, [createFetcher.state, createFetcher.data, navigate]);
+
+  const handleCreateInvoice = () => {
+    createFetcher.submit({}, { method: "POST", action: "/app/api/create-draft-order" });
+  };
 
   const getFulfillmentBadgeClass = (status: string) => {
     switch (status) {
@@ -83,9 +126,18 @@ export default function Index() {
 
   return (
     <div className="cr-dashboard animate-fade-in-up">
-      <header style={{ marginBottom: '40px' }}>
-        <h1 className="cr-hero-title">Dashboard</h1>
-        <p className="cr-hero-sub">Welcome back. Streamline your international shipping with automated customs documentation.</p>
+      <header style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
+          <h1 className="cr-hero-title">Dashboard</h1>
+          <p className="cr-hero-sub">Welcome back. Streamline your international shipping with automated customs documentation.</p>
+        </div>
+        <button 
+          className="cr-btn cr-btn--primary" 
+          onClick={handleCreateInvoice}
+          disabled={createFetcher.state !== "idle"}
+        >
+          {createFetcher.state !== "idle" ? "Creating..." : "+ Create Manual Invoice"}
+        </button>
       </header>
       
       <div className="cr-stat-grid">
