@@ -14,29 +14,29 @@ export async function action({ request }: ActionFunctionArgs) {
     return json({ error: "Product title is required" }, { status: 400 });
   }
 
-  // Check trial limits
-  const config = await db.configuration.findUnique({
-    where: { shopDomain: session.shop },
-  });
-
-  const currentUsage = config?.aiLookupCount || 0;
-  if (currentUsage >= 3) {
-    return json(
-      { error: "Free trial limit reached (3/3 used). Please upgrade for more AI lookups." },
-      { status: 403 }
-    );
-  }
-
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) {
-    return json(
-      { error: "GEMINI_API_KEY is not configured on the server." },
-      { status: 500 }
-    );
-  }
-
-  // Call Gemini REST API
   try {
+    // Check trial limits
+    const config = await db.configuration.findUnique({
+      where: { shopDomain: session.shop },
+    });
+
+    const currentUsage = config?.aiLookupCount || 0;
+    if (currentUsage >= 3) {
+      return json(
+        { error: "Free trial limit reached (3/3 used). Please upgrade for more AI lookups." },
+        { status: 403 }
+      );
+    }
+
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      return json(
+        { error: "GEMINI_API_KEY is not configured on the server." },
+        { status: 500 }
+      );
+    }
+
+    // Call Gemini REST API
     const prompt = `You are a customs classification expert.
 Suggest the most appropriate 6-digit Harmonized System (HS) code for the following product:
 Title: "${productTitle}"
@@ -92,6 +92,7 @@ Return ONLY the 6-digit code with no additional text, formatting, or punctuation
     });
 
   } catch (error: any) {
-    return json({ error: error.message || "Failed to suggest HS Code" }, { status: 500 });
+    console.error("[suggest-hs-code] Failed:", error);
+    return json({ error: error.message || "Failed to suggest HS Code due to an unexpected server issue." }, { status: 500 });
   }
 }
