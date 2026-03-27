@@ -29,23 +29,21 @@ export async function action({ request }: ActionFunctionArgs) {
     }
 
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
+    if (!apiKey || apiKey.trim() === "") {
       return json(
-        { error: "GEMINI_API_KEY is not configured on the server." },
+        { error: "GEMINI_API_KEY is not configured on the server. Please set it in Netlify environment variables." },
         { status: 500 }
       );
     }
 
     // Call Gemini REST API
     const prompt = `You are a customs classification expert.
-Suggest the most appropriate 6-digit Harmonized System (HS) code for the following product:
-Title: "${productTitle}"
-${productDescription ? `Description: "${productDescription}"` : ""}
-
-Return ONLY the 6-digit code with no additional text, formatting, or punctuation.`;
+For the following product, return ONLY a 6-digit Harmonized System (HS) code.
+Do NOT include any explanation, punctuation, spaces or dots — just the 6 digits.
+Product: "${productTitle}"${productDescription ? `\nDescription: "${productDescription}"` : ""}\nResponse (6 digits only):`;
 
     const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`,
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },

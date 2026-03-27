@@ -2,9 +2,9 @@
 import { json, type ActionFunctionArgs } from "@remix-run/node";
 import { authenticate } from "~/shopify.server";
 
-const ORDER_SEND_EMAIL_MUTATION = `#graphql
-  mutation orderSendEmail($input: OrderSendEmailInput!) {
-    orderSendEmail(input: $input) {
+const ORDER_INVOICE_SEND_MUTATION = `#graphql
+  mutation orderInvoiceSend($id: ID!, $email: EmailInput) {
+    orderInvoiceSend(id: $id, email: $email) {
       order {
         id
         name
@@ -19,8 +19,8 @@ const ORDER_SEND_EMAIL_MUTATION = `#graphql
 `;
 
 const DRAFT_SEND_INVOICE_MUTATION = `#graphql
-  mutation draftOrderSendInvoice($id: ID!, $email: EmailInput!) {
-    draftOrderSendInvoice(id: $id, email: $email) {
+  mutation draftOrderInvoiceSend($id: ID!, $email: EmailInput!) {
+    draftOrderInvoiceSend(id: $id, email: $email) {
       draftOrder {
         id
         name
@@ -66,34 +66,34 @@ export async function action({ request, params }: ActionFunctionArgs) {
       });
       result = await response.json();
       
-      const userErrors = result?.data?.draftOrderSendInvoice?.userErrors ?? [];
+      const userErrors = result?.data?.draftOrderInvoiceSend?.userErrors ?? [];
       if (userErrors.length > 0) {
         throw new Error(userErrors.map((e: any) => e.message).join("; "));
       }
       
       return json({ 
         success: true, 
-        orderName: result?.data?.draftOrderSendInvoice?.draftOrder?.name ?? rawOrderId, 
+        orderName: result?.data?.draftOrderInvoiceSend?.draftOrder?.name ?? rawOrderId, 
         customerEmail: email 
       });
       
     } else {
-      const input: any = { id: gid, customMessage };
-      if (email) input.to = email;
-      
-      const response = await admin.graphql(ORDER_SEND_EMAIL_MUTATION, {
-        variables: { input },
+      const emailInput: any = { customMessage };
+      if (email) emailInput.to = email;
+
+      const response = await admin.graphql(ORDER_INVOICE_SEND_MUTATION, {
+        variables: { id: gid, email: emailInput },
       });
       result = await response.json();
-      
-      const userErrors = result?.data?.orderSendEmail?.userErrors ?? [];
+
+      const userErrors = result?.data?.orderInvoiceSend?.userErrors ?? [];
       if (userErrors.length > 0) {
         throw new Error(userErrors.map((e: any) => e.message).join("; "));
       }
-      
-      const orderName = result?.data?.orderSendEmail?.order?.name ?? rawOrderId;
-      const customerEmail = result?.data?.orderSendEmail?.order?.email ?? email;
-      
+
+      const orderName = result?.data?.orderInvoiceSend?.order?.name ?? rawOrderId;
+      const customerEmail = result?.data?.orderInvoiceSend?.order?.email ?? email;
+
       return json({ success: true, orderName, customerEmail });
     }
   } catch (err) {
