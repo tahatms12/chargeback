@@ -30,7 +30,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
             }
           }
         }
-        draftOrders(first: 20, query: "tag:CustomsReady_Manual", sortKey: UPDATED_AT, reverse: true) {
+        draftOrders(first: 20, sortKey: UPDATED_AT, reverse: true) {
           edges {
             node {
               id

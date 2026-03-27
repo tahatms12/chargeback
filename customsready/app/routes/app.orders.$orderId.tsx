@@ -33,6 +33,7 @@ export default function OrderDetails() {
   const [activeAiRowIndex, setActiveAiRowIndex] = useState<number | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
   const [autoAiTriggered, setAutoAiTriggered] = useState(false);
+  const [lastEmailData, setLastEmailData] = useState<any>(null);
 
   // Recalculate total value based on edits
   const totalValue = lineItems.reduce((acc, item) => acc + (item.unitPrice * item.quantity), 0);
@@ -47,7 +48,7 @@ export default function OrderDetails() {
   const calculateDuties = () => {
     fetcher.submit(
       { 
-        destinationCountry: invoiceData.buyerDetails.country,
+        destinationCountry: buyerDetails.country || "US",
         totalValue: totalValue,
         currency: invoiceData.currency,
         hsCode: lineItems[0]?.hsCode || ""
@@ -86,6 +87,22 @@ export default function OrderDetails() {
     );
   };
 
+  // Listen for Email results
+  useEffect(() => {
+    if (emailFetcher.state === "idle" && emailFetcher.data && emailFetcher.data !== lastEmailData) {
+      if (emailFetcher.data.success) {
+        if (typeof shopify !== 'undefined' && (shopify as any).toast) {
+          (shopify as any).toast.show(`Email sent to ${emailFetcher.data.customerEmail}`);
+        }
+      } else if (emailFetcher.data.error) {
+        if (typeof shopify !== 'undefined' && (shopify as any).toast) {
+          (shopify as any).toast.show(`Failed to send email: ${emailFetcher.data.error}`, { isError: true });
+        }
+      }
+      setLastEmailData(emailFetcher.data);
+    }
+  }, [emailFetcher.state, emailFetcher.data, lastEmailData]);
+
   // Listen for AI results
   useEffect(() => {
     if (aiFetcher.state === "idle" && aiFetcher.data && activeAiRowIndex !== null) {
@@ -93,10 +110,14 @@ export default function OrderDetails() {
         const newItems = [...lineItems];
         newItems[activeAiRowIndex].hsCode = aiFetcher.data.hsCode;
         setLineItems(newItems);
-        (shopify as any).toast.show(`AI: ${aiFetcher.data.hsCode} (Trials left: ${aiFetcher.data.usageRemaining})`);
+        if (typeof shopify !== 'undefined' && (shopify as any).toast) {
+          (shopify as any).toast.show(`AI: ${aiFetcher.data.hsCode} (Trials left: ${aiFetcher.data.usageRemaining})`);
+        }
       } else if (aiFetcher.data.error) {
         setAiError(aiFetcher.data.error);
-        (shopify as any).toast.show(aiFetcher.data.error, { isError: true });
+        if (typeof shopify !== 'undefined' && (shopify as any).toast) {
+          (shopify as any).toast.show(aiFetcher.data.error, { isError: true });
+        }
       }
       setActiveAiRowIndex(null);
     }

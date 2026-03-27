@@ -160,8 +160,8 @@ function mapLineItems(edges: any[]): LineItemCustoms[] {
       title: node.title,
       description: "",
       quantity: node.quantity,
-      unitPrice: parseFloat(node.originalUnitPriceSet.shopMoney.amount),
-      totalPrice: parseFloat(node.originalUnitPriceSet.shopMoney.amount) * node.quantity,
+      unitPrice: parseFloat(node.originalUnitPriceSet?.shopMoney?.amount || "0"),
+      totalPrice: parseFloat(node.originalUnitPriceSet?.shopMoney?.amount || "0") * node.quantity,
       weightGrams,
       hsCode,
       countryOfOrigin,
@@ -218,13 +218,20 @@ export async function fetchAndMapOrder(
     const response = await admin.graphql(DRAFT_ORDER_DETAIL_QUERY, {
       variables: { id: gid },
     });
-    const { data } = await response.json();
-    const order = data.draftOrder;
-    const shopData = data.shop;
+    const json = await response.json();
 
-    if (!order) {
-      throw new Error(`Draft order ${numericId} not found`);
+    if (json.errors) {
+      console.error(`GraphQL errors for draft order ${numericId}:`, json.errors);
+      throw new Error(`Shopify API Error: ${json.errors[0]?.message || "Access denied or invalid ID"}`);
     }
+
+    const data = json.data;
+    if (!data || !data.draftOrder) {
+      throw new Error(`Draft order ${numericId} not found or inaccessible`);
+    }
+
+    const order = data.draftOrder;
+    const shopData = data.shop || { name: "Unknown Shop" };
 
     if (!order.shippingAddress) {
       // Draft orders may not have a shipping address — use placeholder
