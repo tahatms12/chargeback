@@ -9,7 +9,7 @@
     "shopify": "shopify",
     "start": "remix-serve ./build/server/index.js",
     "docker-start": "npm run setup && npm start",
-    "setup": "prisma generate && prisma migrate deploy",
+    "setup": "prisma generate && prisma db push --accept-data-loss",
     "typecheck": "tsc",
     "workers": "tsx --watch app/jobs/catalogAudit.worker.ts & tsx --watch app/jobs/productReaudit.worker.ts",
     "migrate:dev": "prisma migrate dev",
